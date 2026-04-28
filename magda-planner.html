@@ -1089,6 +1089,85 @@ function createTaskBlock(task, isWeek = false) {
   return div;
 }
 
+function checkOverlap(date, hour, duration, excludeId) {
+  const h = parseInt(hour);
+  const dur = parseInt(duration) || 60;
+  const newStart = h * 60;
+  const newEnd = newStart + dur;
+  return tasks.filter(t => {
+    if (t.id === excludeId) return false;
+    if (t.date !== date) return false;
+    if (!t.time) return false;
+    const tH = parseInt(t.time.split(':')[0]);
+    const tStart = tH * 60;
+    const tEnd = tStart + (parseInt(t.duration) || 60);
+    return newStart < tEnd && newEnd > tStart;
+  });
+}
+
+function doDropTask(taskData, date, hour, isMove) {
+  const overlaps = checkOverlap(date, hour, taskData.duration || 60, isMove ? taskData.id : null);
+  if (overlaps.length > 0) {
+    const names = overlaps.map(t => t.name).join(', ');
+    showOverlapWarning(names, () => {
+      applyDrop(taskData, date, hour, isMove);
+    });
+  } else {
+    applyDrop(taskData, date, hour, isMove);
+  }
+}
+
+function applyDrop(taskData, date, hour, isMove) {
+  const timeStr = `${String(hour).padStart(2,'0')}:00`;
+  if (isMove) {
+    const idx = tasks.findIndex(t => t.id === taskData.id);
+    if (idx > -1) {
+      tasks[idx].date = date;
+      tasks[idx].time = timeStr;
+      saveTasks();
+      renderView();
+    }
+  } else {
+    addTask({
+      name: taskData.name,
+      type: taskData.type,
+      date: date,
+      time: timeStr,
+      duration: taskData.duration,
+      notes: '',
+    });
+  }
+}
+
+function showOverlapWarning(names, onConfirm) {
+  // Remove existing warning if any
+  const existing = document.getElementById('overlap-warning');
+  if (existing) existing.remove();
+
+  const div = document.createElement('div');
+  div.id = 'overlap-warning';
+  div.style.cssText = `
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:linear-gradient(145deg,#1B3A5C,#243a5e);
+    border:1px solid rgba(201,168,76,0.4);border-radius:16px;
+    padding:24px 28px;z-index:10000;max-width:340px;width:90%;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);font-family:'DM Sans',sans-serif;
+    text-align:center;animation:fadeUp .2s ease both;
+  `;
+  div.innerHTML = `
+    <div style="font-size:24px;margin-bottom:10px">⚠️</div>
+    <div style="font-size:14px;font-weight:600;color:#f5efe0;margin-bottom:6px">Time conflict</div>
+    <div style="font-size:12px;color:rgba(245,239,224,0.55);line-height:1.6;margin-bottom:20px">Overlaps with: <strong style="color:#e2c97e">${names}</strong><br>Add it anyway?</div>
+    <div style="display:flex;gap:10px">
+      <button id="overlap-cancel" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(201,168,76,0.2);background:transparent;color:rgba(245,239,224,0.5);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer">Cancel</button>
+      <button id="overlap-confirm" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#c9a84c,#a8832e);color:#0d1b2a;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Add Anyway</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+  document.getElementById('overlap-cancel').onclick = () => div.remove();
+  document.getElementById('overlap-confirm').onclick = () => { div.remove(); onConfirm(); };
+}
+
 function setupDropZone(el) {
   el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
   el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
@@ -1100,29 +1179,13 @@ function setupDropZone(el) {
     if (!hour) return;
 
     if (draggedTask) {
-      // Move existing task
-      const idx = tasks.findIndex(t => t.id === draggedTask.id);
-      if (idx > -1) {
-        tasks[idx].date = date;
-        tasks[idx].time = `${String(hour).padStart(2,'0')}:00`;
-        saveTasks();
-        renderView();
-      }
+      doDropTask(draggedTask, date, hour, true);
+      draggedTask = null;
     } else {
-      // Palette item dropped
       const paletteId = e.dataTransfer.getData('palette-id');
       if (paletteId) {
         const p = DEFAULT_PALETTE.find(x => x.id === paletteId);
-        if (p) {
-          addTask({
-            name: p.name,
-            type: p.type,
-            date: date,
-            time: `${String(hour).padStart(2,'0')}:00`,
-            duration: p.duration,
-            notes: '',
-          });
-        }
+        if (p) doDropTask(p, date, hour, false);
       }
     }
   });
@@ -1159,7 +1222,34 @@ function updateDailyStats(dateKey) {
   const hasGym = dayTasks.some(t => t.type === 'gym');
   document.getElementById('stat-gym').textContent = hasGym ? '✅' : '❌';
   document.getElementById('stat-tasks').textContent = dayTasks.length;
+
+  // ── SYNC FROM RUMAFIT localStorage ──────────────────────────────
+  try {
+    // Steps: read from rf_today_{date} or rf_steps history
+    const rfToday = JSON.parse(localStorage.getItem('rf_today_' + dateKey) || '{}');
+    const rfStepsHist = JSON.parse(localStorage.getItem('rf_steps') || '{}');
+    const steps = parseInt(rfToday.steps || rfStepsHist[dateKey] || 0);
+    const stepsEl = document.getElementById('stat-steps');
+    if (stepsEl) {
+      stepsEl.textContent = steps >= 10000 ? '✅' : steps > 0 ? steps.toLocaleString() : '0';
+      stepsEl.style.color = steps >= 10000 ? '#4ade80' : steps > 5000 ? '#c9a84c' : '';
+    }
+
+    // Water: read from rf_water_{date}
+    const water = parseInt(localStorage.getItem('rf_water_' + dateKey) || '0');
+    const waterEl = document.getElementById('stat-water');
+    if (waterEl) {
+      waterEl.textContent = water > 0 ? water + 'L' : '0L';
+      waterEl.style.color = water >= 3 ? '#4ade80' : '';
+    }
+  } catch(e) {}
 }
+
+// Auto-refresh stats every 20 seconds so Ship data shows up live
+setInterval(() => {
+  const dk = typeof toDateKey === 'function' ? toDateKey(new Date()) : '';
+  if (dk) updateDailyStats(dk);
+}, 20000);
 
 // ═══════════════════════════════════════
 //  WEEKLY RENDER
@@ -1581,5 +1671,13 @@ function seedDefaultTasks() {
 seedDefaultTasks();
 init();
 </script>
+
+<!-- ⚓ BACK TO SHIP -->
+<style>
+.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s;cursor:pointer}
+.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);box-shadow:0 6px 24px rgba(201,168,76,0.15);transform:translateY(-1px);color:#f5efe0}
+.ship-home-btn .sh-anchor{font-size:15px;line-height:1}
+</style>
+<a class="ship-home-btn" href="index.html"><span class="sh-anchor">⚓</span> The Ship</a>
 </body>
 </html>
