@@ -1455,6 +1455,16 @@ async function saveTodayLocal(){
   });
   calHistory[todayKey()]=t.cal;
   stepsHistory[todayKey()]=steps;
+
+  // ── SHIP SYNC BRIDGE: write to localStorage so Ship + Planner read live ──
+  const tk='rf_today_'+todayKey();
+  const existing=JSON.parse(localStorage.getItem(tk)||'{}');
+  existing.meals=meals;
+  existing.steps=steps;
+  localStorage.setItem(tk,JSON.stringify(existing));
+  localStorage.setItem('rf_steps',JSON.stringify(stepsHistory));
+  localStorage.setItem('rf_cals',JSON.stringify(calHistory));
+  localStorage.setItem('rf_water_'+todayKey(),String(waterCount));
 }
 
 // ══ INIT ════════════════════════════════════════════════════════════════════
@@ -1707,6 +1717,8 @@ function saveSteps(val){
   const s=parseInt(val)||0;
   updateStepsBar(s);
   stepsHistory[todayKey()]=s;
+  // ── SYNC: write to shared rf_steps so Planner + Ship read live ──
+  localStorage.setItem('rf_steps',JSON.stringify(stepsHistory));
   saveTodayLocal();updateFeedback();renderWeekStrip();
   if(s>=10000&&!tasksDone['steps']){tasksDone['steps']=true;saveTodayLocal();showToast('👑 10K steps done! Task marked complete!');}
 }
@@ -1763,6 +1775,8 @@ async function saveTodayStats(){
   weightHistory.unshift({weight:w,date:todayKey(),...entry});
   statsLog.unshift(entry);
   statsLoggedToday=true;
+  // ── SHIP SYNC: write weight to localStorage so Ship reads live ──
+  localStorage.setItem('rf_weights',JSON.stringify(weightHistory));
   document.getElementById('statsLoggedBadge').style.display='block';
   document.getElementById('statsForm').style.display='none';
   renderWeightHistory();renderRecentStats();renderCharts();
@@ -3437,5 +3451,13 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 window.addEventListener('load',()=>init());
 window.addEventListener('resize',()=>setTimeout(renderCharts,100));
 </script>
+
+<!-- ⚓ BACK TO SHIP -->
+<style>
+.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s;cursor:pointer}
+.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);box-shadow:0 6px 24px rgba(201,168,76,0.15);transform:translateY(-1px);color:#f5efe0}
+.ship-home-btn .sh-anchor{font-size:15px;line-height:1}
+</style>
+<a class="ship-home-btn" href="index.html"><span class="sh-anchor">⚓</span> The Ship</a>
 </body>
 </html>
