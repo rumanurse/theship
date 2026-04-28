@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GardenMind" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>GardenMind</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #d4a853; --gold-light: #f0c87a; --gold-dark: #c8902a;
+      --red: #FF4757; --amber: #FFA502; --green: #2ED573;
+      --bg: #0a0a0f; --text: #e8e0d5; --text-dim: #8b7355;
+      --text-muted: #4a4035; --border: rgba(212,168,83,0.18);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: 'Georgia', 'Times New Roman', serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+    body { display: flex; flex-direction: column; min-height: 100dvh; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+    #app { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 28px 16px 200px; display: flex; flex-direction: column; align-items: center; }
+
+    .header { width: 100%; max-width: 560px; text-align: center; margin-bottom: 24px; }
+    .header-eyebrow { font-size: 10px; letter-spacing: 5px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+    .header-title { font-size: clamp(28px, 8vw, 38px); font-weight: 400; letter-spacing: -1px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold-dark) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-sub { font-size: 12px; color: #6b6055; margin-top: 5px; }
+
+    .progress-bar { width: 100%; max-width: 560px; margin-bottom: 18px; padding: 12px 18px; background: rgba(212,168,83,0.06); border-radius: 12px; border: 1px solid rgba(212,168,83,0.12); }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 7px; }
+    .progress-track { height: 3px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width 0.5s ease; }
+
+    .ai-bubble { width: 100%; max-width: 560px; margin-bottom: 16px; }
+    .ai-bubble-inner { padding: 13px 16px; background: rgba(212,168,83,0.08); border: 1px solid var(--border); border-radius: 4px 16px 16px 16px; font-size: 14px; line-height: 1.6; color: #c8a96e; min-height: 44px; transition: all 0.3s ease; }
+
+    /* MIC MODAL OVERLAY */
+    #micOverlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; flex-direction: column;
+    }
+    #micOverlay.show { display: flex; }
+    .mic-modal {
+      background: #13131a; border: 1px solid rgba(212,168,83,0.2);
+      border-radius: 24px; padding: 36px 28px; text-align: center;
+      max-width: 300px; width: 90%;
+    }
+    .mic-orb {
+      width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--red), #c0392b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; cursor: pointer;
+      box-shadow: 0 0 0 0 rgba(255,71,87,0.4);
+      animation: orbPulse 1.4s ease-in-out infinite;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mic-orb.idle { background: rgba(212,168,83,0.15); animation: none; box-shadow: none; }
+    .mic-modal-title { font-size: 18px; color: var(--text); margin-bottom: 6px; }
+    .mic-modal-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.5; }
+    .mic-waveform { height: 32px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 3px; }
+    .wave-bar { width: 3px; border-radius: 3px; background: var(--gold); transition: height 0.1s; }
+    .btn-stop-mic {
+      width: 100%; padding: 13px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #0a0a0f; font-size: 15px; font-family: 'Georgia', serif;
+      cursor: pointer; font-weight: bold; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-cancel-mic {
+      margin-top: 10px; width: 100%; padding: 10px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08); background: transparent;
+      color: var(--text-dim); font-size: 13px; font-family: 'Georgia', serif;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+
+    /* INPUT DOCK */
+    #input-dock { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 16px; padding-bottom: calc(12px + var(--safe-bottom)); background: linear-gradient(to top, #0a0a0f 70%, transparent); z-index: 100; }
+    .input-wrap { max-width: 560px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 18px; padding: 10px 10px 10px 15px; transition: border-color 0.3s; }
+    textarea#msg { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 15px; line-height: 1.5; resize: none; font-family: 'Georgia', serif; max-height: 120px; -webkit-appearance: none; }
+    textarea#msg::placeholder { color: #4a4035; }
+    .btn-col { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .btn-mic, .btn-send { width: 44px; height: 44px; border-radius: 13px; border: none; cursor: pointer; font-size: 19px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; }
+    .btn-mic { background: rgba(255,255,255,0.07); color: var(--text-dim); }
+    .btn-mic:active { transform: scale(0.92); }
+    .btn-send { background: rgba(212,168,83,0.1); color: #6b5535; font-weight: bold; font-size: 18px; }
+    .btn-send.ready { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #0a0a0f; }
+    .btn-send:disabled { opacity: 0.4; }
+    .input-hint { font-size: 10px; color: #3d3530; margin-top: 5px; text-align: center; max-width: 560px; margin-inline: auto; }
+
+    /* FILTERS */
+    .filters { width: 100%; max-width: 560px; display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn { padding: 5px 13px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.06); background: transparent; color: #5a5045; font-size: 11px; cursor: pointer; font-family: 'Georgia', serif; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+    .filter-btn.active { border-color: rgba(212,168,83,0.5); background: rgba(212,168,83,0.12); color: var(--gold); }
+    .clear-btn { margin-left: auto; padding: 5px 13px; border-radius: 99px; border: 1px solid rgba(255,71,87,0.2); background: transparent; color: var(--red); font-size: 11px; cursor: pointer; font-family: 'Georgia', serif; -webkit-tap-highlight-color: transparent; }
+
+    /* TODOS */
+    .todo-list { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 8px; }
+    .empty-state { text-align: center; color: var(--text-muted); font-size: 13px; padding: 40px 0; line-height: 2.4; }
+    .empty-state span { color: #6b5535; }
+    .todo-item { display: flex; align-items: center; gap: 11px; padding: 13px 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; transition: all 0.2s; animation: slideIn 0.25s ease; }
+    .todo-item.done { opacity: 0.4; }
+    .todo-check { width: 24px; height: 24px; border-radius: 7px; border: 1.5px solid rgba(255,255,255,0.15); background: transparent; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.2s; color: transparent; -webkit-tap-highlight-color: transparent; }
+    .todo-check.checked { color: #fff; }
+    .todo-icon { font-size: 15px; flex-shrink: 0; }
+    .todo-text { flex: 1; font-size: 14px; line-height: 1.4; color: #d8d0c5; }
+    .todo-text.done { text-decoration: line-through; color: var(--text-muted); }
+    .todo-dot { font-size: 9px; flex-shrink: 0; }
+    .todo-del { background: none; border: none; cursor: pointer; color: #3d3530; font-size: 20px; padding: 2px 4px; flex-shrink: 0; line-height: 1; -webkit-tap-highlight-color: transparent; }
+    .todo-del:active { color: var(--red); }
+    .todo-cal { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 3px; flex-shrink: 0; opacity: 0.6; -webkit-tap-highlight-color: transparent; transition: opacity 0.2s; }
+    .todo-cal:active { opacity: 1; }
+
+    /* TOAST */
+    #toast { position: fixed; top: calc(20px + var(--safe-top)); left: 50%; transform: translateX(-50%) translateY(-80px); background: #1a1a24; border: 1px solid rgba(212,168,83,0.3); color: var(--gold); padding: 10px 20px; border-radius: 99px; font-size: 13px; z-index: 300; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    @keyframes orbPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,71,87,0.5); } 50% { box-shadow: 0 0 0 16px rgba(255,71,87,0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .spinner { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: middle; border: 2px solid transparent; border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header">
+    <div class="header-eyebrow">your personal assistant</div>
+    <div class="header-title">GardenMind</div>
+    <div class="header-sub">brain dump. i'll catch everything.</div>
+  </div>
+
+  <div class="progress-bar" id="progressBar" style="display:none">
+    <div class="progress-labels"><span id="doneLabel">0 done</span><span id="remainLabel">0 remaining</span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="ai-bubble">
+    <div class="ai-bubble-inner" id="aiReply">Hey! Just talk to me — I'll handle the organizing. 💛</div>
+  </div>
+
+  <div class="filters" id="filters" style="display:none">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">all</button>
+    <button class="filter-btn" data-filter="RumaNurse" onclick="setFilter('RumaNurse')">🏥 RumaNurse</button>
+    <button class="filter-btn" data-filter="Araya" onclick="setFilter('Araya')">📋 Araya</button>
+    <button class="filter-btn" data-filter="Personal" onclick="setFilter('Personal')">✨ Personal</button>
+    <button class="filter-btn" data-filter="urgent" onclick="setFilter('urgent')">🔴 urgent</button>
+    <button class="filter-btn" data-filter="soon" onclick="setFilter('soon')">🟡 soon</button>
+    <button class="filter-btn" data-filter="whenever" onclick="setFilter('whenever')">🟢 whenever</button>
+    <button class="filter-btn" data-filter="done" onclick="setFilter('done')">✓ done</button>
+  </div>
+
+  <div class="todo-list" id="todoList">
+    <div class="empty-state">Your list is empty.<br /><span>Just start talking below. 💛</span></div>
+  </div>
+</div>
+
+
+
+<!-- TOAST -->
+<!-- API KEY MODAL -->
+<div id="keyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#111118;border:1px solid rgba(212,168,83,0.25);border-radius:20px;padding:28px;max-width:420px;width:100%;">
+    <div style="font-size:11px;letter-spacing:4px;color:#8b7355;text-transform:uppercase;margin-bottom:12px;">one time setup</div>
+    <div style="font-size:22px;font-weight:400;color:#d4a853;margin-bottom:8px;">Enter your API Key</div>
+    <div style="font-size:13px;color:#6b6055;line-height:1.6;margin-bottom:20px;">Get yours free at <strong style="color:#c8a96e;">console.anthropic.com</strong> → API Keys. It stays on your device only. 💛</div>
+    <input id="keyInput" type="password" placeholder="sk-ant-..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,168,83,0.2);border-radius:12px;padding:12px 16px;color:#e8e0d5;font-size:14px;outline:none;font-family:monospace;margin-bottom:12px;" />
+    <button onclick="saveKey()" style="width:100%;background:linear-gradient(135deg,#d4a853,#c8902a);color:#0a0a0f;border:none;border-radius:12px;padding:13px;font-size:15px;cursor:pointer;font-family:'Georgia',serif;font-weight:bold;">Save & Start →</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- INPUT DOCK -->
+<div id="input-dock">
+  <div class="input-wrap" id="inputWrap">
+    <textarea id="msg" rows="2" placeholder="I need to call my mom, laundry is piling up, forgot that email…" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+    <div class="btn-col">
+      <button class="btn-mic" id="micBtn" onclick="toggleVoice()" title="Voice input">🎙️</button>
+      <button class="btn-send" id="sendBtn" onclick="handleSend()" disabled>↑</button>
+    </div>
+  </div>
+  <div class="input-hint" id="inputHint">tap 🎙️ to speak · or just type &amp; hit send</div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let todos = JSON.parse(localStorage.getItem('bd_todos') || '[]');
+let completedIds = new Set(JSON.parse(localStorage.getItem('bd_done') || '[]'));
+let completedAt = JSON.parse(localStorage.getItem('bd_completedat') || '{}');
+let messages = [];
+let loading = false;
+let currentFilter = 'all';
+let isListening = false;
+let recognition = null;
+let API_KEY = localStorage.getItem('bd_apikey') || '';
+
+const BUCKET_CONFIG = {
+  RumaNurse: { color: '#c8a96e', bg: 'rgba(200,169,110,0.12)', label: '🏥 RumaNurse' },
+  Araya:     { color: '#7eb8d4', bg: 'rgba(126,184,212,0.12)', label: '📋 Araya' },
+  Personal:  { color: '#a989c8', bg: 'rgba(169,137,200,0.12)', label: '✨ Personal' },
+};
+
+// ─── API KEY ──────────────────────────────────────────────────────────────────
+function checkKey() {
+  const modal = document.getElementById('keyModal');
+  if (!API_KEY) {
+    modal.style.display = 'flex';
+  } else {
+    modal.style.display = 'none';
+  }
+}
+function saveKey() {
+  const val = document.getElementById('keyInput').value.trim();
+  if (!val.startsWith('sk-')) { 
+    document.getElementById('keyInput').style.borderColor = '#FF4757';
+    return; 
+  }
+  API_KEY = val;
+  localStorage.setItem('bd_apikey', val);
+  document.getElementById('keyModal').style.display = 'none';
+  toast('✅ Key saved! You\'re all set.');
+}
+
+const PRIORITY = {
+  urgent: { color: '#FF4757', dot: '🔴' },
+  soon:   { color: '#FFA502', dot: '🟡' },
+  whenever: { color: '#2ED573', dot: '🟢' },
+};
+const CAT = { work:'💼', health:'🫀', personal:'✨', errands:'🛒', admin:'📋', creative:'🎨', family:'🏠', other:'📌' };
+
+const SYSTEM = `You are a gentle, zero-judgment task extraction assistant built for someone with ADHD and executive paralysis. Her name is Magda. She runs two businesses: RumaNurse (premium concierge nursing) and Araya Consulting (healthcare consulting/accreditation).
+Your ONLY job: extract actionable to-do items from whatever she says — stream of consciousness, venting, rambling, half-sentences.
+Rules:
+- Extract ALL implied tasks, not just explicit ones
+- Keep task names SHORT (under 8 words), action-first
+- Assign priority: "urgent" if they say today/tonight/now/ASAP, "soon" if this week/tomorrow, "whenever" otherwise
+- Assign category: work, health, personal, errands, admin, creative, family, or other
+- Assign a "bucket" field — one of: "RumaNurse", "Araya", "Personal". Infer from context: nursing/clients/concierge/private duty = RumaNurse, consulting/accreditation/JCAHO/ACHC/policy/compliance = Araya, everything else = Personal
+- If a date or time is mentioned (today, tomorrow, Monday, 3pm, etc), extract it into a "date" field as plain english like "today", "tomorrow 3pm", "Monday". Otherwise omit "date".
+- For EVERY task, break it into 2-5 concrete micro-steps a person with ADHD can actually start. Steps should be physical, specific, and tiny. e.g. "do laundry" → ["gather clothes from floor", "put in washing machine", "add detergent", "press start"]. Store as "steps": ["step 1", "step 2", ...]
+- Return ONLY valid JSON, no markdown, no backticks
+- Format: { "tasks": [ { "text": "...", "priority": "...", "category": "...", "bucket": "...", "date": "...", "steps": ["...","..."] } ], "reply": "..." }
+- reply = warm, short 1-2 sentence encouraging response
+- If nothing actionable: { "tasks": [], "reply": "Got it, I'm here whenever you need me." }`;
+
+// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('bd_todos', JSON.stringify(todos));
+  localStorage.setItem('bd_done', JSON.stringify([...completedIds]));
+  localStorage.setItem('bd_completedat', JSON.stringify(completedAt));
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, duration = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ─── CALENDAR ────────────────────────────────────────────────────────────────
+function addToCalendar(taskText, dateHint) {
+  // Parse dateHint into a Google Calendar dates param (YYYYMMDDTHHMMSS format)
+  let dates = '';
+  if (dateHint) {
+    try {
+      const now = new Date();
+      let d = new Date(dateHint);
+
+      // Handle relative terms
+      const hint = dateHint.toLowerCase();
+      if (hint.includes('today')) d = new Date(now);
+      else if (hint.includes('tomorrow')) { d = new Date(now); d.setDate(d.getDate() + 1); }
+
+      // Try to extract time like "3pm", "3:30pm", "15:00"
+      const timeMatch = hint.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
+      if (timeMatch) {
+        let hours = parseInt(timeMatch[1]);
+        const mins = parseInt(timeMatch[2] || '0');
+        const ampm = timeMatch[3];
+        if (ampm === 'pm' && hours < 12) hours += 12;
+        if (ampm === 'am' && hours === 12) hours = 0;
+        d.setHours(hours, mins, 0, 0);
+      } else {
+        d.setHours(9, 0, 0, 0); // default 9am
+      }
+
+      if (!isNaN(d.getTime())) {
+        const pad = n => String(n).padStart(2, '0');
+        const fmt = dt => `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+        const end = new Date(d.getTime() + 60 * 60 * 1000); // +1 hour
+        dates = `&dates=${fmt(d)}/${fmt(end)}`;
+      }
+    } catch(e) {}
+  }
+
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(taskText)}&details=${encodeURIComponent('Added from GardenMind')}${dates}`;
+  window.open(url, '_blank');
+}
+
+// ─── VOICE (Web Speech API) ───────────────────────────────────────────────────
+(function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('micBtn').style.display = 'none';
+    return;
+  }
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = e => {
+    const transcript = e.results[e.results.length - 1][0].transcript.trim();
+    const ta = document.getElementById('msg');
+    const existing = ta.value.trim();
+    ta.value = existing ? existing + ' ' + transcript : transcript;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = false;
+    btn.classList.add('ready');
+  };
+
+  recognition.onend = () => {
+    // If still supposed to be listening, restart automatically
+    if (isListening) {
+      try { recognition.start(); } catch(e) {}
+    } else {
+      setListeningUI(false);
+    }
+  };
+
+  recognition.onerror = e => {
+    setListeningUI(false);
+    if (e.error === 'not-allowed') toast('🚫 Mic permission denied');
+    else if (e.error !== 'aborted' && e.error !== 'no-speech') toast('⚠️ Mic: ' + e.error);
+  };
+})();
+
+function toggleVoice() {
+  if (!recognition) { toast('Voice not supported on this browser'); return; }
+  if (isListening) {
+    recognition.stop();
+    setListeningUI(false);
+  } else {
+    try {
+      recognition.start();
+      setListeningUI(true);
+      setReply('Listening… keep going, I\'m catching it all 🎙️');
+    } catch(e) {
+      // Silently ignore — Android Chrome throws a false error but mic still starts
+      setListeningUI(true);
+      setReply('Listening… keep going, I\'m catching it all 🎙️');
+    }
+  }
+}
+
+function setListeningUI(on) {
+  isListening = on;
+  const mic = document.getElementById('micBtn');
+  const wrap = document.getElementById('inputWrap');
+  const ta = document.getElementById('msg');
+  const hint = document.getElementById('inputHint');
+
+  mic.textContent = on ? '⏹' : '🎙️';
+  mic.style.background = on ? 'linear-gradient(135deg,#FF4757,#c0392b)' : 'rgba(255,255,255,0.06)';
+  mic.style.color = on ? '#fff' : '#8b7355';
+  mic.style.animation = on ? 'orbPulse 1.2s ease-in-out infinite' : 'none';
+  wrap.style.borderColor = on ? 'rgba(255,71,87,0.4)' : 'rgba(212,168,83,0.18)';
+  wrap.style.background = on ? 'rgba(255,71,87,0.04)' : 'rgba(255,255,255,0.04)';
+  ta.placeholder = on ? 'Speak freely… catching every word 🎙️' : 'I need to call my mom, laundry is piling up, forgot that email…';
+  hint.textContent = on ? '🔴 recording… tap ⏹ to stop' : 'tap 🎙️ to speak · or just type & hit send';
+  hint.style.color = on ? '#FF4757' : '#3d3530';
+}
+
+// ─── TEXT INPUT ───────────────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  updateSendBtn();
+}
+
+function updateSendBtn() {
+  const val = document.getElementById('msg').value.trim();
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = !val || loading;
+  btn.classList.toggle('ready', !!val && !loading);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 600) {
+    e.preventDefault(); handleSend();
+  }
+}
+
+// ─── SEND ─────────────────────────────────────────────────────────────────────
+async function handleSend() {
+  const ta = document.getElementById('msg');
+  const text = ta.value.trim();
+  if (!text || loading) return;
+
+  if (isListening) { recognition.stop(); setListeningUI(false); }
+
+  ta.value = ''; autoResize(ta);
+  loading = true; updateSendBtn();
+  setReply('<span class="spinner"></span>Processing…', true);
+
+  messages.push({ role: 'user', content: text });
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages,
+      })
+    });
+
+    const data = await res.json();
+    const raw = (data.content?.find(b => b.type === 'text')?.text || '{}')
+      .replace(/```json|```/g, '').trim();
+
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { parsed = { tasks: [], reply: 'Got you. 💛' }; }
+
+    const { tasks = [], reply = 'Got it.' } = parsed;
+
+    if (tasks.length > 0) {
+      const newItems = tasks.map((t, i) => ({
+        id: Date.now() + i,
+        text: t.text,
+        priority: t.priority || 'whenever',
+        category: t.category || 'other',
+        bucket: t.bucket || 'Personal',
+        date: t.date || null,
+        addedAt: Date.now(),
+        steps: (t.steps || []).map((s, si) => ({ id: si, text: s, done: false })),
+      }));
+      todos = [...newItems, ...todos];
+      save();
+      toast(`✨ Added ${tasks.length} task${tasks.length > 1 ? 's' : ''}`);
+    }
+
+    setReply(reply);
+    messages.push({ role: 'assistant', content: raw });
+  } catch (err) {
+    setReply('Something went wrong, try again? 💛');
+  }
+
+  loading = false; updateSendBtn(); render();
+}
+
+function setReply(html) {
+  document.getElementById('aiReply').innerHTML = html;
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+function toggleDone(id) {
+  if (completedIds.has(id)) {
+    completedIds.delete(id);
+    delete completedAt[id];
+  } else {
+    completedIds.add(id);
+    completedAt[id] = Date.now();
+  }
+  save(); render();
+}
+function deleteTodo(id) {
+  todos = todos.filter(t => t.id !== id);
+  completedIds.delete(id);
+  delete completedAt[id];
+  save(); render();
+}
+function clearDone() {
+  const doneIds = [...completedIds];
+  todos = todos.filter(t => !completedIds.has(t.id));
+  doneIds.forEach(id => delete completedAt[id]);
+  completedIds = new Set();
+  save(); render();
+}
+function toggleStep(todoId, stepId) {
+  todos = todos.map(t => {
+    if (t.id !== todoId) return t;
+    const steps = t.steps.map(s => s.id === stepId ? {...s, done: !s.done} : s);
+    // Auto-complete task if all steps done
+    const allDone = steps.every(s => s.done);
+    if (allDone && !completedIds.has(t.id)) {
+      completedIds.add(t.id);
+      completedAt[t.id] = Date.now();
+      setTimeout(() => toast('🎉 All steps done — task complete!'), 100);
+    } else if (!allDone && completedIds.has(t.id)) {
+      completedIds.delete(t.id);
+      delete completedAt[t.id];
+    }
+    return {...t, steps};
+  });
+  save(); render();
+}
+function setBucket(id, bucket) {
+  todos = todos.map(t => t.id === id ? {...t, bucket} : t);
+  save(); render();
+}
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  render();
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const total = todos.length;
+  const done = completedIds.size;
+
+  document.getElementById('progressBar').style.display = total > 0 ? '' : 'none';
+  document.getElementById('doneLabel').textContent = `${done} done`;
+  document.getElementById('remainLabel').textContent = `${total - done} remaining`;
+  document.getElementById('progressFill').style.width = total ? `${(done/total)*100}%` : '0%';
+  document.getElementById('filters').style.display = total > 0 ? '' : 'none';
+
+  let filtered = todos.filter(t => {
+    if (currentFilter === 'done') return completedIds.has(t.id);
+    if (currentFilter === 'all') return !completedIds.has(t.id);
+    if (['urgent','soon','whenever'].includes(currentFilter)) return t.priority === currentFilter && !completedIds.has(t.id);
+    if (['RumaNurse','Araya','Personal'].includes(currentFilter)) return t.bucket === currentFilter && !completedIds.has(t.id);
+    return !completedIds.has(t.id);
+  });
+
+  const list = document.getElementById('todoList');
+
+  if (!total) {
+    list.innerHTML = `<div class="empty-state">Your list is empty.<br /><span>Just start talking below. 💛</span></div>`;
+    return;
+  }
+  if (!filtered.length && currentFilter !== 'done') {
+    list.innerHTML = `<div class="empty-state"><span>Nothing here for this filter.</span></div>`;
+    return;
+  }
+  if (!filtered.length && currentFilter === 'done') {
+    list.innerHTML = `<div class="empty-state"><span>No completed tasks yet. You got this! 💛</span></div>`;
+    return;
+  }
+
+  const clearDoneBtn = currentFilter === 'done' && done > 0
+    ? `<button onclick="clearDone()" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;border:1px solid rgba(255,71,87,0.25);background:transparent;color:#FF4757;font-size:13px;cursor:pointer;font-family:'Georgia',serif;letter-spacing:0.5px;">🗑️ clear all completed</button>`
+    : '';
+
+  list.innerHTML = filtered.map(todo => {
+    const isDone = completedIds.has(todo.id);
+    const p = PRIORITY[todo.priority] || PRIORITY.whenever;
+    const icon = CAT[todo.category] || '📌';
+    const b = BUCKET_CONFIG[todo.bucket] || BUCKET_CONFIG.Personal;
+    const steps = todo.steps || [];
+    const stepsDone = steps.filter(s => s.done).length;
+    const stepsTotal = steps.length;
+
+    const calBtn = todo.date
+      ? `<button class="todo-cal" onclick="addToCalendar('${escHtml(todo.text)}','${escHtml(todo.date || '')}')" title="Add to calendar">📅</button>`
+      : '';
+    const dateBadge = todo.date
+      ? `<span style="font-size:10px;color:#8b7355;margin-right:6px;">📅 ${escHtml(todo.date)}</span>`
+      : '';
+    const addedLine = todo.addedAt
+      ? `<span style="font-size:10px;color:#4a4035;">⏱ added ${timeAgo(todo.addedAt)}</span>`
+      : '';
+    const doneLine = isDone && completedAt[todo.id]
+      ? `<span style="font-size:10px;color:#4a4035;margin-left:8px;">✓ done ${timeAgo(completedAt[todo.id])}</span>`
+      : '';
+
+    const buckets = ['RumaNurse','Araya','Personal'];
+    const nextBucket = buckets[(buckets.indexOf(todo.bucket || 'Personal') + 1) % 3];
+    const bucketPill = `<button onclick="event.stopPropagation();setBucket(${todo.id},'${nextBucket}')" style="font-size:10px;padding:2px 8px;border-radius:99px;border:1px solid ${b.color}33;background:${b.bg};color:${b.color};cursor:pointer;white-space:nowrap;flex-shrink:0;">${b.label}</button>`;
+
+    // Step progress bar
+    const stepBar = stepsTotal > 0 ? `
+      <div style="height:2px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;margin:6px 0 2px;">
+        <div style="height:100%;background:${p.color};border-radius:99px;width:${stepsTotal ? (stepsDone/stepsTotal*100) : 0}%;transition:width 0.3s ease;"></div>
+      </div>
+      <div style="font-size:10px;color:${p.color};margin-bottom:6px;">${stepsDone}/${stepsTotal} steps</div>` : '';
+
+    // Steps list
+    const stepsHtml = stepsTotal > 0 ? `
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;">
+        ${steps.map(s => `
+          <div onclick="event.stopPropagation();toggleStep(${todo.id},${s.id})" style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${s.done ? 'rgba(46,213,115,0.06)' : 'rgba(255,255,255,0.03)'};border-radius:8px;border:1px solid ${s.done ? 'rgba(46,213,115,0.15)' : 'rgba(255,255,255,0.05)'};cursor:pointer;transition:all 0.2s;">
+            <div style="width:16px;height:16px;border-radius:4px;border:1.5px solid ${s.done ? '#2ED573' : 'rgba(255,255,255,0.2)'};background:${s.done ? 'rgba(46,213,115,0.15)' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#2ED573;">${s.done ? '✓' : ''}</div>
+            <span style="font-size:12px;color:${s.done ? '#4a4035' : '#c8c0b5'};text-decoration:${s.done ? 'line-through' : 'none'};line-height:1.3;">${escHtml(s.text)}</span>
+          </div>`).join('')}
+      </div>` : '';
+
+    return `
+      <div class="todo-item ${isDone ? 'done' : ''}" style="flex-direction:column;align-items:stretch;gap:0;padding:14px 16px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <button class="todo-check ${isDone ? 'checked' : ''}"
+            style="border-color:${isDone ? p.color : 'rgba(255,255,255,0.15)'};background:${isDone ? p.color+'22':'transparent'};color:${p.color};margin-top:1px;flex-shrink:0;"
+            onclick="toggleDone(${todo.id})">${isDone ? '✓' : ''}</button>
+          <span class="todo-icon" style="margin-top:1px;">${icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div class="todo-text ${isDone ? 'done' : ''}" style="margin-bottom:2px;">${escHtml(todo.text)}</div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">${dateBadge}${addedLine}${doneLine}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+            ${bucketPill}
+            <div style="display:flex;gap:4px;align-items:center;">
+              <span style="font-size:9px;">${p.dot}</span>
+              ${calBtn}
+              <button class="todo-del" onclick="deleteTodo(${todo.id})">×</button>
+            </div>
+          </div>
+        </div>
+        ${stepBar}
+        ${stepsHtml}
+      </div>`;
+  }).join('') + clearDoneBtn;
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  // Show actual date if older than a week
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+checkKey();
+render();
+updateSendBtn();
+</script>
+</body>
+</html>

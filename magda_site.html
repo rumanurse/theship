@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">✿ Magda's Space ✿</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Pacifico&display=swap" rel="stylesheet">
+<style>
+:root {
+  --lav: #f0e6ff; --pink-l: #ffe6f3; --blue-l: #e6f0ff;
+  --white: #fffaff; --bd-lav: #d4aaff; --bd-pink: #ffb3d9; --bd-blue: #b3ccff;
+  --dark: #3d1055; --mid: #7b4fa6; --light: #b380d6;
+  --pink: #ff80bf; --purple: #a066cc; --blue: #80b3ff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #fdf5ff url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='8' y='25' font-size='16' opacity='0.07' fill='%23cc88ff'%3E✿%3C/text%3E%3Ctext x='45' y='55' font-size='12' opacity='0.06' fill='%23ff99cc'%3E★%3C/text%3E%3Ctext x='20' y='65' font-size='10' opacity='0.05' fill='%2399bbff'%3E♡%3C/text%3E%3C/svg%3E");
+  color: var(--dark); min-height: 100vh;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ctext y='18' font-size='16'%3E🌸%3C/text%3E%3C/svg%3E") 10 10, auto;
+}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--lav); }
+::-webkit-scrollbar-thumb { background: var(--bd-lav); border-radius: 4px; }
+.banner {
+  background: linear-gradient(90deg,#e6ccff,#ffc2e6,#c2d9ff,#ffc2e6,#e6ccff);
+  background-size: 200%; animation: pshift 6s ease infinite;
+  padding: 7px 0; overflow: hidden; border-bottom: 2px solid var(--bd-lav);
+}
+@keyframes pshift{0%,100%{background-position:0%}50%{background-position:100%}}
+.mq { display:inline-block; white-space:nowrap; animation:mq 28s linear infinite; font-size:13px; color:var(--dark); letter-spacing:1.5px; font-weight:700; }
+@keyframes mq{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
+.hdr { text-align:center; padding:22px 16px 6px; }
+.site-title {
+  font-family:'Pacifico',cursive; font-size:40px;
+  background:linear-gradient(135deg,#b366ff,#ff80bf,#80b3ff);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  filter:drop-shadow(0 2px 6px rgba(180,100,255,.2)); line-height:1.2;
+}
+.tagline { color:var(--light); font-size:12px; letter-spacing:2px; margin-top:5px; font-style:italic; }
+.nav { display:flex; justify-content:center; gap:8px; padding:12px 16px 14px; flex-wrap:wrap; }
+.tb {
+  background:var(--white); border:2px solid var(--bd-lav); color:var(--mid);
+  padding:7px 18px; border-radius:50px; cursor:pointer;
+  font-family:'Nunito',sans-serif; font-size:14px; font-weight:700;
+  transition:all .2s; letter-spacing:.3px;
+}
+.tb:hover { background:var(--lav); border-color:var(--purple); color:var(--purple); transform:translateY(-1px); }
+.tb.active { background:linear-gradient(135deg,#d4aaff,#ffb3d9); border-color:var(--purple); color:var(--dark); box-shadow:0 4px 12px rgba(160,100,200,.25); }
+.wrap { max-width:860px; margin:0 auto; padding:0 12px 50px; }
+.tab { display:none; } .tab.on { display:block; }
+.home-grid { display:grid; grid-template-columns:200px 1fr; gap:14px; }
+@media(max-width:600px){.home-grid{grid-template-columns:1fr}}
+.card { background:var(--white); border:2px solid var(--bd-lav); border-radius:16px; padding:18px 20px; margin-bottom:14px; box-shadow:0 4px 16px rgba(180,100,255,.07); }
+.ctitle { font-family:'Pacifico',cursive; font-size:17px; color:var(--purple); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.cdiv { height:1px; background:linear-gradient(90deg,transparent,var(--bd-lav),var(--bd-pink),var(--bd-lav),transparent); margin:11px 0; }
+.avi {
+  width:100%; aspect-ratio:1;
+  background:linear-gradient(135deg,var(--lav),var(--pink-l),var(--blue-l));
+  border:3px solid var(--bd-pink); border-radius:14px;
+  display:flex; align-items:center; justify-content:center; font-size:60px;
+  margin-bottom:10px; position:relative; overflow:hidden;
+}
+.avi img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; border-radius:11px; }
+.avi::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,transparent 60%); pointer-events:none; }
+.online { background:#d4f7e6; border:1px solid #88ddaa; color:#1a7a45; font-size:11px; font-weight:700; padding:3px 10px; border-radius:50px; text-align:center; margin-bottom:8px; letter-spacing:1px; }
+.pname { font-family:'Pacifico',cursive; font-size:19px; color:var(--purple); text-align:center; margin-bottom:3px; }
+.phandle { text-align:center; font-size:12px; color:var(--light); margin-bottom:10px; font-style:italic; }
+.srow { display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-bottom:1px dashed #eedfff; color:var(--mid); }
+.srow span:last-child { color:var(--dark); font-weight:700; }
+.srow:last-child { border-bottom:none; }
+.moodbox { background:var(--lav); border:1.5px solid var(--bd-lav); border-radius:10px; padding:10px; text-align:center; margin-top:8px; }
+.ml { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--light); margin-bottom:3px; }
+.me { font-size:30px; display:block; margin:4px 0; }
+.mt { color:var(--mid); font-size:12px; font-style:italic; }
+.atext { color:var(--dark); font-size:13px; line-height:1.85; }
+.atext .hl { color:var(--purple); font-weight:700; }
+.aquote { border-left:3px solid var(--bd-pink); padding:8px 12px; margin:10px 0; background:var(--pink-l); border-radius:0 8px 8px 0; color:var(--mid); font-style:italic; font-size:12px; }
+.tagcloud { display:flex; flex-wrap:wrap; gap:6px; }
+.tag { border:1.5px solid; padding:3px 12px; border-radius:50px; font-size:12px; font-weight:600; cursor:default; transition:transform .2s; }
+.tag:hover { transform:scale(1.06); }
+.tp { border-color:var(--bd-pink); color:#cc4488; background:var(--pink-l); }
+.tpu { border-color:var(--bd-lav); color:var(--purple); background:var(--lav); }
+.tb2 { border-color:var(--bd-blue); color:#4477cc; background:var(--blue-l); }
+.tm { border-color:#99ddc0; color:#2a7a56; background:#edfff5; }
+.f8 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.fc { background:var(--lav); border:2px solid var(--bd-lav); border-radius:12px; padding:8px; text-align:center; cursor:pointer; transition:all .2s; }
+.fc:hover { border-color:var(--purple); transform:translateY(-3px); box-shadow:0 6px 16px rgba(160,100,200,.2); }
+.favi { font-size:34px; display:block; margin-bottom:5px; }
+.fname { font-size:11px; color:var(--mid); font-weight:600; word-break:break-all; }
+/* COMMENTS */
+.cmt-item { background:var(--white); border:1.5px solid var(--bd-lav); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+.cmt-hd { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; }
+.cmt-name { font-weight:700; color:var(--purple); font-size:13px; }
+.cmt-date { font-size:11px; color:var(--light); }
+.cmt-msg { font-size:13px; color:var(--dark); line-height:1.7; }
+.cmt-replies { margin-top:10px; padding-top:10px; border-top:1px dashed #eedfff; }
+.cmt-reply { background:var(--lav); border-radius:8px; padding:10px 12px; margin-bottom:6px; }
+.cmt-reply-name { font-weight:700; color:var(--mid); font-size:12px; }
+.cmt-reply-msg { font-size:12px; color:var(--dark); line-height:1.6; margin-top:3px; }
+.reply-form { display:none; margin-top:8px; }
+.reply-form.open { display:flex; gap:6px; }
+.reply-input { flex:1; background:var(--white); border:1.5px solid var(--bd-lav); border-radius:8px; padding:8px 12px; font-family:'Nunito',sans-serif; font-size:12px; color:var(--dark); outline:none; }
+.reply-input:focus { border-color:var(--purple); }
+.reply-btn-sm { background:linear-gradient(135deg,#cc99ff,#ff99cc); border:none; color:#fff; padding:7px 14px; border-radius:8px; font-family:'Nunito',sans-serif; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+/* BLOG */
+.bpost { background:var(--white); border:2px solid var(--bd-lav); border-radius:14px; padding:18px 20px; margin-bottom:16px; }
+.bdate { font-size:11px; color:var(--light); letter-spacing:1px; margin-bottom:6px; }
+.btitle { font-family:'Pacifico',cursive; font-size:19px; color:var(--purple); margin-bottom:8px; line-height:1.3; }
+.bmeta { display:flex; gap:16px; font-size:11px; color:var(--light); margin-bottom:10px; font-style:italic; }
+.bbody { font-size:13px; line-height:1.85; color:var(--dark); }
+.bimg { width:100%; border-radius:10px; margin:12px 0; max-height:400px; object-fit:cover; border:2px solid var(--bd-lav); display:block; }
+.btags { display:flex; flex-wrap:wrap; gap:5px; margin-top:12px; }
+.btag { background:var(--lav); border:1px solid var(--bd-lav); color:var(--mid); font-size:11px; padding:2px 9px; border-radius:50px; }
+.bfoot { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px dashed #eedfff; }
+.bfoot span { font-size:11px; color:var(--light); }
+.write-btn {
+  display:none; width:100%; padding:14px;
+  background:linear-gradient(135deg,var(--lav),var(--pink-l));
+  border:2px dashed var(--bd-lav); border-radius:14px;
+  color:var(--mid); font-family:'Nunito',sans-serif; font-size:14px; font-weight:700;
+  cursor:pointer; text-align:center; transition:all .2s; margin-bottom:16px;
+}
+.write-btn:hover { border-style:solid; border-color:var(--purple); color:var(--purple); }
+.admin-on .write-btn { display:block; }
+.aa { display:none; gap:6px; }
+.admin-on .aa { display:flex; }
+.abtn { background:none; border:1px solid var(--bd-lav); color:var(--light); padding:3px 10px; border-radius:50px; cursor:pointer; font-size:11px; font-family:inherit; transition:all .2s; }
+.abtn:hover { background:var(--lav); color:var(--purple); }
+.abtn.del { border-color:#ffb3b3; color:#cc4444; }
+.abtn.del:hover { background:#fff0f0; }
+/* GUESTBOOK */
+.gbform { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.gbform input, .gbform textarea, .fi {
+  background:var(--white); border:2px solid var(--bd-lav); border-radius:10px;
+  padding:10px 14px; font-family:'Nunito',sans-serif; font-size:13px;
+  color:var(--dark); outline:none; transition:border-color .2s; resize:vertical; width:100%;
+}
+.gbform input:focus,.gbform textarea:focus,.fi:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(160,100,200,.1); }
+.gbform input::placeholder,.gbform textarea::placeholder,.fi::placeholder { color:var(--light); }
+.sbtn {
+  background:linear-gradient(135deg,#cc99ff,#ff99cc); border:none; color:#fff;
+  padding:10px 24px; border-radius:50px; font-family:'Nunito',sans-serif;
+  font-size:14px; font-weight:700; cursor:pointer; transition:all .2s;
+  letter-spacing:.5px; box-shadow:0 4px 12px rgba(200,100,200,.3);
+}
+.sbtn:hover { opacity:.9; transform:translateY(-1px); }
+.sbtn.full { display:block; width:100%; text-align:center; }
+.gbe { background:var(--white); border:1.5px solid var(--bd-lav); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+.gbeh { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+.gbn { font-weight:700; color:var(--purple); font-size:14px; }
+.gbloc { font-size:11px; color:var(--light); }
+.gbd { font-size:11px; color:var(--light); }
+.gbm { font-size:13px; color:var(--dark); line-height:1.7; }
+.fprivate { font-size:11px; color:var(--light); font-style:italic; margin-top:2px; }
+/* TESTIMONIALS */
+.tgrid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+@media(max-width:550px){.tgrid{grid-template-columns:1fr}}
+.tcard { background:var(--white); border:2px solid var(--bd-pink); border-radius:14px; padding:16px; }
+.tchead { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.tavi { font-size:36px; flex-shrink:0; }
+.tname { font-weight:700; color:var(--purple); font-size:14px; }
+.thow { font-size:11px; color:var(--light); font-style:italic; }
+.tdate { font-size:11px; color:var(--light); }
+.ttext { font-size:13px; color:var(--dark); line-height:1.75; font-style:italic; }
+.wtbtn {
+  display:block; width:100%; padding:14px;
+  background:linear-gradient(135deg,var(--pink-l),var(--lav));
+  border:2px dashed var(--bd-pink); border-radius:14px;
+  color:var(--mid); font-family:'Nunito',sans-serif; font-size:14px; font-weight:700;
+  cursor:pointer; text-align:center; transition:all .2s; margin-bottom:16px;
+}
+.wtbtn:hover { border-style:solid; border-color:var(--pink); color:#cc4488; }
+/* MOOD PICKER */
+.mood-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:8px; }
+.mood-cell {
+  background:var(--lav); border:2px solid var(--bd-lav); border-radius:10px;
+  padding:6px 4px; text-align:center; cursor:pointer; transition:all .2s;
+}
+.mood-cell:hover { border-color:var(--purple); background:#e0c8ff; transform:translateY(-2px); }
+.mood-cell.sel { border-color:var(--purple); background:linear-gradient(135deg,#e0c8ff,#ffd6ee); box-shadow:0 3px 10px rgba(160,100,200,.2); }
+.mood-cell .me2 { font-size:22px; display:block; }
+.mood-cell .mt2 { font-size:9px; color:var(--mid); margin-top:2px; line-height:1.2; }
+/* IMAGE UPLOAD */
+.img-upload-area {
+  border:2px dashed var(--bd-lav); border-radius:10px; padding:14px;
+  text-align:center; cursor:pointer; transition:all .2s; position:relative; overflow:hidden;
+  background:var(--lav);
+}
+.img-upload-area:hover { border-color:var(--purple); background:#e8d5ff; }
+.img-upload-area input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.img-preview { max-width:100%; border-radius:8px; margin-top:10px; display:none; border:2px solid var(--bd-lav); }
+/* PROFILE PHOTO UPLOAD */
+.prof-upload-btn {
+  display:none; width:100%; margin-top:6px; padding:8px;
+  background:var(--lav); border:1.5px dashed var(--bd-lav); border-radius:8px;
+  color:var(--mid); font-family:'Nunito',sans-serif; font-size:12px; font-weight:700;
+  cursor:pointer; text-align:center; transition:all .2s; position:relative;
+}
+.prof-upload-btn input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.admin-on .prof-upload-btn { display:block; }
+/* MODALS */
+.overlay { position:fixed; inset:0; background:rgba(60,10,90,.35); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+.overlay.on { display:flex; }
+.mbox {
+  background:var(--white); border:2px solid var(--bd-lav); border-radius:20px;
+  padding:28px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto;
+  box-shadow:0 20px 60px rgba(160,100,200,.25); position:relative;
+}
+.mbox.wide { max-width:580px; }
+.mtitle { font-family:'Pacifico',cursive; font-size:22px; color:var(--purple); margin-bottom:16px; text-align:center; }
+.mclose { position:absolute; top:14px; right:16px; background:var(--lav); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:14px; color:var(--mid); display:flex; align-items:center; justify-content:center; transition:background .2s; }
+.mclose:hover { background:var(--bd-lav); }
+.fg { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+.flabel { font-size:12px; font-weight:700; color:var(--mid); letter-spacing:.5px; }
+.frow { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ta { resize:vertical; min-height:100px; }
+.ferr { color:#cc4488; font-size:12px; text-align:center; margin-bottom:10px; display:none; }
+/* ADMIN */
+.atabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.atab { background:var(--lav); border:1.5px solid var(--bd-lav); color:var(--mid); padding:6px 14px; border-radius:50px; cursor:pointer; font-size:12px; font-family:inherit; font-weight:700; transition:all .2s; }
+.atab.on { background:var(--purple); border-color:var(--purple); color:#fff; }
+.asec { display:none; } .asec.on { display:block; }
+.ptcard { background:var(--lav); border:1.5px solid var(--bd-lav); border-radius:10px; padding:12px; margin-bottom:8px; }
+.appbtn { background:#d4f7e6; border:1px solid #88ddaa; color:#1a7a45; padding:4px 14px; border-radius:50px; cursor:pointer; font-size:12px; font-family:inherit; font-weight:700; }
+.appbtn:hover { background:#b3f0d0; }
+.rjbtn { background:#fff0f5; border:1px solid var(--bd-pink); color:#cc4488; padding:4px 14px; border-radius:50px; cursor:pointer; font-size:12px; font-family:inherit; font-weight:700; }
+.rjbtn:hover { background:#ffe6f0; }
+/* PROMPT BTN */
+.prompt-btn {
+  background:linear-gradient(135deg,var(--blue-l),var(--lav)); border:1.5px solid var(--bd-blue);
+  color:#4466bb; padding:8px 16px; border-radius:50px; font-family:'Nunito',sans-serif;
+  font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; margin-bottom:10px;
+  width:100%; text-align:center;
+}
+.prompt-btn:hover { transform:translateY(-1px); background:var(--blue-l); }
+/* ADMIN REPLY */
+.reply-toggle { display:none; background:none; border:1px solid var(--bd-lav); color:var(--light); padding:3px 10px; border-radius:50px; cursor:pointer; font-size:11px; font-family:inherit; transition:all .2s; margin-top:8px; }
+.reply-toggle:hover { background:var(--lav); color:var(--purple); }
+.admin-on .reply-toggle { display:inline-block; }
+/* TOAST / SPARKLE */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:linear-gradient(135deg,#cc99ff,#ff99cc); color:#fff; padding:12px 24px; border-radius:50px; font-weight:700; font-size:14px; box-shadow:0 8px 24px rgba(200,100,200,.4); transition:transform .4s cubic-bezier(.34,1.56,.64,1); z-index:2000; pointer-events:none; white-space:nowrap; }
+.toast.on { transform:translateX(-50%) translateY(0); }
+.sp { position:fixed; pointer-events:none; animation:spout 1.2s ease-out forwards; z-index:9999; font-size:14px; }
+@keyframes spout{0%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(.2) translateY(50px)}}
+.abadge { position:fixed; top:12px; right:12px; background:linear-gradient(135deg,#cc99ff,#ff99cc); color:#fff; padding:5px 14px; border-radius:50px; font-size:12px; font-weight:700; display:none; z-index:500; box-shadow:0 4px 12px rgba(200,100,200,.4); cursor:pointer; }
+.admin-on .abadge { display:block; }
+footer { text-align:center; padding:20px 16px; font-size:12px; color:var(--light); letter-spacing:1px; }
+#secret { cursor:default; user-select:none; }
+.empty { text-align:center; padding:30px; color:var(--light); font-style:italic; font-size:14px; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="abadge" id="abadge" onclick="showAdmin()">⚙ Admin Mode</div>
+
+<div class="banner">
+  <div class="mq">✿ welcome to my little corner of the internet ✿ &nbsp;&nbsp; ♡ sign my guestbook! ♡ &nbsp;&nbsp; ★ BTS army forever ★ &nbsp;&nbsp; ✿ God is good all the time ✿ &nbsp;&nbsp; ♡ testimonials open if you know me! ♡ &nbsp;&nbsp;</div>
+</div>
+
+<div class="hdr">
+  <h1 class="site-title" id="siteTitle">✿ Magda's Space ✿</h1>
+  <p class="tagline" id="siteTag">✿ dreamer ✿ believer ✿ BTS army forever ✿</p>
+</div>
+
+<nav class="nav">
+  <button class="tb active" onclick="showTab('home',this)">🏠 Home</button>
+  <button class="tb" onclick="showTab('blog',this)">📓 Blog</button>
+  <button class="tb" onclick="showTab('guestbook',this)">📝 Guestbook</button>
+  <button class="tb" onclick="showTab('testimonials',this)">💌 Testimonials</button>
+</nav>
+
+<div class="wrap">
+
+<!-- HOME -->
+<div id="t-home" class="tab on">
+  <div class="home-grid">
+    <div>
+      <div class="card" style="padding:14px">
+        <div class="avi">
+          <img id="profPhoto" src="" alt="" style="display:none">
+          <span id="profEmoji">🌸</span>
+        </div>
+        <label class="prof-upload-btn">
+          📷 change photo
+          <input type="file" accept="image/*" onchange="uploadProfilePhoto(this)">
+        </label>
+        <div class="online">● online now</div>
+        <div class="pname" id="profName">Magda</div>
+        <div class="phandle" id="profHandle">xo_Magda_xo</div>
+        <div class="cdiv"></div>
+        <div class="srow"><span>Age</span><span id="sAge">forever 21 ✨</span></div>
+        <div class="srow"><span>Location</span><span id="sLoc">ur heart 💜</span></div>
+        <div class="srow"><span>Status</span><span id="sStatus">it's complicated</span></div>
+        <div class="srow"><span>Since</span><span>2006</span></div>
+      </div>
+      <div class="moodbox">
+        <div class="ml">Current Mood</div>
+        <span class="me" id="moodE">🌸</span>
+        <div class="mt" id="moodT">soft &amp; nostalgic</div>
+      </div>
+      <div style="margin-top:8px;border-radius:12px;overflow:hidden;border:2px solid var(--bd-lav);box-shadow:0 4px 16px rgba(180,100,255,.1)">
+        <iframe id="spotifyEmbed"
+          src="https://open.spotify.com/embed/album/3ukkRHDHbN8tNRPKsGZR1h?utm_source=generator&theme=0"
+          width="100%" height="152" frameBorder="0"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy" style="display:block"></iframe>
+      </div>
+      <div class="card" style="margin-top:10px;text-align:center;padding:12px">
+        <div style="font-size:10px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">✦ Real Visitor Count ✦</div>
+        <div style="font-family:'Pacifico',cursive;font-size:26px;color:var(--purple);min-height:38px" id="vcnt">
+          <span style="font-size:14px;color:var(--light);font-family:'Nunito',sans-serif">loading...</span>
+        </div>
+        <div style="font-size:10px;color:var(--light);margin-top:2px">since day one 🌸</div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ctitle">✿ About Me</div>
+        <div class="atext" id="aboutMe">
+          heyyyy!! welcome to my little corner of the internet 🥹 i'm so happy you're here!!
+          <div class="aquote">"she believed she could, so she did ✨"</div>
+          okay so i'm <span class="hl">Magda</span>, basically obsessed with <span class="hl">BTS</span> (jungkook is mine, sorry 😌), i love God with my whole heart 🙏, and i think glitter should be mandatory.
+          <br><br>
+          i make playlists at 2am, overanalyze song lyrics, and my love language is memes at 3am 💌 leave me a comment!
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">★ Interests</div>
+        <div class="tagcloud">
+          <span class="tag tpu">💜 BTS</span><span class="tag tp">✝️ Faith</span><span class="tag tb2">🎵 Music</span>
+          <span class="tag tpu">✨ Glitter</span><span class="tag tp">📓 Journaling</span><span class="tag tb2">🌙 Night Owl</span>
+          <span class="tag tm">🎀 Y2K Aesthetic</span><span class="tag tpu">🍓 Strawberry Milk</span><span class="tag tp">📸 Photography</span>
+          <span class="tag tb2">🌟 K-pop</span><span class="tag tm">🐱 Cats</span><span class="tag tpu">💌 Writing</span>
+          <span class="tag tp">🙏 Gratitude</span><span class="tag tb2">🎮 Neopets</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">💜 Top 8 Friends</div>
+        <div class="f8">
+          <div class="fc"><span class="favi">🦋</span><div class="fname">xXbabygurl2006Xx</div></div>
+          <div class="fc"><span class="favi">🌊</span><div class="fname">sk8er_boi_07</div></div>
+          <div class="fc"><span class="favi">🌿</span><div class="fname">l0ve_punk_4ever</div></div>
+          <div class="fc"><span class="favi">🔥</span><div class="fname">x_darkangel_x</div></div>
+          <div class="fc"><span class="favi">⭐</span><div class="fname">stardust_princess</div></div>
+          <div class="fc"><span class="favi">🔮</span><div class="fname">mystic_vibes101</div></div>
+          <div class="fc"><span class="favi">💅</span><div class="fname">girly_pop_xoxo</div></div>
+          <div class="fc"><span class="favi">🌺</span><div class="fname">tropical_dream88</div></div>
+        </div>
+      </div>
+      <!-- COMMENTS -->
+      <div class="card">
+        <div class="ctitle">💬 Leave a Comment</div>
+        <p style="font-size:13px;color:var(--mid);margin-bottom:14px">say hi, leave some love — i read every single one 🥺💜</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+          <div class="frow">
+            <div>
+              <input class="fi" type="text" id="cmtFirst" placeholder="First name (private 🔒)" maxlength="30">
+              <div class="fprivate">only i can see this</div>
+            </div>
+            <div>
+              <input class="fi" type="text" id="cmtDisplay" placeholder="Show as (optional)" maxlength="30">
+              <div class="fprivate">blank = Anonymous ✿</div>
+            </div>
+          </div>
+          <textarea class="fi" id="cmtMsg" rows="3" placeholder="leave a little love note!! 💜" maxlength="400"></textarea>
+          <button class="sbtn" onclick="submitComment()">✦ Post Comment ✦</button>
+        </div>
+        <div id="cmtList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BLOG -->
+<div id="t-blog" class="tab">
+  <button class="write-btn" onclick="openNewPost()">✦ write a new entry ✦</button>
+  <div id="blogList"></div>
+</div>
+
+<!-- GUESTBOOK -->
+<div id="t-guestbook" class="tab">
+  <div class="card">
+    <div class="ctitle">📝 Sign My Guestbook!</div>
+    <p style="font-size:13px;color:var(--mid);margin-bottom:14px">leave me a little note!! it makes my whole day 🌸</p>
+    <div class="gbform">
+      <div class="frow" style="margin-bottom:0">
+        <div>
+          <input type="text" id="gbFirst" placeholder="First name (private 🔒)" maxlength="30">
+          <div class="fprivate" style="margin-top:3px">only i can see your real name</div>
+        </div>
+        <div>
+          <input type="text" id="gbDisplay" placeholder="Show as (optional)" maxlength="30">
+          <div class="fprivate" style="margin-top:3px">blank = Anonymous ✿</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <input type="text" id="gbLoc" placeholder="Location (optional) 🌍" maxlength="50">
+        <input type="text" id="gbSite" placeholder="Website (optional) 🔗" maxlength="100">
+      </div>
+      <textarea id="gbMsg" rows="4" placeholder="Leave me a message! I reply to everyone!! 💜" maxlength="500"></textarea>
+      <button class="sbtn" onclick="submitGb()">✦ Sign Guestbook ✦</button>
+    </div>
+  </div>
+  <div id="gbList"></div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div id="t-testimonials" class="tab">
+  <div class="card" style="text-align:center;margin-bottom:14px">
+    <div class="ctitle" style="justify-content:center">💌 Testimonials</div>
+    <p style="font-size:13px;color:var(--mid);margin-bottom:14px">only people who know me personally can write these 🔒 if i gave you the code, you know what to do!! 🌸</p>
+    <button class="wtbtn" onclick="openTesti()">✦ Write Me a Testimonial ✦</button>
+  </div>
+  <div class="tgrid" id="tGrid"></div>
+  <div id="tEmpty" class="empty" style="display:none">no testimonials yet 🥺 be the first!</div>
+</div>
+
+</div>
+
+<footer>
+  <p>✿ <span id="footName">Magda</span>'s Space ✿ made with love &amp; glitter</p>
+  <p style="margin-top:6px">best viewed with your whole heart 💜 &nbsp;<span id="secret">✦</span></p>
+</footer>
+
+<!-- FRIEND CODE -->
+<div class="overlay" id="m-code">
+  <div class="mbox">
+    <button class="mclose" onclick="closeM('m-code')">✕</button>
+    <div class="mtitle">🔒 Friend Code</div>
+    <p style="font-size:13px;color:var(--mid);text-align:center;margin-bottom:16px">only people who know me personally can write a testimonial! enter the code i gave you 🌸</p>
+    <div class="fg"><label class="flabel">Secret Friend Code</label><input class="fi" type="password" id="codeIn" placeholder="enter the code..." onkeydown="if(event.key==='Enter')checkCode()"></div>
+    <div class="ferr" id="codeErr">❌ wrong code! ask me for it 💜</div>
+    <button class="sbtn full" onclick="checkCode()">✦ Unlock ✦</button>
+  </div>
+</div>
+
+<!-- WRITE TESTIMONIAL -->
+<div class="overlay" id="m-testi">
+  <div class="mbox">
+    <button class="mclose" onclick="closeM('m-testi')">✕</button>
+    <div class="mtitle">💌 Write a Testimonial</div>
+    <div class="fg"><label class="flabel">Your Name</label><input class="fi" type="text" id="tName" placeholder="your name or username" maxlength="40"></div>
+    <div class="fg">
+      <label class="flabel">Pick an Avatar Emoji</label>
+      <div id="emojiPick" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>
+      <input class="fi" type="text" id="tEmoji" placeholder="or type any emoji 💜" maxlength="4">
+    </div>
+    <div class="fg"><label class="flabel">How do you know me?</label><input class="fi" type="text" id="tHow" placeholder="e.g. school bestie, online friend" maxlength="60"></div>
+    <div class="fg"><label class="flabel">Your Testimonial</label><textarea class="fi ta" id="tText" placeholder="say something sweet!! 🥺" maxlength="400"></textarea></div>
+    <button class="sbtn full" onclick="submitTesti()">✦ Submit Testimonial ✦</button>
+    <p style="font-size:11px;color:var(--light);text-align:center;margin-top:10px">✿ reviewed before going public ✿</p>
+  </div>
+</div>
+
+<!-- WRITE BLOG POST -->
+<div class="overlay" id="m-post">
+  <div class="mbox wide">
+    <button class="mclose" onclick="closeM('m-post')">✕</button>
+    <div class="mtitle" id="postMTitle">📓 New Blog Entry</div>
+    <button class="prompt-btn" onclick="fillPrompt()">✦ get a random journal / bulletin prompt ✦</button>
+    <div class="fg"><label class="flabel">Title</label><input class="fi" type="text" id="pTitle" placeholder="what's the vibe today?" maxlength="100"></div>
+    <div class="fg">
+      <label class="flabel">Current Mood — pick one 🌸</label>
+      <div class="mood-grid" id="moodGrid"></div>
+      <div id="moodSelected" style="display:none;text-align:center;font-size:12px;color:var(--mid);margin-top:4px;font-style:italic">mood: <span id="moodSelectedLabel"></span></div>
+    </div>
+    <div class="fg"><label class="flabel">Currently Listening To</label><input class="fi" type="text" id="pMusic" placeholder="artist - song" maxlength="80"></div>
+    <div class="fg">
+      <label class="flabel">Add a Photo (auto-watermarked with @ohitsmagda ✿)</label>
+      <div class="img-upload-area">
+        <input type="file" accept="image/*" id="blogImgInput" onchange="handleBlogImage(this)">
+        <div id="blogImgPrompt" style="font-size:13px;color:var(--mid);padding:6px 0">📷 click to upload a photo</div>
+        <img id="blogImgPreview" class="img-preview" alt="preview">
+      </div>
+      <button type="button" onclick="clearBlogImg()" id="clearImgBtn" style="display:none;margin-top:6px;background:none;border:1px solid var(--bd-pink);color:#cc4488;padding:4px 12px;border-radius:50px;font-family:inherit;font-size:11px;cursor:pointer">✕ remove photo</button>
+    </div>
+    <div class="fg"><label class="flabel">Entry</label><textarea class="fi ta" id="pBody" placeholder="write your heart out 💜" maxlength="5000" style="min-height:160px"></textarea></div>
+    <div class="fg"><label class="flabel">Tags (comma separated)</label><input class="fi" type="text" id="pTags" placeholder="bts, faith, late night" maxlength="150"></div>
+    <input type="hidden" id="pEditId">
+    <input type="hidden" id="pImgData">
+    <button class="sbtn full" onclick="savePost()">✦ Publish Entry ✦</button>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="overlay" id="m-login">
+  <div class="mbox" style="max-width:360px">
+    <button class="mclose" onclick="closeM('m-login')">✕</button>
+    <div class="mtitle">⚙ Admin Login</div>
+    <div class="fg"><label class="flabel">Password</label><input class="fi" type="password" id="adminPw" placeholder="enter password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="ferr" id="loginErr">❌ wrong password!</div>
+    <button class="sbtn full" onclick="doLogin()">✦ Login ✦</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="overlay" id="m-admin">
+  <div class="mbox wide">
+    <button class="mclose" onclick="closeM('m-admin')">✕</button>
+    <div class="mtitle">⚙ Admin Panel</div>
+    <div class="atabs">
+      <button class="atab on" onclick="aTab('pending',this)">Pending Testis</button>
+      <button class="atab" onclick="aTab('comments',this)">Comments</button>
+      <button class="atab" onclick="aTab('gb',this)">Guestbook</button>
+      <button class="atab" onclick="aTab('settings',this)">Settings</button>
+    </div>
+    <div id="as-pending" class="asec on"><div id="pendingList"></div></div>
+    <div id="as-comments" class="asec"><div id="adminCmtList"></div></div>
+    <div id="as-gb" class="asec"><div id="adminGbList"></div></div>
+    <div id="as-settings" class="asec">
+      <div class="frow">
+        <div class="fg"><label class="flabel">Display Name</label><input class="fi" type="text" id="sName" maxlength="30"></div>
+        <div class="fg"><label class="flabel">Profile Emoji</label><input class="fi" type="text" id="sEmoji" maxlength="4"></div>
+      </div>
+      <div class="fg"><label class="flabel">Tagline</label><input class="fi" type="text" id="sTag" maxlength="100"></div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Mood Text</label><input class="fi" type="text" id="sMood" maxlength="40"></div>
+        <div class="fg"><label class="flabel">Mood Emoji</label><input class="fi" type="text" id="sMoodE" maxlength="4"></div>
+      </div>
+      <div style="background:var(--lav);border:1.5px solid var(--bd-lav);border-radius:10px;padding:10px;font-size:12px;color:var(--mid);margin-bottom:12px">
+        🎵 <strong>Spotify</strong> is embedded showing <strong>BTS — ARIRANG</strong>. To change albums, edit the <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px">src</code> on the <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px">#spotifyEmbed</code> iframe in the HTML file.
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">Age / Display</label><input class="fi" type="text" id="sAge" maxlength="20"></div>
+        <div class="fg"><label class="flabel">Location</label><input class="fi" type="text" id="sLoc2" maxlength="40"></div>
+      </div>
+      <div class="fg"><label class="flabel">Status</label><input class="fi" type="text" id="sStatus2" maxlength="30"></div>
+      <div class="fg"><label class="flabel">About Me</label><textarea class="fi ta" id="sAbout" maxlength="1000"></textarea></div>
+      <div style="border-top:1px dashed var(--bd-lav);padding-top:14px;margin-top:6px">
+        <div style="font-weight:700;color:var(--mid);font-size:13px;margin-bottom:10px">🔒 Change Passwords</div>
+        <div class="frow">
+          <div class="fg"><label class="flabel">New Admin Password</label><input class="fi" type="password" id="sAdminPw" placeholder="leave blank to keep"></div>
+          <div class="fg"><label class="flabel">New Friend Code</label><input class="fi" type="text" id="sCode" placeholder="leave blank to keep" maxlength="30"></div>
+        </div>
+      </div>
+      <button class="sbtn full" onclick="saveSettings()" style="margin-top:10px">✦ Save Settings ✦</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DB ──────────────────────────────────────────────────────────────────────
+const DB = {
+  g(k){try{return JSON.parse(localStorage.getItem('y2k_'+k))}catch{return null}},
+  s(k,v){localStorage.setItem('y2k_'+k,JSON.stringify(v))},
+  posts(){return this.g('posts')||[]},
+  gb(){return this.g('gb')||[]},
+  comments(){return this.g('comments')||[]},
+  testis(a=null){const all=this.g('testis')||[];return a===null?all:all.filter(t=>t.a===a)},
+  cfg(){return this.g('cfg')||{code:'xoxomagda',pw:'sparkle2006',name:'Magda',emoji:'🌸',tag:'✿ dreamer ✿ believer ✿ BTS army forever ✿',mood:'soft & nostalgic',moodE:'🌸',music:'BTS - Spring Day',age:'forever 21 ✨',loc:'ur heart 💜',status:"it's complicated",about:''}}
+};
+
+// ── MOODS ───────────────────────────────────────────────────────────────────
+const MOODS=[
+  {e:'🌸',t:'soft & dreamy'},{e:'🌙',t:'midnight mood'},{e:'✨',t:'blessed'},
+  {e:'💜',t:'full of love'},{e:'🥺',t:'emotional'},{e:'😊',t:'genuinely happy'},
+  {e:'🔥',t:'hyped & ready'},{e:'🙏',t:'thankful'},{e:'🤪',t:'being silly'},
+  {e:'😰',t:'a lil anxious'},{e:'🌿',t:'nostalgic'},{e:'🎵',t:'just vibing'},
+  {e:'💭',t:'in my head'},{e:'😌',t:'at peace'},{e:'🌧',t:'moody'},
+  {e:'⚡',t:'energized'},{e:'😴',t:'sleepy lol'},{e:'🦋',t:'free spirit'},
+  {e:'🫶',t:'caring'},{e:'💫',t:'inspired'}
+];
+let selectedMood=null;
+
+// ── PROMPTS ─────────────────────────────────────────────────────────────────
+const PROMPTS=[
+`THE ABOUT ME SURVEY ✿
+
+full name:
+age:
+birthday:
+zodiac sign:
+hair color:
+eye color:
+favorite color:
+favorite band/artist:
+favorite movie:
+favorite food:
+best friend:
+relationship status:
+last song you listened to:
+last thing you ate:
+are you happy right now?:
+what are you wearing?:
+what's on your mind?:`,
+
+`RANDOM QUESTIONS 2006 ★
+
+what song is stuck in your head rn:
+if you could teleport anywhere right now:
+what's ur phone wallpaper:
+coke or pepsi:
+do you believe in love at first sight:
+can you roll your tongue:
+do you have a secret talent:
+last person you hugged:
+morning person or night owl:
+if you could be any animal:
+what's ur current obsession:`,
+
+`LOVE & FRIENDS 💌
+
+best friend:
+how long have you known them:
+favorite memory together:
+crush rn (initials only lol):
+describe ur ideal date:
+do you believe in soulmates:
+biggest green flag in a person:
+biggest red flag:
+love language:
+funniest thing a friend ever said to you:
+if you could tell ur crush one thing:`,
+
+`THE TRUTH SURVEY ★ (answer honestly!!)
+
+have you ever snuck out:
+biggest regret:
+something you wish you could undo:
+do you hold grudges:
+are you jealous of anyone rn:
+biggest insecurity:
+do you actually like yourself:
+something nobody knows about you:
+if you could change one thing about your life:
+are you happy:`,
+
+`CURRENTLY ✿
+
+currently listening to:
+currently watching:
+currently reading:
+currently craving:
+currently wearing:
+currently feeling:
+currently wanting:
+currently missing:
+currently grateful for:
+currently worrying about:
+currently excited for:`,
+
+`THIS OR THAT 💜
+
+coffee or tea:
+beach or mountains:
+texting or calling:
+night out or night in:
+chocolate or vanilla:
+books or movies:
+instagram or tumblr:
+shower at night or morning:
+cats or dogs:
+fast food or home cooked:
+love or money:
+singing or dancing:`,
+
+`THINGS I'M GRATEFUL FOR TODAY 🙏
+
+(write 10 things, big or small)
+
+1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+
+why gratitude matters to me:`,
+
+`2AM THOUGHTS DUMP 🌙
+
+what's actually on my mind right now:
+what i keep replaying in my head:
+something i want to say but haven't:
+what i'm scared to admit:
+what i wish someone would ask me:
+what i'm looking forward to:
+a prayer or intention for tomorrow:`,
+
+`DEAR FUTURE ME ✉️
+
+dear future me,
+
+right now i am:
+i hope by the time you read this you have:
+i'm currently struggling with:
+but i know i'll get through it because:
+the people who matter most to me right now:
+something i never want to forget about this moment:
+i love you. keep going. 💜`,
+
+`PLAYLIST DIARY 🎵
+
+my current playlist is called:
+vibe of the playlist:
+the song that hits different rn:
+a song that reminds me of someone:
+a song that makes me cry (in a good way):
+a song that gives me main character energy:
+a song i have on repeat:
+if my life was a movie right now the soundtrack would be:`,
+
+`SELF LOVE CHECK-IN ✨
+
+how am i really doing (honest answer):
+something i did well this week:
+something kind i did for someone:
+something kind someone did for me:
+what my body needs right now:
+what my heart needs right now:
+a compliment i'm going to give myself:
+one thing i'm proud of about myself:
+an affirmation for the rest of the week:`,
+
+`THIS WEEK IN MY LIFE 🗓️
+
+best moment of the week:
+worst moment (we don't hide from it):
+funniest thing that happened:
+most random thing i thought about:
+who i spent the most time with:
+something i ate that was amazing:
+song of the week:
+mood of the week:
+what i learned:
+what i'm carrying into next week:`
+];
+
+// ── SEED ────────────────────────────────────────────────────────────────────
+function seed(){
+  if(DB.g('seeded3'))return;
+  DB.s('posts',[
+    {id:1001,title:'the way God moves in quiet moments 🙏',date:'Saturday, April 26, 2026 · 10:14 PM',mood:'grateful & full',moodE:'🌙',music:'BTS - Magic Shop',img:'',body:"okay so i know i always post at weird hours but hear me out.\n\nthere's this thing that happens when it gets quiet and you're just sitting there and suddenly you feel it — like this warmth that doesn't come from anything around you, it just... IS there. and you just KNOW.\n\ni had that tonight. after everything this week, after all the chaos and the noise, God just quietly showed up in the stillness and reminded me that He's got it. He's always had it.\n\ni genuinely have no words for how grateful i am. not just for the big things. for the small signs. for the songs that play at exactly the right moment. for the friends who check in just when you needed it most.\n\nif you're reading this — you're one of the good things in my life, i hope you know that 💜",tags:['faith','grateful','late night','God is good']},
+    {id:1000,title:'2am playlist mode: activated 🌙',date:'Thursday, April 24, 2026 · 2:07 AM',mood:'soft chaos',moodE:'✨',music:'BTS - Spring Day',img:'',body:"i was SUPPOSED to sleep three hours ago.\n\nbut instead i made four playlists, texted three people who are definitely asleep, and started redecorating my whole room in my head at 1:47am like a normal person.\n\nthe playlist i made tonight is called \"if 2am had a color it would be lavender\" and i stand by that completely.\n\nalso decided my 2026 aesthetic is \"soft girl who could also ruin ur life\" and i will be taking no questions about this 💅\n\nif you're up at weird hours too — hi, we should be friends, leave me a guestbook entry.",tags:['music','late night','2am thoughts','playlists']}
+  ]);
+  DB.s('gb',[
+    {id:2001,firstName:'Ana',displayName:'stardustgirl',loc:'Manila, PH',site:'',msg:"omg your site is SOOO cute!! the layout is giving everything and more 🌸 love you always girl!!",date:'April 27, 2026'},
+    {id:2000,firstName:'Kim',displayName:'',loc:'somewhere over the rainbow',site:'',msg:"found your page and literally could not leave without signing the guestbook!! your energy is so warm i can feel it through the screen 💜 keep being you!!",date:'April 25, 2026'}
+  ]);
+  DB.s('testis',[
+    {id:3000,name:'j_sparkles99',e:'🦋',how:'college bestie',txt:"magda is the kind of person who remembers your order at every coffee shop, texts you exactly when you need it most, and hypes you up like it's literally her job. she is the friend everyone deserves. also her playlists? career-changing.",date:'April 20, 2026',a:true}
+  ]);
+  DB.s('comments',[
+    {id:4001,firstName:'Jess',displayName:'stargirl2006',msg:"your page is SO cute!! i love the vibes here 🌸",date:'April 27, 2026',replies:[]},
+    {id:4000,firstName:'',displayName:'',msg:"found this page and i'm never leaving!! 💜",date:'April 26, 2026',replies:[{id:40001,msg:"omg thank you!! 🌸",date:'April 26, 2026'}]}
+  ]);
+  DB.s('seeded3',true);
+}
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let admin=false,clicks=0,codeOk=false,editId=null,blogImgData='';
+
+// ── INIT ────────────────────────────────────────────────────────────────────
+function init(){
+  seed();applyCfg();renderBlog();renderGb();renderTestis();
+  renderComments();setupEmoji();setupMoodGrid();setupSparkles();setupSecret();animCounter();
+}
+
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+function applyCfg(){
+  const c=DB.cfg();
+  document.getElementById('siteTitle').textContent='✿ '+c.name+"'s Space ✿";
+  document.getElementById('page-title').textContent='✿ '+c.name+"'s Space ✿";
+  document.getElementById('siteTag').textContent=c.tag;
+  document.getElementById('profName').textContent=c.name;
+  document.getElementById('profHandle').textContent='xo_'+c.name+'_xo';
+  document.getElementById('moodE').textContent=c.moodE;
+  document.getElementById('moodT').textContent=c.mood;
+  document.getElementById('sAge').textContent=c.age;
+  document.getElementById('sLoc').textContent=c.loc;
+  document.getElementById('sStatus').textContent=c.status;
+  document.getElementById('footName').textContent=c.name;
+  if(c.about)document.getElementById('aboutMe').innerHTML=esc(c.about).replace(/\n/g,'<br>');
+  const photo=DB.g('profPhoto');
+  const img=document.getElementById('profPhoto');
+  const em=document.getElementById('profEmoji');
+  if(photo){img.src=photo;img.style.display='block';em.style.display='none';}
+  else{img.style.display='none';em.style.display='block';em.textContent=c.emoji||'🌸';}
+}
+
+// ── TABS ────────────────────────────────────────────────────────────────────
+function showTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t-'+name).classList.add('on');
+  btn.classList.add('active');
+}
+
+// ── PROFILE PHOTO ───────────────────────────────────────────────────────────
+function uploadProfilePhoto(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    DB.s('profPhoto',e.target.result);
+    document.getElementById('profPhoto').src=e.target.result;
+    document.getElementById('profPhoto').style.display='block';
+    document.getElementById('profEmoji').style.display='none';
+    toast('✿ profile photo updated! 💜');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── WATERMARK ───────────────────────────────────────────────────────────────
+function applyWatermark(file,callback){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=new Image();
+    img.onload=function(){
+      const canvas=document.createElement('canvas');
+      const maxW=1000;
+      let w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      const fs=Math.max(14,Math.round(w*0.038));
+      ctx.font=`bold ${fs}px Nunito, sans-serif`;
+      const text='@ohitsmagda';
+      const tw=ctx.measureText(text).width;
+      const pad=10;
+      const rx=w-tw-pad*2-12,ry=h-fs-pad*2-12,rw=tw+pad*2,rh=fs+pad*2;
+      ctx.fillStyle='rgba(0,0,0,0.42)';
+      ctx.beginPath();
+      if(ctx.roundRect){ctx.roundRect(rx,ry,rw,rh,6);}
+      else{ctx.rect(rx,ry,rw,rh);}
+      ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.95)';
+      ctx.fillText(text,rx+pad,ry+fs+pad-2);
+      callback(canvas.toDataURL('image/jpeg',0.82));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleBlogImage(input){
+  const file=input.files[0];if(!file)return;
+  document.getElementById('blogImgPrompt').textContent='⏳ adding watermark...';
+  applyWatermark(file,function(data){
+    blogImgData=data;
+    document.getElementById('pImgData').value=data;
+    const prev=document.getElementById('blogImgPreview');
+    prev.src=data;prev.style.display='block';
+    document.getElementById('blogImgPrompt').textContent='✿ photo ready — @ohitsmagda watermark added!';
+    document.getElementById('clearImgBtn').style.display='block';
+  });
+}
+
+function clearBlogImg(){
+  blogImgData='';
+  document.getElementById('pImgData').value='';
+  document.getElementById('blogImgPreview').style.display='none';
+  document.getElementById('blogImgPrompt').textContent='📷 click to upload a photo';
+  document.getElementById('blogImgInput').value='';
+  document.getElementById('clearImgBtn').style.display='none';
+}
+
+// ── MOOD GRID ───────────────────────────────────────────────────────────────
+function setupMoodGrid(){
+  document.getElementById('moodGrid').innerHTML=MOODS.map((m,i)=>`
+    <div class="mood-cell" id="mc-${i}" onclick="selectMood(${i})">
+      <span class="me2">${m.e}</span>
+      <div class="mt2">${m.t}</div>
+    </div>`).join('');
+}
+
+function selectMood(i){
+  document.querySelectorAll('.mood-cell').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('mc-'+i).classList.add('sel');
+  selectedMood=MOODS[i];
+  document.getElementById('moodSelectedLabel').textContent=selectedMood.e+' '+selectedMood.t;
+  document.getElementById('moodSelected').style.display='block';
+}
+
+// ── PROMPTS ─────────────────────────────────────────────────────────────────
+function fillPrompt(){
+  const p=PROMPTS[Math.floor(Math.random()*PROMPTS.length)];
+  const ta=document.getElementById('pBody');
+  if(ta.value.trim()&&!confirm('replace current entry with a prompt? your text will be overwritten!'))return;
+  ta.value=p;ta.focus();
+  toast('✿ prompt loaded! make it yours 💜');
+}
+
+// ── BLOG ────────────────────────────────────────────────────────────────────
+function renderBlog(){
+  const posts=DB.posts(),el=document.getElementById('blogList');
+  if(!posts.length){el.innerHTML='<div class="empty">no entries yet 🌸 check back soon!</div>';return;}
+  el.innerHTML=posts.map(p=>`
+    <div class="bpost">
+      <div class="bdate">📅 ${p.date}</div>
+      <div class="btitle">${esc(p.title)}</div>
+      <div class="bmeta">
+        <span>${p.moodE||'🌸'} ${esc(p.mood||'')}</span>
+        ${p.music?`<span>🎵 ${esc(p.music)}</span>`:''}
+      </div>
+      ${p.img?`<img class="bimg" src="${p.img}" alt="blog photo">`:''}
+      <div class="bbody">${esc(p.body||'').replace(/\n/g,'<br>')}</div>
+      ${p.tags&&p.tags.length?`<div class="btags">${p.tags.map(t=>`<span class="btag">${esc(t.trim())}</span>`).join('')}</div>`:''}
+      <div class="bfoot">
+        <span>✿ ${esc(DB.cfg().name)}</span>
+        <div class="aa">
+          <button class="abtn" onclick="editPost(${p.id})">✏ edit</button>
+          <button class="abtn del" onclick="delPost(${p.id})">✕ delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openNewPost(){
+  editId=null;blogImgData='';
+  document.getElementById('postMTitle').textContent='📓 New Blog Entry';
+  ['pTitle','pMusic','pBody','pTags'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pEditId').value='';
+  document.getElementById('pImgData').value='';
+  clearBlogImg();
+  selectedMood=null;
+  document.querySelectorAll('.mood-cell').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('moodSelected').style.display='none';
+  openM('m-post');
+}
+
+function editPost(id){
+  const p=DB.posts().find(x=>x.id===id);if(!p)return;
+  editId=id;
+  document.getElementById('postMTitle').textContent='✏ Edit Entry';
+  document.getElementById('pTitle').value=p.title;
+  document.getElementById('pMusic').value=p.music||'';
+  document.getElementById('pBody').value=p.body||'';
+  document.getElementById('pTags').value=(p.tags||[]).join(', ');
+  document.getElementById('pEditId').value=id;
+  selectedMood=null;
+  document.querySelectorAll('.mood-cell').forEach(c=>c.classList.remove('sel'));
+  if(p.moodE){
+    const idx=MOODS.findIndex(m=>m.e===p.moodE);
+    if(idx>=0)selectMood(idx);
+    else{selectedMood={e:p.moodE,t:p.mood||''};}
+  }
+  blogImgData=p.img||'';
+  const prev=document.getElementById('blogImgPreview');
+  if(p.img){prev.src=p.img;prev.style.display='block';document.getElementById('clearImgBtn').style.display='block';document.getElementById('blogImgPrompt').textContent='✿ current photo';}
+  else clearBlogImg();
+  openM('m-post');
+}
+
+function savePost(){
+  const title=document.getElementById('pTitle').value.trim();
+  const body=document.getElementById('pBody').value.trim();
+  if(!title||!body){toast('✿ title and entry are required!');return;}
+  const now=new Date();
+  const ds=now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' · '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const post={
+    id:editId||Date.now(),title,
+    date:editId?(DB.posts().find(p=>p.id===editId)||{}).date||ds:ds,
+    mood:selectedMood?selectedMood.t:'',
+    moodE:selectedMood?selectedMood.e:'🌸',
+    music:document.getElementById('pMusic').value.trim(),
+    img:document.getElementById('pImgData').value||blogImgData||'',
+    body,
+    tags:document.getElementById('pTags').value.split(',').map(t=>t.trim()).filter(Boolean)
+  };
+  let posts=DB.posts();
+  posts=editId?posts.map(p=>p.id===editId?post:p):[post,...posts];
+  DB.s('posts',posts);
+  closeM('m-post');renderBlog();
+  toast(editId?'✿ entry updated!':'✿ entry published! 💜');
+}
+
+function delPost(id){
+  if(!confirm('delete this entry? 🥺'))return;
+  DB.s('posts',DB.posts().filter(p=>p.id!==id));
+  renderBlog();toast('✿ entry deleted');
+}
+
+// ── COMMENTS ────────────────────────────────────────────────────────────────
+function renderComments(){
+  const comments=DB.comments(),el=document.getElementById('cmtList');
+  if(!comments.length){el.innerHTML='<div class="empty">no comments yet! be the first 🌸</div>';return;}
+  el.innerHTML=comments.map(c=>{
+    const pub=c.displayName?esc(c.displayName):'Anonymous ✿';
+    const replies=(c.replies||[]).map(r=>`
+      <div class="cmt-reply">
+        <div class="cmt-reply-name">💜 ${esc(DB.cfg().name)} replied:</div>
+        <div class="cmt-reply-msg">${esc(r.msg).replace(/\n/g,'<br>')}</div>
+        <div style="font-size:10px;color:var(--light);margin-top:4px">${esc(r.date)}</div>
+      </div>`).join('');
+    return `
+      <div class="cmt-item">
+        <div class="cmt-hd">
+          <div class="cmt-name">✿ ${pub}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="cmt-date">${esc(c.date)}</div>
+            <div class="aa"><button class="abtn del" onclick="delComment(${c.id})">✕</button></div>
+          </div>
+        </div>
+        <div class="cmt-msg">${esc(c.msg).replace(/\n/g,'<br>')}</div>
+        ${replies?`<div class="cmt-replies">${replies}</div>`:''}
+        <button class="reply-toggle" onclick="toggleReply(${c.id})">↩ reply</button>
+        <div class="reply-form" id="rf-${c.id}">
+          <input class="reply-input" type="text" id="ri-${c.id}" placeholder="write a reply..." maxlength="300"
+            onkeydown="if(event.key==='Enter'){submitReply(${c.id});event.preventDefault();}">
+          <button class="reply-btn-sm" onclick="submitReply(${c.id})">send 💜</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function submitComment(){
+  const first=document.getElementById('cmtFirst').value.trim();
+  const display=document.getElementById('cmtDisplay').value.trim();
+  const msg=document.getElementById('cmtMsg').value.trim();
+  if(!first){toast('✿ first name required — only i see it! 🌸');return;}
+  if(!msg){toast('✿ say something!! 💜');return;}
+  const c={id:Date.now(),firstName:first,displayName:display,msg,date:new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),replies:[]};
+  const all=DB.comments();all.unshift(c);DB.s('comments',all);
+  ['cmtFirst','cmtDisplay','cmtMsg'].forEach(id=>document.getElementById(id).value='');
+  renderComments();toast('✿ comment posted! 💜');
+}
+
+function toggleReply(id){
+  const rf=document.getElementById('rf-'+id);
+  rf.classList.toggle('open');
+  if(rf.classList.contains('open'))document.getElementById('ri-'+id).focus();
+}
+
+function submitReply(id){
+  const input=document.getElementById('ri-'+id);
+  const msg=input.value.trim();if(!msg)return;
+  const all=DB.comments();
+  const c=all.find(x=>x.id===id);if(!c)return;
+  if(!c.replies)c.replies=[];
+  c.replies.push({id:Date.now(),msg,date:new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})});
+  DB.s('comments',all);
+  input.value='';
+  renderComments();toast('✿ reply sent! 💜');
+}
+
+function delComment(id){
+  DB.s('comments',DB.comments().filter(c=>c.id!==id));
+  renderComments();toast('✿ comment deleted');
+}
+
+// ── ADMIN COMMENTS ──────────────────────────────────────────────────────────
+function renderAdminComments(){
+  const all=DB.comments(),el=document.getElementById('adminCmtList');
+  if(!all.length){el.innerHTML='<div class="empty">no comments yet 🌸</div>';return;}
+  el.innerHTML=all.map(c=>`
+    <div class="ptcard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <div style="margin-bottom:4px">
+            <span style="background:#d4f7e6;border-radius:50px;padding:2px 9px;font-size:11px;color:#1a7a45;border:1px solid #88ddaa">
+              👤 ${c.firstName?esc(c.firstName):'(no name given)'}
+            </span>
+            <span style="font-size:11px;color:var(--light);margin-left:6px">shows as: <em>${c.displayName?esc(c.displayName):'Anonymous ✿'}</em></span>
+          </div>
+          <div style="font-size:12px;color:var(--dark);line-height:1.5">${esc(c.msg.substring(0,120))}${c.msg.length>120?'...':''}</div>
+          <div style="font-size:11px;color:var(--light);margin-top:3px">${esc(c.date)}</div>
+        </div>
+        <button class="rjbtn" style="margin-left:10px;flex-shrink:0" onclick="delComment(${c.id});renderAdminComments()">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── GUESTBOOK ───────────────────────────────────────────────────────────────
+function renderGb(){
+  const entries=DB.gb(),el=document.getElementById('gbList');
+  if(!entries.length){el.innerHTML='<div class="empty">no entries yet! be the first to sign 🌸</div>';return;}
+  el.innerHTML=entries.map(e=>{
+    const pub=e.displayName?esc(e.displayName):'Anonymous ✿';
+    return `
+    <div class="gbe">
+      <div class="gbeh">
+        <div>
+          <div class="gbn">✿ ${pub}</div>
+          ${e.loc?`<div class="gbloc">📍 ${esc(e.loc)}</div>`:''}
+          ${e.site?`<div class="gbloc">🔗 ${esc(e.site)}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="gbd">${esc(e.date)}</div>
+          <div class="aa"><button class="abtn del" onclick="delGb(${e.id})">✕</button></div>
+        </div>
+      </div>
+      <div class="gbm">${esc(e.msg).replace(/\n/g,'<br>')}</div>
+    </div>`;
+  }).join('');
+}
+
+function submitGb(){
+  const first=document.getElementById('gbFirst').value.trim();
+  const display=document.getElementById('gbDisplay').value.trim();
+  const msg=document.getElementById('gbMsg').value.trim();
+  if(!first){toast('✿ first name required — only i see it! 🌸');return;}
+  if(!msg){toast('✿ say something!! 💜');return;}
+  const entry={id:Date.now(),firstName:first,displayName:display,loc:document.getElementById('gbLoc').value.trim(),site:document.getElementById('gbSite').value.trim(),msg,date:new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})};
+  const entries=DB.gb();entries.unshift(entry);DB.s('gb',entries);
+  ['gbFirst','gbDisplay','gbLoc','gbSite','gbMsg'].forEach(id=>document.getElementById(id).value='');
+  renderGb();toast('✿ guestbook signed! thank you!! 💜');
+}
+
+function delGb(id){
+  DB.s('gb',DB.gb().filter(e=>e.id!==id));
+  renderGb();renderAdminGb();toast('✿ entry deleted');
+}
+
+// ── TESTIMONIALS ────────────────────────────────────────────────────────────
+function renderTestis(){
+  const approved=DB.testis(true),g=document.getElementById('tGrid'),em=document.getElementById('tEmpty');
+  if(!approved.length){g.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  g.innerHTML=approved.map(t=>`
+    <div class="tcard">
+      <div class="tchead">
+        <div class="tavi">${t.e||'🌸'}</div>
+        <div style="flex:1">
+          <div class="tname">${esc(t.name)}</div>
+          <div class="thow">${esc(t.how||'')}</div>
+          <div class="tdate">${esc(t.date||'')}</div>
+        </div>
+        <div class="aa"><button class="abtn del" onclick="delTesti(${t.id})">✕</button></div>
+      </div>
+      <div class="ttext">${esc(t.txt)}</div>
+    </div>`).join('');
+}
+
+function openTesti(){codeOk?openM('m-testi'):openM('m-code');}
+
+function checkCode(){
+  const v=document.getElementById('codeIn').value.trim();
+  if(v===DB.cfg().code){
+    codeOk=true;document.getElementById('codeErr').style.display='none';
+    document.getElementById('codeIn').value='';
+    closeM('m-code');openM('m-testi');
+  }else{document.getElementById('codeErr').style.display='block';}
+}
+
+function submitTesti(){
+  const name=document.getElementById('tName').value.trim();
+  const txt=document.getElementById('tText').value.trim();
+  const e=document.getElementById('tEmoji').value.trim()||'🌸';
+  if(!name||!txt){toast('✿ name and testimonial are required!');return;}
+  const t={id:Date.now(),name,e,how:document.getElementById('tHow').value.trim(),txt,date:new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),a:false};
+  const all=DB.testis();all.unshift(t);DB.s('testis',all);
+  codeOk=false;
+  ['tName','tEmoji','tHow','tText'].forEach(id=>document.getElementById(id).value='');
+  closeM('m-testi');toast("✿ submitted! i'll review it soon 💜");
+}
+
+function delTesti(id){
+  if(!confirm('delete this testimonial? 🥺'))return;
+  DB.s('testis',DB.testis().filter(t=>t.id!==id));
+  renderTestis();toast('✿ deleted');
+}
+
+// ── ADMIN ───────────────────────────────────────────────────────────────────
+function setupSecret(){
+  document.getElementById('secret').addEventListener('click',()=>{
+    clicks++;
+    if(clicks>=3){clicks=0;admin?showAdmin():openM('m-login');if(!admin)setTimeout(()=>document.getElementById('adminPw').focus(),100);}
+  });
+}
+
+function doLogin(){
+  const pw=document.getElementById('adminPw').value;
+  if(pw===DB.cfg().pw){
+    admin=true;document.body.classList.add('admin-on');
+    document.getElementById('loginErr').style.display='none';
+    document.getElementById('adminPw').value='';
+    closeM('m-login');renderComments();toast('✿ welcome back! 💜');
+  }else{document.getElementById('loginErr').style.display='block';}
+}
+
+function showAdmin(){
+  loadAdminSettings();renderPending();renderAdminGb();renderAdminComments();openM('m-admin');
+}
+
+function aTab(name,btn){
+  document.querySelectorAll('.asec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.atab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('as-'+name).classList.add('on');
+  btn.classList.add('on');
+}
+
+function renderPending(){
+  const pending=DB.testis(false),el=document.getElementById('pendingList');
+  if(!pending.length){el.innerHTML='<div class="empty">no pending testimonials! 🌸</div>';return;}
+  el.innerHTML=pending.map(t=>`
+    <div class="ptcard">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:24px">${t.e}</span>
+        <div>
+          <div style="font-weight:700;color:var(--purple);font-size:13px">${esc(t.name)}</div>
+          <div style="font-size:11px;color:var(--light)">${esc(t.how||'')} · ${esc(t.date||'')}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--dark);margin:8px 0;line-height:1.6;font-style:italic">"${esc(t.txt)}"</div>
+      <div style="display:flex;gap:6px">
+        <button class="appbtn" onclick="approveTesti(${t.id})">✓ Approve</button>
+        <button class="rjbtn" onclick="rejectTesti(${t.id})">✕ Reject</button>
+      </div>
+    </div>`).join('');
+}
+
+function approveTesti(id){
+  DB.s('testis',DB.testis().map(t=>t.id===id?{...t,a:true}:t));
+  renderPending();renderTestis();toast('✿ testimonial approved! 💜');
+}
+
+function rejectTesti(id){
+  DB.s('testis',DB.testis().filter(t=>t.id!==id));
+  renderPending();toast('✿ testimonial rejected');
+}
+
+function renderAdminGb(){
+  const entries=DB.gb(),el=document.getElementById('adminGbList');
+  if(!entries.length){el.innerHTML='<div class="empty">no guestbook entries 🌸</div>';return;}
+  el.innerHTML=entries.map(e=>`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--bd-lav)">
+      <div style="flex:1;min-width:0">
+        <div style="margin-bottom:4px">
+          <span style="background:#d4f7e6;border-radius:50px;padding:2px 9px;font-size:11px;color:#1a7a45;border:1px solid #88ddaa">
+            👤 ${e.firstName?esc(e.firstName):'(no name)'}
+          </span>
+          <span style="font-size:11px;color:var(--light);margin-left:6px">shows as: <em>${e.displayName?esc(e.displayName):'Anonymous ✿'}</em></span>
+        </div>
+        <div style="font-size:12px;color:var(--dark)">${esc(e.msg.substring(0,80))}${e.msg.length>80?'...':''}</div>
+        <div style="font-size:11px;color:var(--light)">${esc(e.date)}</div>
+      </div>
+      <button class="rjbtn" style="margin-left:10px;flex-shrink:0" onclick="delGb(${e.id})">✕</button>
+    </div>`).join('');
+}
+
+function loadAdminSettings(){
+  const c=DB.cfg();
+  document.getElementById('sName').value=c.name||'';
+  document.getElementById('sEmoji').value=c.emoji||'';
+  document.getElementById('sTag').value=c.tag||'';
+  document.getElementById('sMood').value=c.mood||'';
+  document.getElementById('sMoodE').value=c.moodE||'';
+  document.getElementById('sAge').value=c.age||'';
+  document.getElementById('sLoc2').value=c.loc||'';
+  document.getElementById('sStatus2').value=c.status||'';
+  document.getElementById('sAbout').value=c.about||'';
+  document.getElementById('sAdminPw').value='';
+  document.getElementById('sCode').value='';
+}
+
+function saveSettings(){
+  const cur=DB.cfg();
+  const npw=document.getElementById('sAdminPw').value.trim();
+  const ncode=document.getElementById('sCode').value.trim();
+  DB.s('cfg',{
+    ...cur,
+    name:document.getElementById('sName').value.trim()||cur.name,
+    emoji:document.getElementById('sEmoji').value.trim()||cur.emoji,
+    tag:document.getElementById('sTag').value.trim()||cur.tag,
+    mood:document.getElementById('sMood').value.trim()||cur.mood,
+    moodE:document.getElementById('sMoodE').value.trim()||cur.moodE,
+    music:cur.music,
+    age:document.getElementById('sAge').value.trim()||cur.age,
+    loc:document.getElementById('sLoc2').value.trim()||cur.loc,
+    status:document.getElementById('sStatus2').value.trim()||cur.status,
+    about:document.getElementById('sAbout').value.trim(),
+    pw:npw||cur.pw,code:ncode||cur.code
+  });
+  applyCfg();closeM('m-admin');toast('✿ settings saved! 💜');
+}
+
+// ── MODALS ──────────────────────────────────────────────────────────────────
+function openM(id){document.getElementById(id).classList.add('on');}
+function closeM(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('on');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.on').forEach(m=>m.classList.remove('on'));});
+
+// ── EMOJI PICKER ────────────────────────────────────────────────────────────
+function setupEmoji(){
+  const emojis='🌸 🦋 ⭐ 🌊 🔮 🌿 💜 🌺 🌙 ✨ 🎀 🍓 🌈 🐱 💫 🦄'.split(' ');
+  document.getElementById('emojiPick').innerHTML=emojis.map(e=>`<span style="font-size:22px;cursor:pointer;padding:4px;border-radius:8px;transition:background .15s" onclick="pickEmoji('${e}',this)">${e}</span>`).join('');
+}
+function pickEmoji(e,el){
+  document.getElementById('tEmoji').value=e;
+  document.querySelectorAll('#emojiPick span').forEach(s=>s.style.background='');
+  el.style.background='var(--lav)';
+}
+
+// ── VISITOR COUNTER ─────────────────────────────────────────────────────────
+async function animCounter(){
+  const el=document.getElementById('vcnt');
+  try{
+    const r=await fetch('https://api.countapi.xyz/hit/magda-xo-space-2026-v1/pageviews');
+    if(!r.ok)throw new Error();
+    const d=await r.json();
+    if(d&&typeof d.value==='number'){el.textContent=d.value.toLocaleString();return;}
+  }catch(e){}
+  let n=parseInt(localStorage.getItem('y2k_vcnt')||'84721');
+  n++;localStorage.setItem('y2k_vcnt',String(n));
+  el.textContent=n.toLocaleString();
+}
+
+// ── SPARKLES ────────────────────────────────────────────────────────────────
+function setupSparkles(){
+  const ch=['✿','★','♡','✦','💜','🌸','✨'];
+  document.addEventListener('mousemove',e=>{
+    if(Math.random()>.88){
+      const el=document.createElement('div');
+      el.className='sp';
+      el.textContent=ch[Math.floor(Math.random()*ch.length)];
+      el.style.left=(e.clientX+(Math.random()-.5)*20-8)+'px';
+      el.style.top=(e.clientY-8)+'px';
+      el.style.color=['#cc99ff','#ff99cc','#80b3ff','#ffb3d9'][Math.floor(Math.random()*4)];
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),1250);
+    }
+  });
+}
+
+// ── TOAST ───────────────────────────────────────────────────────────────────
+let tt;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+// ── HELPER ──────────────────────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+init();
+</script>
+</body>
+</html>

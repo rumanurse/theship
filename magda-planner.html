@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RumaNurse Planner — Magda's Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garant:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1B3A5C;
+    --champagne: #F5E6C8;
+    --gold: #C9A84C;
+    --taupe: #8B7355;
+    --cream: #FAF6EF;
+    --dark: #0F2238;
+    --white: #FFFFFF;
+    --shadow: rgba(27,58,92,0.12);
+    --shadow-deep: rgba(27,58,92,0.22);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* QUOTE BANNER */
+  #quote-banner {
+    background: var(--navy);
+    color: var(--champagne);
+    text-align: center;
+    padding: 14px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  #quote-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  #quote-text {
+    font-family: 'Cormorant Garant', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  #quote-source {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--gold);
+    margin-top: 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    background: var(--white);
+    border-bottom: 1px solid rgba(139,115,85,0.18);
+    box-shadow: 0 2px 12px var(--shadow);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo-area h1 {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--navy);
+    letter-spacing: 0.03em;
+  }
+  .logo-area span {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--taupe);
+    display: block;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .view-tabs {
+    display: flex;
+    background: var(--cream);
+    border-radius: 50px;
+    padding: 4px;
+    border: 1px solid rgba(139,115,85,0.2);
+  }
+  .view-tab {
+    padding: 7px 18px;
+    border-radius: 50px;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--taupe);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+  .view-tab.active {
+    background: var(--navy);
+    color: var(--champagne);
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--navy);
+    border: none;
+    padding: 9px 18px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary:hover { background: #b8942f; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,168,76,0.35); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--navy);
+    border: 1.5px solid var(--navy);
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover { background: var(--navy); color: var(--white); }
+
+  /* DATE NAV */
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    background: var(--white);
+    border-bottom: 1px solid rgba(139,115,85,0.1);
+  }
+  .date-nav h2 {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .nav-arrows { display: flex; gap: 6px; }
+  .nav-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(27,58,92,0.2);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    color: var(--navy);
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--navy); color: var(--white); }
+
+  /* MAIN CONTENT */
+  #main-content { padding: 24px 32px; min-height: calc(100vh - 200px); }
+
+  /* ─────────────── DAILY VIEW ─────────────── */
+  #daily-view { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+
+  .timeline-wrap {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 16px var(--shadow);
+    overflow: hidden;
+  }
+  .timeline-header {
+    background: var(--navy);
+    color: var(--champagne);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .timeline-header h3 { font-family: 'Cormorant Garant', serif; font-size: 1.1rem; font-style: italic; }
+
+  .timeline-grid { position: relative; }
+  .time-slot {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    min-height: 60px;
+    border-bottom: 1px solid rgba(139,115,85,0.08);
+    position: relative;
+  }
+  .time-slot:last-child { border-bottom: none; }
+  .time-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--taupe);
+    letter-spacing: 0.06em;
+    padding: 8px 10px;
+    text-align: right;
+    border-right: 1px solid rgba(139,115,85,0.12);
+    position: sticky;
+    align-self: start;
+    margin-top: 4px;
+  }
+  .slot-drop {
+    padding: 4px 8px;
+    min-height: 60px;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .slot-drop.drag-over { background: rgba(201,168,76,0.1); }
+
+  /* TASK BLOCKS */
+  .task-block {
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin: 3px 0;
+    cursor: grab;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .task-block:active { cursor: grabbing; opacity: 0.85; transform: scale(0.98); }
+  .task-block:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+  .task-block.gym { background: #E8F4FD; border-left: 3px solid #2196F3; color: #1565C0; }
+  .task-block.chore { background: #FFF8E6; border-left: 3px solid var(--gold); color: #7a5c00; }
+  .task-block.work { background: #EEF2FA; border-left: 3px solid var(--navy); color: var(--navy); }
+  .task-block.sibling { background: #F3E8FF; border-left: 3px solid #9C27B0; color: #6A1B9A; }
+  .task-block.health { background: #E8F5E9; border-left: 3px solid #4CAF50; color: #1B5E20; }
+  .task-block.self { background: #FFF0F3; border-left: 3px solid #E91E63; color: #880E4F; }
+  .task-block.meal { background: #FFF3E0; border-left: 3px solid #FF9800; color: #E65100; }
+  .task-block .task-icon { font-size: 1rem; flex-shrink: 0; }
+  .task-block .task-info { flex: 1; }
+  .task-block .task-name { font-weight: 600; font-size: 0.78rem; }
+  .task-block .task-dur { font-size: 0.68rem; opacity: 0.7; margin-top: 1px; }
+  .task-block .task-actions {
+    display: none;
+    gap: 4px;
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+  }
+  .task-block:hover .task-actions { display: flex; }
+  .task-edit-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.08);
+    cursor: pointer;
+    font-size: 0.65rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .task-edit-btn:hover { background: rgba(0,0,0,0.16); }
+
+  /* SIDEBAR */
+  .daily-sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  .sidebar-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 12px var(--shadow);
+    overflow: hidden;
+  }
+  .sidebar-card-header {
+    padding: 14px 18px;
+    background: var(--navy);
+    color: var(--champagne);
+    font-family: 'Cormorant Garant', serif;
+    font-size: 1rem;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar-card-body { padding: 14px 18px; }
+
+  /* TASK PALETTE */
+  .palette-grid { display: flex; flex-direction: column; gap: 6px; }
+  .palette-item {
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    cursor: grab;
+    font-size: 0.78rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .palette-item:active { cursor: grabbing; }
+  .palette-item:hover { transform: translateX(3px); }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-item {
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+  }
+  .stat-num { font-size: 1.3rem; font-weight: 600; color: var(--navy); font-family: 'Cormorant Garant', serif; }
+  .stat-label { font-size: 0.65rem; color: var(--taupe); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  /* PROGRESS RINGS */
+  .progress-rings { display: flex; justify-content: space-around; margin-top: 4px; }
+  .ring-wrap { text-align: center; }
+  .ring-label { font-size: 0.65rem; color: var(--taupe); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+  /* ─────────────── WEEKLY VIEW ─────────────── */
+  #weekly-view { display: none; }
+  .week-grid {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 16px var(--shadow);
+    overflow: hidden;
+  }
+  .week-header-row {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    background: var(--navy);
+  }
+  .week-day-header {
+    padding: 14px 8px;
+    text-align: center;
+    color: var(--champagne);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .week-day-header.today { background: rgba(201,168,76,0.25); }
+  .week-day-header .day-num {
+    display: block;
+    font-family: 'Cormorant Garant', serif;
+    font-size: 1.4rem;
+    font-weight: 300;
+    margin-top: 2px;
+  }
+  .week-body { max-height: 70vh; overflow-y: auto; }
+  .week-time-row {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    border-bottom: 1px solid rgba(139,115,85,0.07);
+    min-height: 54px;
+  }
+  .week-time-cell {
+    padding: 4px 4px;
+    border-right: 1px solid rgba(139,115,85,0.07);
+    min-height: 54px;
+    transition: background 0.15s;
+  }
+  .week-time-cell.drag-over { background: rgba(201,168,76,0.1); }
+  .week-time-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--taupe);
+    letter-spacing: 0.05em;
+    padding: 8px 6px;
+    text-align: right;
+    border-right: 1px solid rgba(139,115,85,0.12);
+    align-self: start;
+  }
+  .week-task {
+    border-radius: 5px;
+    padding: 4px 7px;
+    margin: 2px 0;
+    font-size: 0.68rem;
+    font-weight: 500;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    user-select: none;
+    overflow: hidden;
+  }
+  .week-task span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ─────────────── MONTHLY VIEW ─────────────── */
+  #monthly-view { display: none; }
+  .month-grid-wrap {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 16px var(--shadow);
+    overflow: hidden;
+  }
+  .month-day-names {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--navy);
+  }
+  .month-day-name {
+    padding: 12px 8px;
+    text-align: center;
+    color: var(--champagne);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .month-cell {
+    min-height: 100px;
+    border-right: 1px solid rgba(139,115,85,0.08);
+    border-bottom: 1px solid rgba(139,115,85,0.08);
+    padding: 6px;
+    position: relative;
+    transition: background 0.15s;
+  }
+  .month-cell.drag-over { background: rgba(201,168,76,0.08); }
+  .month-cell.other-month { background: rgba(139,115,85,0.03); }
+  .month-cell.today .cell-date {
+    background: var(--gold);
+    color: var(--navy);
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cell-date {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 4px;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .month-task-dot {
+    font-size: 0.64rem;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin: 1px 0;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+  .month-more {
+    font-size: 0.62rem;
+    color: var(--taupe);
+    margin-top: 2px;
+    cursor: pointer;
+  }
+
+  /* ─────────────── MODAL ─────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,34,56,0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 28px 32px;
+    width: 460px;
+    max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(15,34,56,0.25);
+    animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .modal h3 {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 1.4rem;
+    color: var(--navy);
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--taupe); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid rgba(139,115,85,0.25);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--navy);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .type-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .type-chip {
+    padding: 5px 12px;
+    border-radius: 50px;
+    border: 1.5px solid rgba(139,115,85,0.2);
+    font-size: 0.72rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+  }
+  .type-chip.selected { border-color: var(--navy); background: var(--navy); color: var(--white); }
+
+  /* GCAL TOAST */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--navy);
+    color: var(--champagne);
+    padding: 14px 22px;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 30px var(--shadow-deep);
+    z-index: 2000;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-icon { font-size: 1.2rem; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(139,115,85,0.3); border-radius: 3px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    header { padding: 14px 16px; }
+    #main-content { padding: 16px; }
+    #daily-view { grid-template-columns: 1fr; }
+    .daily-sidebar { order: -1; flex-direction: row; flex-wrap: wrap; }
+    .sidebar-card { flex: 1; min-width: 240px; }
+  }
+
+  .current-time-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .current-time-line::before {
+    content: '';
+    position: absolute;
+    left: 60px;
+    top: -4px;
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+  
+  .empty-slot-hint {
+    color: rgba(139,115,85,0.3);
+    font-size: 0.68rem;
+    text-align: center;
+    padding: 10px;
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slot-drop:has(.task-block) .empty-slot-hint { display: none; }
+</style>
+</head>
+<body>
+
+<!-- QUOTE BANNER -->
+<div id="quote-banner">
+  <div id="quote-text">Loading your daily word…</div>
+  <div id="quote-source"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <h1>✦ Magda's Command Center</h1>
+    <span>RumaNurse · Araya Consulting · 2026 Alignment Era</span>
+  </div>
+  <div class="header-right">
+    <div class="view-tabs">
+      <button class="view-tab active" onclick="switchView('daily')">Day</button>
+      <button class="view-tab" onclick="switchView('weekly')">Week</button>
+      <button class="view-tab" onclick="switchView('monthly')">Month</button>
+    </div>
+    <button class="btn-primary" onclick="openAddModal()">＋ Add Task</button>
+    <button class="btn-outline" onclick="exportToGCal()">📅 Sync GCal</button>
+  </div>
+</header>
+
+<!-- DATE NAV -->
+<div class="date-nav">
+  <div class="nav-arrows">
+    <button class="nav-btn" onclick="navigate(-1)">←</button>
+    <button class="nav-btn" onclick="goToToday()">Today</button>
+    <button class="nav-btn" onclick="navigate(1)">→</button>
+  </div>
+  <h2 id="current-date-label">Loading…</h2>
+  <div style="width:100px"></div>
+</div>
+
+<!-- MAIN -->
+<div id="main-content">
+
+  <!-- DAILY VIEW -->
+  <div id="daily-view">
+    <div class="timeline-wrap">
+      <div class="timeline-header">
+        <h3>Today's Timeline</h3>
+        <span style="font-size:0.75rem; opacity:0.7;" id="daily-progress-text">0 tasks</span>
+      </div>
+      <div class="timeline-grid" id="timeline-grid"></div>
+    </div>
+
+    <div class="daily-sidebar">
+      <!-- TASK PALETTE -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">
+          <span>Task Palette</span>
+          <span style="font-size:0.7rem; opacity:0.7;">drag to timeline →</span>
+        </div>
+        <div class="sidebar-card-body">
+          <div class="palette-grid" id="task-palette"></div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header"><span>Daily Wins ✦</span></div>
+        <div class="sidebar-card-body">
+          <div class="stats-grid">
+            <div class="stat-item"><div class="stat-num" id="stat-tasks">0</div><div class="stat-label">Tasks Done</div></div>
+            <div class="stat-item"><div class="stat-num" id="stat-gym">🏋🏽‍♀️</div><div class="stat-label">Gym</div></div>
+            <div class="stat-item"><div class="stat-num" id="stat-water">0L</div><div class="stat-label">Water</div></div>
+            <div class="stat-item"><div class="stat-num" id="stat-steps">0</div><div class="stat-label">Steps</div></div>
+          </div>
+          <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:0.72rem; font-weight:600; color:var(--taupe); text-transform:uppercase; letter-spacing:0.06em;">Non-Negotiables</div>
+            <div id="non-neg-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LUNA CHECK -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header"><span>🐾 Luna & Family</span></div>
+        <div class="sidebar-card-body">
+          <div style="display:flex; flex-direction:column; gap:7px;" id="luna-checks"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEKLY VIEW -->
+  <div id="weekly-view">
+    <div class="week-grid">
+      <div class="week-header-row" id="week-header"></div>
+      <div class="week-body" id="week-body"></div>
+    </div>
+  </div>
+
+  <!-- MONTHLY VIEW -->
+  <div id="monthly-view">
+    <div class="month-grid-wrap">
+      <div class="month-day-names">
+        <div class="month-day-name">Sun</div>
+        <div class="month-day-name">Mon</div>
+        <div class="month-day-name">Tue</div>
+        <div class="month-day-name">Wed</div>
+        <div class="month-day-name">Thu</div>
+        <div class="month-day-name">Fri</div>
+        <div class="month-day-name">Sat</div>
+      </div>
+      <div class="month-grid" id="month-grid"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">New Task</h3>
+    <div class="form-group">
+      <label>Task Name</label>
+      <input type="text" id="task-name-input" placeholder="e.g. Morning workout, Pick up sibling…" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="task-date-input" />
+      </div>
+      <div class="form-group">
+        <label>Time</label>
+        <input type="time" id="task-time-input" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Duration (min)</label>
+        <input type="number" id="task-dur-input" value="60" min="15" step="15" />
+      </div>
+      <div class="form-group">
+        <label>Repeat</label>
+        <select id="task-repeat-input">
+          <option value="none">None</option>
+          <option value="daily">Daily</option>
+          <option value="weekdays">Weekdays</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <div class="type-chips">
+        <button class="type-chip selected" data-type="work">💼 Work</button>
+        <button class="type-chip" data-type="gym">🏋🏽‍♀️ Gym</button>
+        <button class="type-chip" data-type="chore">🧹 Chore</button>
+        <button class="type-chip" data-type="sibling">🚗 Sibling</button>
+        <button class="type-chip" data-type="health">💊 Health</button>
+        <button class="type-chip" data-type="self">💆🏽‍♀️ Self-care</button>
+        <button class="type-chip" data-type="meal">🍽️ Meal</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="task-notes-input" rows="2" placeholder="Optional notes…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveTask()" id="save-task-btn">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span class="toast-icon">✅</span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  QUOTES & BIBLE VERSES (100 total)
+// ═══════════════════════════════════════
+const QUOTES = [
+  { text: "I can do all things through Christ who strengthens me.", source: "Philippians 4:13" },
+  { text: "She is clothed with strength and dignity; she can laugh at the days to come.", source: "Proverbs 31:25" },
+  { text: "For I know the plans I have for you — plans to prosper you and not to harm you.", source: "Jeremiah 29:11" },
+  { text: "Be strong and courageous. Do not be afraid; do not be discouraged.", source: "Joshua 1:9" },
+  { text: "The Lord will fight for you; you need only to be still.", source: "Exodus 14:14" },
+  { text: "Trust in the Lord with all your heart and lean not on your own understanding.", source: "Proverbs 3:5-6" },
+  { text: "She is more precious than rubies; nothing you desire can compare with her.", source: "Proverbs 3:15" },
+  { text: "Commit your work to the Lord, and your plans will be established.", source: "Proverbs 16:3" },
+  { text: "The Lord your God is with you, the Mighty Warrior who saves.", source: "Zephaniah 3:17" },
+  { text: "Ask and it will be given to you; seek and you will find.", source: "Matthew 7:7" },
+  { text: "Come to me, all you who are weary and burdened, and I will give you rest.", source: "Matthew 11:28" },
+  { text: "With God all things are possible.", source: "Matthew 19:26" },
+  { text: "Do not be anxious about anything, but in every situation present your requests to God.", source: "Philippians 4:6" },
+  { text: "And we know that in all things God works for the good of those who love him.", source: "Romans 8:28" },
+  { text: "The race is not given to the swift, but to those who endure.", source: "Ecclesiastes 9:11" },
+  { text: "No weapon formed against you shall prosper.", source: "Isaiah 54:17" },
+  { text: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles.", source: "Isaiah 40:31" },
+  { text: "Have I not commanded you? Be strong and courageous!", source: "Joshua 1:9" },
+  { text: "The name of the Lord is a fortified tower; the righteous run to it and are safe.", source: "Proverbs 18:10" },
+  { text: "Delight yourself in the Lord, and he will give you the desires of your heart.", source: "Psalm 37:4" },
+  { text: "You are altogether beautiful, my darling; there is no flaw in you.", source: "Song of Solomon 4:7" },
+  { text: "God has not given us a spirit of fear, but of power and love and self-discipline.", source: "2 Timothy 1:7" },
+  { text: "Start where you are. Use what you have. Do what you can.", source: "Arthur Ashe" },
+  { text: "The secret of getting ahead is getting started.", source: "Mark Twain" },
+  { text: "You don't have to be great to start, but you have to start to be great.", source: "Zig Ziglar" },
+  { text: "Done is better than perfect. Progress over paralysis.", source: "— " },
+  { text: "One day or day one. You decide.", source: "— " },
+  { text: "Discipline is choosing between what you want now and what you want most.", source: "Abraham Lincoln" },
+  { text: "Success is the sum of small efforts repeated day in and day out.", source: "Robert Collier" },
+  { text: "You have been assigned this mountain to show others it can be moved.", source: "— " },
+  { text: "Your future self is watching you right now through your memories.", source: "Aubrey Marcus" },
+  { text: "The body achieves what the mind believes.", source: "— " },
+  { text: "Strength doesn't come from what you can do. It comes from overcoming what you thought you couldn't.", source: "Rikki Rogers" },
+  { text: "Fall seven times, stand up eight.", source: "Japanese Proverb" },
+  { text: "It always seems impossible until it's done.", source: "Nelson Mandela" },
+  { text: "Don't watch the clock; do what it does. Keep going.", source: "Sam Levenson" },
+  { text: "You are braver than you believe, stronger than you seem.", source: "A.A. Milne" },
+  { text: "Hard work beats talent when talent doesn't work hard.", source: "Tim Notke" },
+  { text: "Your breakthrough is on the other side of your consistency.", source: "— " },
+  { text: "Small steps every day. That's the whole secret.", source: "— " },
+  { text: "She believed she could, so she did.", source: "R.S. Grey" },
+  { text: "The comeback is always stronger than the setback.", source: "— " },
+  { text: "Build the life you want, then live in it.", source: "— " },
+  { text: "Your healing is not linear. Neither is your growth.", source: "— " },
+  { text: "Be the energy you want to attract.", source: "— " },
+  { text: "You are not behind. You are exactly on time.", source: "— " },
+  { text: "Everything you need is already within you.", source: "— " },
+  { text: "Align your actions with your vision.", source: "— " },
+  { text: "This is your suddenly era. Walk in it.", source: "— " },
+  { text: "The alignment you prayed for is already in motion.", source: "— " },
+  { text: "You were not made to play small.", source: "— " },
+  { text: "Your story is not over. The best chapters are still being written.", source: "— " },
+  { text: "Faith is taking the first step even when you don't see the whole staircase.", source: "MLK Jr." },
+  { text: "She is not afraid of tomorrow, for she has walked with God today.", source: "— " },
+  { text: "Excellence is not a skill. It is an attitude.", source: "Ralph Marston" },
+  { text: "Your value does not decrease based on someone's inability to see your worth.", source: "— " },
+  { text: "Rest if you must, but don't you quit.", source: "Edgar A. Guest" },
+  { text: "The goal is not to be better than the other man, but your previous self.", source: "Muhammad Ali" },
+  { text: "Believe in yourself and all that you are. Know that there is something inside you greater than any obstacle.", source: "Christian D. Larson" },
+  { text: "You were given this life because you are strong enough to live it.", source: "— " },
+  { text: "Hustle in silence. Let your success make the noise.", source: "— " },
+  { text: "Every expert was once a beginner. Every pro was once an amateur.", source: "Robin Sharma" },
+  { text: "Invest in your body. It's the only place you have to live.", source: "— " },
+  { text: "Consistency is the bridge between goals and accomplishment.", source: "— " },
+  { text: "Your 10,000 steps today are an investment in your future freedom.", source: "— " },
+  { text: "Protein, prayer, and purpose. That's the formula.", source: "— " },
+  { text: "Even BTS had days they didn't want to practice. They showed up anyway.", source: "— " },
+  { text: "ARMY energy: love yourself first. 💜", source: "BTS / RM" },
+  { text: "Life goes on. Even on the hard days, sayang — you move forward.", source: "BTS / J-Hope" },
+  { text: "The most beautiful thing about you is that you keep going.", source: "— " },
+  { text: "You are somebody's miracle. Show up like it.", source: "— " },
+  { text: "Build the business. Build the body. Build the life.", source: "— " },
+  { text: "RumaNurse is not just a business — it's your calling answered.", source: "— " },
+  { text: "Your clients haven't found their nurse yet. Go be found.", source: "— " },
+  { text: "15 years of experience. Zero imposter syndrome allowed.", source: "— " },
+  { text: "The woman who fears the Lord is to be praised.", source: "Proverbs 31:30" },
+  { text: "She opens her mouth with wisdom, and the teaching of kindness is on her tongue.", source: "Proverbs 31:26" },
+  { text: "Arise, shine, for your light has come.", source: "Isaiah 60:1" },
+  { text: "You are a chosen people, a royal priesthood.", source: "1 Peter 2:9" },
+  { text: "Before I formed you in the womb I knew you, before you were born I set you apart.", source: "Jeremiah 1:5" },
+  { text: "The Lord makes firm the steps of the one who delights in him.", source: "Psalm 37:23" },
+  { text: "Cast all your anxiety on him because he cares for you.", source: "1 Peter 5:7" },
+  { text: "Let your light shine before others.", source: "Matthew 5:16" },
+  { text: "My grace is sufficient for you, for my power is made perfect in weakness.", source: "2 Corinthians 12:9" },
+  { text: "Peace I leave with you; my peace I give you.", source: "John 14:27" },
+  { text: "Nothing is impossible with God.", source: "Luke 1:37" },
+  { text: "For the Spirit God gave us does not make us timid, but gives us power.", source: "2 Timothy 1:7" },
+  { text: "Do everything without grumbling or arguing, so that you may shine like stars.", source: "Philippians 2:14-15" },
+  { text: "Whatever you do, work at it with all your heart, as working for the Lord.", source: "Colossians 3:23" },
+  { text: "I sought the Lord, and he answered me; he delivered me from all my fears.", source: "Psalm 34:4" },
+  { text: "The Lord is my shepherd; I lack nothing.", source: "Psalm 23:1" },
+  { text: "Blessed is she who has believed that the Lord would fulfill his promises to her.", source: "Luke 1:45" },
+  { text: "Now to him who is able to do immeasurably more than all we ask or imagine.", source: "Ephesians 3:20" },
+  { text: "Be still and know that I am God.", source: "Psalm 46:10" },
+  { text: "I praise you because I am fearfully and wonderfully made.", source: "Psalm 139:14" },
+  { text: "Your ADHD is not a flaw. It's a superpower with a different frequency.", source: "— " },
+];
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let currentView = 'daily';
+let currentDate = new Date();
+let tasks = JSON.parse(localStorage.getItem('magda_tasks') || '[]');
+let editingTaskId = null;
+let selectedType = 'work';
+let draggedTask = null;
+
+const HOURS = Array.from({length: 18}, (_, i) => i + 5); // 5am–10pm
+const TASK_TYPES = {
+  gym:    { icon: '🏋🏽‍♀️', label: 'Gym' },
+  chore:  { icon: '🧹', label: 'Chore' },
+  work:   { icon: '💼', label: 'Work' },
+  sibling:{ icon: '🚗', label: 'Sibling' },
+  health: { icon: '💊', label: 'Health' },
+  self:   { icon: '💆🏽‍♀️', label: 'Self-care' },
+  meal:   { icon: '🍽️', label: 'Meal' },
+};
+
+const DEFAULT_PALETTE = [
+  { id: 'p1', name: 'Morning Workout', type: 'gym', duration: 90, icon: '🏋🏽‍♀️' },
+  { id: 'p2', name: 'Walk 10K Steps', type: 'health', duration: 60, icon: '🚶🏽‍♀️' },
+  { id: 'p3', name: 'High-Protein Meal Prep', type: 'meal', duration: 45, icon: '🍳' },
+  { id: 'p4', name: 'RumaNurse Outreach', type: 'work', duration: 60, icon: '📞' },
+  { id: 'p5', name: 'Pick Up Sibling', type: 'sibling', duration: 30, icon: '🚗' },
+  { id: 'p6', name: 'Drop Off Sibling', type: 'sibling', duration: 30, icon: '🚗' },
+  { id: 'p7', name: 'House Cleaning', type: 'chore', duration: 60, icon: '🧹' },
+  { id: 'p8', name: 'Laundry', type: 'chore', duration: 45, icon: '👕' },
+  { id: 'p9', name: 'Skincare Routine', type: 'self', duration: 20, icon: '✨' },
+  { id: 'p10', name: 'Drink 3L Water', type: 'health', duration: 0, icon: '💧' },
+  { id: 'p11', name: 'Bible / Devotional', type: 'self', duration: 30, icon: '📖' },
+  { id: 'p12', name: 'RumaNurse Admin', type: 'work', duration: 90, icon: '💼' },
+  { id: 'p13', name: 'Luna Walk', type: 'health', duration: 30, icon: '🐾' },
+  { id: 'p14', name: 'Grocery Run', type: 'chore', duration: 45, icon: '🛒' },
+  { id: 'p15', name: 'Rest / Nap', type: 'self', duration: 30, icon: '😴' },
+];
+
+const NON_NEGS = [
+  { icon: '🥩', label: '165g Protein', id: 'protein' },
+  { icon: '👟', label: '10K Steps', id: 'steps' },
+  { icon: '💧', label: '3L Water', id: 'water' },
+  { icon: '😴', label: '7hrs Sleep', id: 'sleep' },
+  { icon: '🏋🏽‍♀️', label: 'Gym (workout)', id: 'gym' },
+];
+
+const LUNA_CHECKS = [
+  { icon: '🌅', label: 'Morning meds for Luna' },
+  { icon: '🚶', label: 'Luna walk / potty' },
+  { icon: '🌙', label: 'Evening meds for Luna' },
+  { icon: '🍽️', label: 'Luna fed' },
+];
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+function init() {
+  setDailyQuote();
+  renderView();
+  renderPalette();
+  renderNonNegs();
+  renderLunaChecks();
+  setInterval(updateCurrentTimeLine, 60000);
+}
+
+function setDailyQuote() {
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  const q = QUOTES[dayOfYear % QUOTES.length];
+  document.getElementById('quote-text').textContent = `"${q.text}"`;
+  document.getElementById('quote-source').textContent = `— ${q.source}`;
+}
+
+// ═══════════════════════════════════════
+//  VIEW SWITCHING
+// ═══════════════════════════════════════
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().trim() === view.substring(0,3)));
+  ['daily','weekly','monthly'].forEach(v => {
+    document.getElementById(`${v}-view`).style.display = v === view ? (v === 'daily' ? 'grid' : 'block') : 'none';
+  });
+  renderView();
+}
+
+function navigate(dir) {
+  if (currentView === 'daily') currentDate.setDate(currentDate.getDate() + dir);
+  else if (currentView === 'weekly') currentDate.setDate(currentDate.getDate() + dir * 7);
+  else currentDate.setMonth(currentDate.getMonth() + dir);
+  renderView();
+}
+
+function goToToday() { currentDate = new Date(); renderView(); }
+
+function renderView() {
+  updateDateLabel();
+  if (currentView === 'daily') renderDaily();
+  else if (currentView === 'weekly') renderWeekly();
+  else renderMonthly();
+}
+
+function updateDateLabel() {
+  const opts = currentView === 'daily'
+    ? { weekday:'long', year:'numeric', month:'long', day:'numeric' }
+    : currentView === 'weekly'
+    ? { month:'long', year:'numeric' }
+    : { month:'long', year:'numeric' };
+  document.getElementById('current-date-label').textContent =
+    currentDate.toLocaleDateString('en-US', opts);
+}
+
+// ═══════════════════════════════════════
+//  DAILY RENDER
+// ═══════════════════════════════════════
+function renderDaily() {
+  const grid = document.getElementById('timeline-grid');
+  grid.innerHTML = '';
+  const dateKey = toDateKey(currentDate);
+
+  HOURS.forEach(h => {
+    const slot = document.createElement('div');
+    slot.className = 'time-slot';
+    slot.dataset.hour = h;
+
+    const label = document.createElement('div');
+    label.className = 'time-label';
+    label.textContent = formatHour(h);
+    slot.appendChild(label);
+
+    const drop = document.createElement('div');
+    drop.className = 'slot-drop';
+    drop.dataset.hour = h;
+    drop.dataset.date = dateKey;
+
+    const hint = document.createElement('div');
+    hint.className = 'empty-slot-hint';
+    hint.textContent = 'drop here';
+    drop.appendChild(hint);
+
+    // Render tasks in this hour
+    const slotTasks = tasks.filter(t => {
+      if (!t.date || !t.time) return false;
+      const tDate = t.date;
+      const tHour = parseInt(t.time.split(':')[0]);
+      return tDate === dateKey && tHour === h;
+    });
+    slotTasks.forEach(t => drop.appendChild(createTaskBlock(t)));
+
+    setupDropZone(drop);
+    slot.appendChild(drop);
+    grid.appendChild(slot);
+  });
+
+  updateCurrentTimeLine();
+  updateDailyStats(dateKey);
+}
+
+function createTaskBlock(task, isWeek = false) {
+  const div = document.createElement('div');
+  div.className = `task-block ${task.type}${isWeek ? ' week-task' : ''}`;
+  div.draggable = true;
+  div.dataset.id = task.id;
+
+  const icon = document.createElement('span');
+  icon.className = 'task-icon';
+  icon.textContent = TASK_TYPES[task.type]?.icon || '📋';
+
+  const info = document.createElement('div');
+  info.className = 'task-info';
+  const name = document.createElement('div');
+  name.className = 'task-name';
+  name.textContent = task.name;
+  const dur = document.createElement('div');
+  dur.className = 'task-dur';
+  dur.textContent = task.time ? `${task.time}${task.duration ? ` · ${task.duration}min` : ''}` : '';
+  info.appendChild(name);
+  info.appendChild(dur);
+
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+  const editBtn = document.createElement('button');
+  editBtn.className = 'task-edit-btn';
+  editBtn.textContent = '✏️';
+  editBtn.onclick = (e) => { e.stopPropagation(); openEditModal(task.id); };
+  const delBtn = document.createElement('button');
+  delBtn.className = 'task-edit-btn';
+  delBtn.textContent = '🗑';
+  delBtn.onclick = (e) => { e.stopPropagation(); deleteTask(task.id); };
+
+  actions.appendChild(editBtn);
+  actions.appendChild(delBtn);
+  div.appendChild(icon);
+  div.appendChild(info);
+  div.appendChild(actions);
+
+  div.addEventListener('dragstart', (e) => {
+    draggedTask = task;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => div.style.opacity = '0.4', 0);
+  });
+  div.addEventListener('dragend', () => { div.style.opacity = '1'; draggedTask = null; });
+
+  return div;
+}
+
+function setupDropZone(el) {
+  el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    const hour = el.dataset.hour;
+    const date = el.dataset.date;
+    if (!hour) return;
+
+    if (draggedTask) {
+      // Move existing task
+      const idx = tasks.findIndex(t => t.id === draggedTask.id);
+      if (idx > -1) {
+        tasks[idx].date = date;
+        tasks[idx].time = `${String(hour).padStart(2,'0')}:00`;
+        saveTasks();
+        renderView();
+      }
+    } else {
+      // Palette item dropped
+      const paletteId = e.dataTransfer.getData('palette-id');
+      if (paletteId) {
+        const p = DEFAULT_PALETTE.find(x => x.id === paletteId);
+        if (p) {
+          addTask({
+            name: p.name,
+            type: p.type,
+            date: date,
+            time: `${String(hour).padStart(2,'0')}:00`,
+            duration: p.duration,
+            notes: '',
+          });
+        }
+      }
+    }
+  });
+}
+
+function updateCurrentTimeLine() {
+  document.querySelectorAll('.current-time-line').forEach(el => el.remove());
+  if (currentView !== 'daily') return;
+  const now = new Date();
+  const todayKey = toDateKey(new Date());
+  if (toDateKey(currentDate) !== todayKey) return;
+
+  const h = now.getHours();
+  const m = now.getMinutes();
+  if (h < 5 || h > 22) return;
+
+  const slots = document.querySelectorAll('.time-slot');
+  for (const slot of slots) {
+    if (parseInt(slot.dataset.hour) === h) {
+      const pct = m / 60;
+      const line = document.createElement('div');
+      line.className = 'current-time-line';
+      line.style.top = `${pct * slot.offsetHeight}px`;
+      slot.style.position = 'relative';
+      slot.appendChild(line);
+      break;
+    }
+  }
+}
+
+function updateDailyStats(dateKey) {
+  const dayTasks = tasks.filter(t => t.date === dateKey);
+  document.getElementById('daily-progress-text').textContent = `${dayTasks.length} task${dayTasks.length !== 1 ? 's' : ''}`;
+  const hasGym = dayTasks.some(t => t.type === 'gym');
+  document.getElementById('stat-gym').textContent = hasGym ? '✅' : '❌';
+  document.getElementById('stat-tasks').textContent = dayTasks.length;
+}
+
+// ═══════════════════════════════════════
+//  WEEKLY RENDER
+// ═══════════════════════════════════════
+function renderWeekly() {
+  const startOfWeek = getWeekStart(currentDate);
+  const days = Array.from({length:7}, (_, i) => {
+    const d = new Date(startOfWeek);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const todayKey = toDateKey(new Date());
+
+  const header = document.getElementById('week-header');
+  header.innerHTML = '<div class="week-day-header"></div>';
+  days.forEach(d => {
+    const div = document.createElement('div');
+    div.className = `week-day-header${toDateKey(d) === todayKey ? ' today' : ''}`;
+    const dayName = d.toLocaleDateString('en-US', {weekday:'short'}).toUpperCase();
+    const dayNum = d.getDate();
+    div.innerHTML = `${dayName}<span class="day-num">${dayNum}</span>`;
+    header.appendChild(div);
+  });
+
+  const body = document.getElementById('week-body');
+  body.innerHTML = '';
+  HOURS.forEach(h => {
+    const row = document.createElement('div');
+    row.className = 'week-time-row';
+    const tlabel = document.createElement('div');
+    tlabel.className = 'week-time-label';
+    tlabel.textContent = formatHour(h);
+    row.appendChild(tlabel);
+
+    days.forEach(d => {
+      const dateKey = toDateKey(d);
+      const cell = document.createElement('div');
+      cell.className = 'week-time-cell';
+      cell.dataset.hour = h;
+      cell.dataset.date = dateKey;
+
+      const dayTasks = tasks.filter(t => t.date === dateKey && t.time && parseInt(t.time.split(':')[0]) === h);
+      dayTasks.forEach(t => {
+        const tb = document.createElement('div');
+        tb.className = `week-task ${t.type}`;
+        tb.draggable = true;
+        tb.dataset.id = t.id;
+        tb.innerHTML = `<span>${TASK_TYPES[t.type]?.icon || '📋'}</span><span>${t.name}</span>`;
+        tb.addEventListener('dragstart', () => { draggedTask = t; });
+        tb.addEventListener('dragend', () => { draggedTask = null; });
+        tb.addEventListener('dblclick', () => openEditModal(t.id));
+        cell.appendChild(tb);
+      });
+
+      setupDropZone(cell);
+      row.appendChild(cell);
+    });
+    body.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════
+//  MONTHLY RENDER
+// ═══════════════════════════════════════
+function renderMonthly() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayKey = toDateKey(new Date());
+
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML = '';
+
+  // Prev month padding
+  const prevDays = new Date(year, month, 0).getDate();
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const cell = document.createElement('div');
+    cell.className = 'month-cell other-month';
+    const d = new Date(year, month - 1, prevDays - i);
+    cell.appendChild(createDateNum(prevDays - i, toDateKey(d), false));
+    grid.appendChild(cell);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(year, month, day);
+    const dateKey = toDateKey(d);
+    const cell = document.createElement('div');
+    cell.className = `month-cell${dateKey === todayKey ? ' today' : ''}`;
+    cell.dataset.date = dateKey;
+    cell.appendChild(createDateNum(day, dateKey, true));
+
+    const dayTasks = tasks.filter(t => t.date === dateKey);
+    dayTasks.slice(0, 3).forEach(t => {
+      const dot = document.createElement('div');
+      dot.className = `month-task-dot ${t.type}`;
+      dot.textContent = `${TASK_TYPES[t.type]?.icon || ''} ${t.name}`;
+      dot.onclick = () => openEditModal(t.id);
+      cell.appendChild(dot);
+    });
+    if (dayTasks.length > 3) {
+      const more = document.createElement('div');
+      more.className = 'month-more';
+      more.textContent = `+${dayTasks.length - 3} more`;
+      more.onclick = () => { currentDate = d; switchView('daily'); };
+      cell.appendChild(more);
+    }
+
+    cell.addEventListener('dblclick', () => {
+      currentDate = d;
+      openAddModal(dateKey);
+    });
+
+    setupDropZone(cell);
+    grid.appendChild(cell);
+  }
+
+  // Next month padding
+  const total = firstDay + daysInMonth;
+  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let i = 1; i <= remaining; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'month-cell other-month';
+    const d = new Date(year, month + 1, i);
+    cell.appendChild(createDateNum(i, toDateKey(d), false));
+    grid.appendChild(cell);
+  }
+}
+
+function createDateNum(num, dateKey, active) {
+  const div = document.createElement('div');
+  div.className = 'cell-date';
+  div.textContent = num;
+  if (active) {
+    div.style.cursor = 'pointer';
+    div.onclick = (e) => { e.stopPropagation(); const d = new Date(dateKey); currentDate = d; switchView('daily'); };
+  }
+  return div;
+}
+
+// ═══════════════════════════════════════
+//  PALETTE
+// ═══════════════════════════════════════
+function renderPalette() {
+  const grid = document.getElementById('task-palette');
+  grid.innerHTML = '';
+  DEFAULT_PALETTE.forEach(p => {
+    const item = document.createElement('div');
+    item.className = `palette-item ${p.type}`;
+    item.draggable = true;
+    item.innerHTML = `<span>${p.icon}</span><span>${p.name}</span>${p.duration ? `<span style="margin-left:auto;font-size:0.65rem;opacity:0.6">${p.duration}m</span>` : ''}`;
+    item.addEventListener('dragstart', (e) => {
+      draggedTask = null;
+      e.dataTransfer.setData('palette-id', p.id);
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    item.addEventListener('click', () => {
+      const dateKey = toDateKey(currentDate);
+      openAddModalPrefilled(p, dateKey);
+    });
+    grid.appendChild(item);
+  });
+}
+
+function renderNonNegs() {
+  const list = document.getElementById('non-neg-list');
+  list.innerHTML = '';
+  const today = toDateKey(new Date());
+  const key = `magda_nonneg_${today}`;
+  const checked = JSON.parse(localStorage.getItem(key) || '{}');
+
+  NON_NEGS.forEach(n => {
+    const row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;font-size:0.78rem;color:var(--navy);';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = checked[n.id] || false;
+    cb.style.accentColor = 'var(--gold)';
+    cb.onchange = () => {
+      const c = JSON.parse(localStorage.getItem(key) || '{}');
+      c[n.id] = cb.checked;
+      localStorage.setItem(key, JSON.stringify(c));
+    };
+    row.appendChild(cb);
+    row.appendChild(document.createTextNode(`${n.icon} ${n.label}`));
+    list.appendChild(row);
+  });
+}
+
+function renderLunaChecks() {
+  const list = document.getElementById('luna-checks');
+  list.innerHTML = '';
+  const today = toDateKey(new Date());
+  const key = `magda_luna_${today}`;
+  const checked = JSON.parse(localStorage.getItem(key) || '{}');
+
+  LUNA_CHECKS.forEach((item, i) => {
+    const row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;font-size:0.78rem;color:var(--navy);';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = checked[i] || false;
+    cb.style.accentColor = 'var(--gold)';
+    cb.onchange = () => {
+      const c = JSON.parse(localStorage.getItem(key) || '{}');
+      c[i] = cb.checked;
+      localStorage.setItem(key, JSON.stringify(c));
+    };
+    row.appendChild(cb);
+    row.appendChild(document.createTextNode(`${item.icon} ${item.label}`));
+    list.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════
+function openAddModal(prefillDate) {
+  editingTaskId = null;
+  document.getElementById('modal-title').textContent = 'New Task ✦';
+  document.getElementById('task-name-input').value = '';
+  document.getElementById('task-date-input').value = prefillDate || toDateKey(currentDate);
+  document.getElementById('task-time-input').value = '09:00';
+  document.getElementById('task-dur-input').value = 60;
+  document.getElementById('task-repeat-input').value = 'none';
+  document.getElementById('task-notes-input').value = '';
+  document.getElementById('save-task-btn').textContent = 'Add Task';
+  setTypeChip('work');
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('task-name-input').focus(), 100);
+}
+
+function openAddModalPrefilled(p, dateKey) {
+  openAddModal(dateKey);
+  document.getElementById('task-name-input').value = p.name;
+  document.getElementById('task-dur-input').value = p.duration;
+  setTypeChip(p.type);
+}
+
+function openEditModal(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  editingTaskId = id;
+  document.getElementById('modal-title').textContent = 'Edit Task ✏️';
+  document.getElementById('task-name-input').value = task.name;
+  document.getElementById('task-date-input').value = task.date || toDateKey(currentDate);
+  document.getElementById('task-time-input').value = task.time || '09:00';
+  document.getElementById('task-dur-input').value = task.duration || 60;
+  document.getElementById('task-repeat-input').value = task.repeat || 'none';
+  document.getElementById('task-notes-input').value = task.notes || '';
+  document.getElementById('save-task-btn').textContent = 'Update Task';
+  setTypeChip(task.type);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function setTypeChip(type) {
+  selectedType = type;
+  document.querySelectorAll('.type-chip').forEach(c => c.classList.toggle('selected', c.dataset.type === type));
+}
+
+document.querySelectorAll('.type-chip').forEach(c => {
+  c.addEventListener('click', () => setTypeChip(c.dataset.type));
+});
+
+function saveTask() {
+  const name = document.getElementById('task-name-input').value.trim();
+  if (!name) { alert('Give that task a name, sayang! 💅'); return; }
+
+  const taskData = {
+    name,
+    date: document.getElementById('task-date-input').value,
+    time: document.getElementById('task-time-input').value,
+    duration: parseInt(document.getElementById('task-dur-input').value) || 60,
+    repeat: document.getElementById('task-repeat-input').value,
+    notes: document.getElementById('task-notes-input').value,
+    type: selectedType,
+  };
+
+  if (editingTaskId) {
+    const idx = tasks.findIndex(t => t.id === editingTaskId);
+    if (idx > -1) tasks[idx] = { ...tasks[idx], ...taskData };
+    showToast('Task updated! ✦');
+  } else {
+    addTask(taskData);
+    showToast('Task added! Let\'s GO 💪🏽');
+  }
+
+  closeModal();
+  renderView();
+}
+
+function addTask(data) {
+  const task = { id: Date.now().toString(), ...data };
+  tasks.push(task);
+
+  if (data.repeat === 'daily' || data.repeat === 'weekdays' || data.repeat === 'weekly') {
+    const baseDate = new Date(data.date);
+    for (let i = 1; i <= 60; i++) {
+      const d = new Date(baseDate);
+      if (data.repeat === 'daily') d.setDate(d.getDate() + i);
+      else if (data.repeat === 'weekly') { if (i % 7 !== 0) continue; d.setDate(d.getDate() + i); }
+      else if (data.repeat === 'weekdays') {
+        d.setDate(d.getDate() + i);
+        if (d.getDay() === 0 || d.getDay() === 6) continue;
+      }
+      tasks.push({ ...data, id: Date.now().toString() + i, date: toDateKey(d) });
+    }
+  }
+  saveTasks();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks();
+  renderView();
+  showToast('Task deleted.');
+}
+
+function saveTasks() {
+  localStorage.setItem('magda_tasks', JSON.stringify(tasks));
+}
+
+// ═══════════════════════════════════════
+//  GOOGLE CALENDAR EXPORT
+// ═══════════════════════════════════════
+function exportToGCal() {
+  const dateKey = toDateKey(currentDate);
+  const dayTasks = tasks.filter(t => t.date === dateKey);
+
+  if (dayTasks.length === 0) {
+    showToast('No tasks today to export! Add some first 💅');
+    return;
+  }
+
+  dayTasks.forEach(t => {
+    if (!t.date || !t.time) return;
+    const start = new Date(`${t.date}T${t.time}:00`);
+    const end = new Date(start.getTime() + (t.duration || 60) * 60000);
+
+    const fmt = d => d.toISOString().replace(/-|:|\.\d{3}/g, '');
+    const url = new URL('https://calendar.google.com/calendar/render');
+    url.searchParams.set('action', 'TEMPLATE');
+    url.searchParams.set('text', `[RumaNurse] ${t.name}`);
+    url.searchParams.set('dates', `${fmt(start)}/${fmt(end)}`);
+    url.searchParams.set('details', t.notes || `Type: ${t.type} | Added via Magda's Command Center`);
+    window.open(url.toString(), '_blank');
+  });
+
+  showToast(`Syncing ${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''} to Google Calendar 📅`);
+}
+
+// ═══════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════
+function toDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatHour(h) {
+  if (h === 0) return '12 AM';
+  if (h < 12) return `${h} AM`;
+  if (h === 12) return '12 PM';
+  return `${h - 12} PM`;
+}
+
+function getWeekStart(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  date.setDate(date.getDate() - day);
+  return date;
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'n' && !e.target.matches('input, textarea, select')) openAddModal();
+});
+
+// Seed default tasks if first time
+function seedDefaultTasks() {
+  if (localStorage.getItem('magda_seeded')) return;
+  const today = toDateKey(new Date());
+  const tomorrow = toDateKey(new Date(Date.now() + 86400000));
+
+  const defaults = [
+    { name: 'Morning Devotional', type: 'self', date: today, time: '06:00', duration: 30, notes: 'Bible + Philippians 4:13', repeat: 'daily' },
+    { name: 'Gym — Back to It! 💪🏽', type: 'gym', date: today, time: '08:00', duration: 90, notes: 'Week 1 restart — upper body', repeat: 'none' },
+    { name: 'High-Protein Breakfast', type: 'meal', date: today, time: '10:00', duration: 30, notes: '40g protein target', repeat: 'daily' },
+    { name: 'RumaNurse Outreach — Lyka follow-up', type: 'work', date: today, time: '11:00', duration: 60, notes: 'Follow up on CalPacific lead', repeat: 'none' },
+    { name: 'Luna Walk + Meds', type: 'health', date: today, time: '13:00', duration: 30, notes: 'Post-surgery recovery check', repeat: 'daily' },
+    { name: 'Lunch — Protein Meal', type: 'meal', date: today, time: '13:30', duration: 30, notes: '45g protein target', repeat: 'daily' },
+    { name: 'RumaNurse Admin / LinkedIn', type: 'work', date: today, time: '14:30', duration: 90, notes: 'Build out client pipeline', repeat: 'weekdays' },
+    { name: 'Sibling Pickup', type: 'sibling', date: today, time: '16:00', duration: 30, notes: '', repeat: 'weekdays' },
+    { name: 'Dinner Prep — High Protein', type: 'meal', date: today, time: '18:00', duration: 45, notes: '40g protein target', repeat: 'daily' },
+    { name: 'Evening Skincare + Self Care', type: 'self', date: today, time: '20:00', duration: 30, notes: '', repeat: 'daily' },
+    { name: 'Wind Down — No Screens', type: 'self', date: today, time: '22:00', duration: 30, notes: 'Prep for 7hr sleep', repeat: 'daily' },
+  ];
+  defaults.forEach(d => tasks.push({ id: Date.now().toString() + Math.random(), ...d }));
+  saveTasks();
+  localStorage.setItem('magda_seeded', '1');
+}
+
+seedDefaultTasks();
+init();
+</script>
+</body>
+</html>
