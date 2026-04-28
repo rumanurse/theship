@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Ship · Magda</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -401,7 +403,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="fleet-section s4">
     <div class="fleet-head">
       <div class="fleet-title">Bangtan Protocol</div>
-      <div class="fleet-live"><div class="fleet-live-dot"></div><div class="fleet-live-txt">7 online</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="gcalBtn" onclick="connectGoogleCalendar()" style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:var(--gold-light);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap">📅 Connect Google Calendar</button>
+        <div class="fleet-live"><div class="fleet-live-dot"></div><div class="fleet-live-txt">7 online</div></div>
+      </div>
     </div>
     <div class="crew-bar">
       <div class="crew-chip active" id="chip-rm" onclick="forceAgent('rm')"><span>🧠</span> RM</div>
@@ -448,6 +453,151 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 const SUPABASE_URL='https://jjjwzgshvqjcmwamiwsg.supabase.co';
 const SUPABASE_KEY='sb_publishable_jnL1Pw-15hVGGrhC7_Ltjg_TL2_SGuP';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// ══ GOOGLE CALENDAR ═══════════════════════════════════════════════════════════
+const GCAL_CLIENT_ID='54450137809-otqhllvkkovong4hjjnbd0fq0gfaqkrg.apps.googleusercontent.com';
+const GCAL_SCOPES='https://www.googleapis.com/auth/calendar.readonly';
+
+let gcalToken=null;
+let gcalEvents=[];
+let gcalConnected=false;
+
+function initGoogleCalendar(){
+  // Load gapi client
+  if(typeof gapi==='undefined') return;
+  gapi.load('client',async()=>{
+    await gapi.client.init({
+      discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+    });
+    // Check for existing token in localStorage
+    const stored=localStorage.getItem('gcal_token');
+    if(stored){
+      try{
+        const t=JSON.parse(stored);
+        if(t.expiry>Date.now()){
+          gcalToken=t.token;
+          gapi.client.setToken({access_token:gcalToken});
+          gcalConnected=true;
+          await fetchGCalEvents();
+          updateGCalButton();
+          return;
+        }
+      }catch(e){}
+    }
+    updateGCalButton();
+  });
+}
+
+function connectGoogleCalendar(){
+  if(typeof google==='undefined'){
+    showToast('Google sign-in not loaded yet — try again in a moment');
+    return;
+  }
+  const client=google.accounts.oauth2.initTokenClient({
+    client_id:GCAL_CLIENT_ID,
+    scope:GCAL_SCOPES,
+    callback:async(resp)=>{
+      if(resp.error){showToast('Google Calendar: '+resp.error);return;}
+      gcalToken=resp.access_token;
+      gcalConnected=true;
+      // Store token with expiry (1 hour)
+      localStorage.setItem('gcal_token',JSON.stringify({
+        token:resp.access_token,
+        expiry:Date.now()+(55*60*1000)
+      }));
+      gapi.client.setToken({access_token:gcalToken});
+      await fetchGCalEvents();
+      updateGCalButton();
+      showToast('📅 Google Calendar connected!');
+    },
+  });
+  client.requestAccessToken();
+}
+
+function disconnectGoogleCalendar(){
+  gcalToken=null;
+  gcalConnected=false;
+  gcalEvents=[];
+  localStorage.removeItem('gcal_token');
+  if(typeof google!=='undefined'&&google.accounts?.oauth2){
+    google.accounts.oauth2.revoke(gcalToken,()=>{});
+  }
+  updateGCalButton();
+  showToast('Google Calendar disconnected');
+}
+
+async function fetchGCalEvents(){
+  if(!gcalConnected||!gcalToken) return [];
+  try{
+    const now=new Date();
+    const endOfDay=new Date();
+    endOfDay.setHours(23,59,59,999);
+    const tomorrow=new Date(now);
+    tomorrow.setDate(tomorrow.getDate()+1);
+    tomorrow.setHours(23,59,59,999);
+
+    const resp=await gapi.client.calendar.events.list({
+      calendarId:'primary',
+      timeMin:now.toISOString(),
+      timeMax:tomorrow.toISOString(),
+      singleEvents:true,
+      orderBy:'startTime',
+      maxResults:15,
+    });
+    gcalEvents=resp.result.items||[];
+    return gcalEvents;
+  }catch(e){
+    console.error('GCal fetch error',e);
+    // Token might be expired
+    if(e.status===401){
+      gcalConnected=false;
+      localStorage.removeItem('gcal_token');
+      updateGCalButton();
+    }
+    return [];
+  }
+}
+
+function formatGCalEvents(){
+  if(!gcalEvents.length) return 'No Google Calendar events found for today/tomorrow.';
+  const now=new Date();
+  const todayStr=now.toDateString();
+
+  return gcalEvents.map(ev=>{
+    const start=ev.start?.dateTime?new Date(ev.start.dateTime):new Date(ev.start?.date);
+    const end=ev.end?.dateTime?new Date(ev.end.dateTime):new Date(ev.end?.date);
+    const isToday=start.toDateString()===todayStr;
+    const timeStr=ev.start?.dateTime?
+      start.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})+
+      '–'+end.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):
+      'All day';
+    const loc=ev.location?` @ ${ev.location.split(',')[0]}`:'';
+    return`${isToday?'TODAY':'TOMORROW'} ${timeStr}: ${ev.summary}${loc}`;
+  }).join('\n');
+}
+
+function updateGCalButton(){
+  const btn=document.getElementById('gcalBtn');
+  if(!btn) return;
+  if(gcalConnected){
+    btn.textContent='📅 Calendar connected ✓';
+    btn.style.background='rgba(74,222,128,0.12)';
+    btn.style.borderColor='rgba(74,222,128,0.3)';
+    btn.style.color='#4ade80';
+    btn.onclick=disconnectGoogleCalendar;
+  } else {
+    btn.textContent='📅 Connect Google Calendar';
+    btn.style.background='';
+    btn.style.borderColor='';
+    btn.style.color='';
+    btn.onclick=connectGoogleCalendar;
+  }
+}
+
+// Init Google Calendar after page load
+window.addEventListener('load',()=>{
+  setTimeout(initGoogleCalendar, 1500);
+});
 
 // ══ AUTH ═════════════════════════════════════════════════════════════════════
 async function checkAuth(){
@@ -753,11 +903,25 @@ function buildShipContext(){
     }
   }catch(e){}
 
+  // ── GOOGLE CALENDAR ──
+  try{
+    if(gcalConnected&&gcalEvents.length){
+      ctx.push(`GOOGLE CALENDAR:\n${formatGCalEvents()}`);
+    } else if(gcalConnected){
+      ctx.push('GOOGLE CALENDAR: Connected but no events found for today/tomorrow.');
+    } else {
+      ctx.push('GOOGLE CALENDAR: Not connected (user can connect via the button in Fleet Command).');
+    }
+  }catch(e){}
+
   return ctx.join('\n');
 }
 
 async function callAgent(id,text){
   const ag=AGENTS[id];
+
+  // Refresh calendar if connected (non-blocking)
+  if(gcalConnected) fetchGCalEvents().catch(()=>{});
 
   // Build live context for RM and all agents
   const shipCtx=buildShipContext();
