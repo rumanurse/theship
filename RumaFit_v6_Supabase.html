@@ -236,16 +236,7 @@ select.input-field{appearance:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* AUTH OVERLAY */
-#authOverlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--cream),var(--nude));z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}
-#authBox{background:var(--warm);border-radius:22px;padding:28px 22px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(44,24,16,.12);border:1px solid rgba(242,214,204,.6)}
-.auth-logo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--dark);text-align:center;margin-bottom:4px}
-.auth-logo em{color:var(--mauve)}
 .auth-sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--light);text-align:center;margin-bottom:20px}
-.auth-tab-row{display:flex;gap:6px;margin-bottom:16px}
-.auth-tab{flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(201,144,122,.2);background:var(--nude);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--light);cursor:pointer;text-align:center;transition:all .2s}
-.auth-tab.active{background:var(--mauve);color:white;border-color:var(--mauve)}
-.auth-err{font-size:11px;color:var(--red);text-align:center;margin-top:8px;min-height:16px}
-.auth-note{font-size:10px;color:var(--light);text-align:center;margin-top:10px;line-height:1.5}
 
 /* SYNC STATUS */
 #syncStatus{position:fixed;top:8px;right:10px;z-index:500;display:flex;align-items:center;gap:4px;background:rgba(247,237,232,.92);border-radius:8px;padding:3px 8px;border:1px solid rgba(201,144,122,.2);font-size:9px;color:var(--light);backdrop-filter:blur(4px)}
@@ -258,28 +249,6 @@ select.input-field{appearance:none}
 <body>
 
 <!-- AUTH OVERLAY -->
-<div id="authOverlay">
-  <div id="authBox">
-    <div class="auth-logo">Ruma<em>Fit</em></div>
-    <div class="auth-sub">Your Personal Fitness Protocol</div>
-    <div class="auth-tab-row">
-      <div class="auth-tab active" id="tabSignIn" onclick="switchAuthTab('signin')">Sign In</div>
-      <div class="auth-tab" id="tabSignUp" onclick="switchAuthTab('signup')">Create Account</div>
-    </div>
-    <div id="signinForm">
-      <div class="input-group"><label class="input-label">Email</label><input type="email" class="input-field" id="authEmail" placeholder="magda@rumanurse.com" autocomplete="email"></div>
-      <div class="input-group"><label class="input-label">Password</label><input type="password" class="input-field" id="authPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doSignIn()"></div>
-      <button class="btn btn-primary" style="margin-top:4px" onclick="doSignIn()">Sign In 🌸</button>
-    </div>
-    <div id="signupForm" style="display:none">
-      <div class="input-group"><label class="input-label">Email</label><input type="email" class="input-field" id="signupEmail" placeholder="your@email.com" autocomplete="email"></div>
-      <div class="input-group"><label class="input-label">Password (min 6 chars)</label><input type="password" class="input-field" id="signupPass" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignUp()"></div>
-      <button class="btn btn-primary" style="margin-top:4px" onclick="doSignUp()">Create Account ✨</button>
-    </div>
-    <div class="auth-err" id="authErr"></div>
-    <div class="auth-note">Your data syncs across all devices automatically.</div>
-  </div>
-</div>
 
 <!-- SYNC STATUS INDICATOR -->
 <div id="syncStatus" style="display:none">
@@ -340,23 +309,25 @@ select.input-field{appearance:none}
     <div class="focus-text" id="dailyFocus"></div>
   </div>
 
-  <!-- Phase Card (compact) -->
   <div class="phase-card">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div class="ph-name" id="phName">Tyker's Cut Phase</div>
-        <div class="ph-dates" id="phDates">Mar 22 – Apr 27, 2026</div>
+        <div class="ph-name" id="phName">Phase 1 · Reverse Diet</div>
+        <div class="ph-dates" id="phDates">Apr 28 – Jun 22, 2026</div>
       </div>
-      <div style="background:rgba(201,168,76,.2);border:1px solid var(--gold);border-radius:6px;padding:2px 7px;font-size:8px;font-weight:700;color:var(--gold)">ACTIVE</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div style="background:rgba(201,168,76,.2);border:1px solid var(--gold);border-radius:6px;padding:2px 7px;font-size:8px;font-weight:700;color:var(--gold)">ACTIVE</div>
+        <button onclick="openPhaseModal()" style="background:rgba(255,255,255,.1);border:1px solid rgba(245,239,224,.2);border-radius:6px;padding:2px 8px;font-size:8px;font-weight:600;color:var(--blush);cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px">Change</button>
+      </div>
     </div>
     <div class="ph-targets">
-      <div class="ph-t"><div class="ph-tv" id="targetCal">1,600</div><div class="ph-tl">Cal Today</div></div>
-      <div class="ph-t"><div class="ph-tv">165g+</div><div class="ph-tl">Protein Min</div></div>
-      <div class="ph-t"><div class="ph-tv">&lt;50g</div><div class="ph-tl">Fat Max</div></div>
+      <div class="ph-t"><div class="ph-tv" id="targetCal">1,700</div><div class="ph-tl">Cal Today</div></div>
+      <div class="ph-t"><div class="ph-tv" id="phProtein">165g+</div><div class="ph-tl">Protein Min</div></div>
+      <div class="ph-t"><div class="ph-tv" id="phFat">&lt;60g</div><div class="ph-tl">Fat Max</div></div>
       <div class="ph-t"><div class="ph-tv">10K</div><div class="ph-tl">Steps Goal</div></div>
     </div>
-    <div style="margin-top:8px;background:rgba(201,144,122,.12);border-radius:7px;padding:6px 8px;font-size:8.5px;color:var(--blush)">
-      Low 1,600: Sun Mon Wed Thu Sat &nbsp;|&nbsp; High 1,900: Tue Fri
+    <div style="margin-top:8px;background:rgba(201,144,122,.12);border-radius:7px;padding:6px 8px;font-size:8.5px;color:var(--blush)" id="phaseNote">
+      Ramping up from 1,700 to 2,400 cals over 8 weeks · Add ~100 cals/week
     </div>
   </div>
 
@@ -499,16 +470,8 @@ select.input-field{appearance:none}
   <div class="section-label">Weight History</div>
   <div class="card"><div class="scrollable" id="weightHistory"></div></div>
   <div class="section-label">Before vs Now</div>
-  <div class="card">
-    <div class="stat-grid">
-      <div class="stat-box"><div class="sb-val">247.5</div><div class="sb-unit">lbs</div><div class="sb-label">Start Weight</div></div>
-      <div class="stat-box"><div class="sb-val" style="color:var(--teal)">223.9</div><div class="sb-unit">lbs</div><div class="sb-label">Current</div></div>
-      <div class="stat-box"><div class="sb-val">88.5</div><div class="sb-unit">lbs</div><div class="sb-label">Start Muscle</div></div>
-      <div class="stat-box"><div class="sb-val" style="color:var(--teal)">94.4</div><div class="sb-unit">lbs</div><div class="sb-label">Now Muscle</div></div>
-      <div class="stat-box"><div class="sb-val">61.9</div><div class="sb-unit">%</div><div class="sb-label">Start Body Fat</div></div>
-      <div class="stat-box"><div class="sb-val" style="color:var(--teal)">55.1</div><div class="sb-unit">%</div><div class="sb-label">Now Body Fat</div></div>
-    </div>
-    <div style="background:var(--teal-light);border-radius:8px;padding:8px;text-align:center"><span style="font-size:11px;color:var(--teal);font-weight:600">-23.6 lbs · +5.9 lbs muscle · -6.8% body fat · -4 visceral fat 🔥</span></div>
+  <div class="card" id="beforeVsNow">
+    <!-- Rendered dynamically by renderBeforeVsNow() -->
   </div>
   <div class="section-label">Recent Entries</div>
   <div class="card" id="recentStatsLog"><p style="font-size:11px;color:var(--light)">No entries yet.</p></div>
@@ -719,12 +682,8 @@ select.input-field{appearance:none}
   <div class="card"><div class="card-title">🍽️ Calories This Week</div><div class="chart-wrap"><div class="chart-title">Daily Calories</div><canvas id="calChart" height="120"></canvas></div><div class="chart-stats" id="calSummary"></div></div>
   <div class="card">
     <div class="card-title">🗺️ Your Phase Timeline</div>
-    <div style="display:grid;gap:8px">
-      <div style="display:flex;gap:9px;align-items:flex-start"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:3px;flex-shrink:0"></div><div><div style="font-size:11px;font-weight:600;color:var(--gold)">CURRENT · Tyker's Cut Phase</div><div style="font-size:9px;color:var(--light)">Mar 22 – Apr 27, 2026 · 1,600 Low / 1,900 High</div></div></div>
-      <div style="display:flex;gap:9px;align-items:flex-start"><div style="width:8px;height:8px;border-radius:50%;background:var(--mauve);margin-top:3px;flex-shrink:0"></div><div><div style="font-size:11px;font-weight:600;color:var(--mauve)">Phase 1 · Reverse Diet</div><div style="font-size:9px;color:var(--light)">Apr 28 – Jun 22, 2026 · 1,700–2,400 cals</div></div></div>
-      <div style="display:flex;gap:9px;align-items:flex-start"><div style="width:8px;height:8px;border-radius:50%;background:var(--teal);margin-top:3px;flex-shrink:0"></div><div><div style="font-size:11px;font-weight:600;color:var(--teal)">Phase 2 · Muscle Building</div><div style="font-size:9px;color:var(--light)">Jun 22 – Oct 2026 · 2,300 Low / 2,700 High</div></div></div>
-      <div style="display:flex;gap:9px;align-items:flex-start"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:3px;flex-shrink:0"></div><div><div style="font-size:11px;font-weight:600;color:var(--gold)">Phase 3 · 2 lb/Week Cut → Goal 140-150 lbs 👑</div><div style="font-size:9px;color:var(--light)">Oct 2026 – May 2027</div></div></div>
-    </div>
+    <div id="phaseTimeline" style="display:grid;gap:4px"><!-- rendered dynamically --></div>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="openPhaseModal()">⚙️ Switch Phase / Set Custom Calories</button>
   </div>
   <div class="card"><div class="card-title">🎯 Goal Calculator</div>
     <div class="input-group"><label class="input-label">Current Weight (lbs)</label><input type="number" class="input-field" id="goalWt" placeholder="223.9" oninput="calcGoal()"></div>
@@ -1194,6 +1153,16 @@ select.input-field{appearance:none}
   </div>
 </div>
 
+<!-- PHASE MODAL -->
+<div class="modal-overlay" id="phaseModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('phaseModal')">✕</button>
+    <div class="modal-title" style="font-size:16px">⚙️ Your Nutrition Phase</div>
+    <div id="phaseModalBody"></div>
+    <button class="btn btn-primary" style="margin-top:10px" onclick="closeModal('phaseModal');updatePhaseCard();renderTasks(new Date().getDay(),DAY_SCHED[new Date().getDay()])">Apply & Close ✨</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1326,9 +1295,7 @@ async function doSignUp(){
 async function doSignOut(){
   await sb.auth.signOut();
   currentUser=null;
-  document.getElementById('authOverlay').style.display='flex';
-  document.getElementById('syncStatus').style.display='none';
-  showToast('Signed out — see you soon! 🌸');
+  window.location.href='index.html';
 }
 
 // ══ SYNC STATUS HELPER ═══════════════════════════════════════════════════════
@@ -1440,6 +1407,250 @@ async function loadAllData(){
   }
 }
 
+// ── OFFLINE / NO-SESSION FALLBACK ────────────────────────────────────────────
+function loadFromLocalStorage(){
+  try{
+    const td=JSON.parse(localStorage.getItem('rf_today_'+todayKey())||'{}');
+    if(td.meals) meals=td.meals;
+    if(td.steps!=null){document.getElementById('stepsInput').value=td.steps;updateStepsBar(td.steps);}
+    if(td.water!=null) waterCount=td.water;
+    if(td.tasks) tasksDone=td.tasks;
+    stepsHistory=JSON.parse(localStorage.getItem('rf_steps')||'{}');
+    calHistory=JSON.parse(localStorage.getItem('rf_cals')||'{}');
+    weightHistory=JSON.parse(localStorage.getItem('rf_weights')||'[]');
+    statsLog=JSON.parse(localStorage.getItem('rf_statslog')||'[]');
+    goals=JSON.parse(localStorage.getItem('rf_goals')||'[]');
+    savedFoods=JSON.parse(localStorage.getItem('rf_foods')||JSON.stringify(DEFAULT_FOODS));
+  }catch(e){console.error('loadFromLocalStorage',e);}
+}
+
+// ══ PHASE SYSTEM ═════════════════════════════════════════════════════════════
+const PHASES={
+  tyker_cut:{
+    id:'tyker_cut',
+    name:"Tyker's Cut Phase",
+    dates:'Mar 22 – Apr 27, 2026',
+    color:'var(--gold)',
+    schedule:{
+      // Low/High by day of week
+      0:{type:'low',cal:1600,carbs:120},
+      1:{type:'low',cal:1600,carbs:120},
+      2:{type:'high',cal:1900,carbs:175},
+      3:{type:'low',cal:1600,carbs:120},
+      4:{type:'low',cal:1600,carbs:120},
+      5:{type:'high',cal:1900,carbs:175},
+      6:{type:'low',cal:1600,carbs:120},
+    },
+    protein:165,fatMax:50,
+    note:'Low 1,600: Sun Mon Wed Thu Sat · High 1,900: Tue Fri',
+    custom:false,
+  },
+  reverse_diet:{
+    id:'reverse_diet',
+    name:'Phase 1 · Reverse Diet',
+    dates:'Apr 28 – Jun 22, 2026',
+    color:'var(--mauve)',
+    schedule:{
+      0:{type:'low',cal:1700,carbs:140},
+      1:{type:'low',cal:1700,carbs:140},
+      2:{type:'high',cal:2100,carbs:220},
+      3:{type:'low',cal:1700,carbs:140},
+      4:{type:'low',cal:1700,carbs:140},
+      5:{type:'high',cal:2100,carbs:220},
+      6:{type:'low',cal:1700,carbs:140},
+    },
+    protein:165,fatMax:60,
+    note:'Ramping up from 1,700 to 2,400 cals over 8 weeks · Add ~100 cals/week',
+    custom:false,
+  },
+  muscle_build:{
+    id:'muscle_build',
+    name:'Phase 2 · Muscle Building',
+    dates:'Jun 22 – Oct 2026',
+    color:'var(--teal)',
+    schedule:{
+      0:{type:'low',cal:2300,carbs:240},
+      1:{type:'low',cal:2300,carbs:240},
+      2:{type:'high',cal:2700,carbs:310},
+      3:{type:'low',cal:2300,carbs:240},
+      4:{type:'low',cal:2300,carbs:240},
+      5:{type:'high',cal:2700,carbs:310},
+      6:{type:'low',cal:2300,carbs:240},
+    },
+    protein:175,fatMax:70,
+    note:'Low 2,300 · High 2,700 · Protein 175g+',
+    custom:false,
+  },
+  cut_to_goal:{
+    id:'cut_to_goal',
+    name:'Phase 3 · Cut to Goal',
+    dates:'Oct 2026 – May 2027',
+    color:'var(--gold)',
+    schedule:{
+      0:{type:'low',cal:1600,carbs:120},
+      1:{type:'low',cal:1600,carbs:120},
+      2:{type:'high',cal:1900,carbs:175},
+      3:{type:'low',cal:1600,carbs:120},
+      4:{type:'low',cal:1600,carbs:120},
+      5:{type:'high',cal:1900,carbs:175},
+      6:{type:'low',cal:1600,carbs:120},
+    },
+    protein:165,fatMax:50,
+    note:'2 lb/week cut · Goal: 140–150 lbs 👑',
+    custom:false,
+  },
+  custom:{
+    id:'custom',
+    name:'Custom Phase',
+    dates:'My own protocol',
+    color:'var(--purple)',
+    schedule:{
+      0:{type:'low',cal:1600,carbs:120},1:{type:'low',cal:1600,carbs:120},
+      2:{type:'high',cal:1900,carbs:175},3:{type:'low',cal:1600,carbs:120},
+      4:{type:'low',cal:1600,carbs:120},5:{type:'high',cal:1900,carbs:175},
+      6:{type:'low',cal:1600,carbs:120},
+    },
+    protein:165,fatMax:50,
+    note:'Your custom calories',
+    custom:true,
+  },
+};
+
+let activePhaseId=localStorage.getItem('rf_active_phase')||'reverse_diet';
+
+function getActivePhase(){
+  const stored=localStorage.getItem('rf_phase_custom');
+  if(activePhaseId==='custom'&&stored){
+    try{const c=JSON.parse(stored);PHASES.custom={...PHASES.custom,...c};}catch{}
+  }
+  return PHASES[activePhaseId]||PHASES.reverse_diet;
+}
+
+function applyActivePhase(){
+  const phase=getActivePhase();
+  const dow=new Date().getDay();
+  const daySched=phase.schedule[dow];
+  // Patch DAY_SCHED with active phase values
+  Object.keys(DAY_SCHED).forEach(d=>{
+    const ps=phase.schedule[d];
+    DAY_SCHED[d].cal=ps.cal;
+    DAY_SCHED[d].carbs=ps.carbs;
+    DAY_SCHED[d].type=ps.type;
+  });
+}
+
+function openPhaseModal(){
+  const phase=getActivePhase();
+  const el=document.getElementById('phaseModal');
+  if(el){el.classList.add('open');renderPhaseModal();}
+}
+
+function renderPhaseModal(){
+  const phase=getActivePhase();
+  const container=document.getElementById('phaseModalBody');
+  if(!container) return;
+
+  const customStored=localStorage.getItem('rf_phase_custom');
+  let customData={lowCal:1600,highCal:1900,protein:165,fatMax:50,lowCarbs:120,highCarbs:175};
+  try{if(customStored) customData={...customData,...JSON.parse(customStored)};}catch{}
+
+  container.innerHTML=`
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--light);margin-bottom:8px">Select Your Active Phase</div>
+      ${Object.values(PHASES).filter(p=>!p.custom).map(p=>`
+        <div onclick="selectPhase('${p.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1.5px solid ${activePhaseId===p.id?'var(--mauve)':'rgba(201,144,122,.18)'};background:${activePhaseId===p.id?'var(--nude)':'var(--warm)'};margin-bottom:6px;cursor:pointer;transition:all .15s">
+          <div style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:${activePhaseId===p.id?'var(--mauve)':'var(--dark)'}">${p.name}</div>
+            <div style="font-size:9px;color:var(--light);margin-top:1px">${p.dates} · ${p.note}</div>
+          </div>
+          ${activePhaseId===p.id?'<div style="color:var(--mauve);font-size:14px">✓</div>':''}
+        </div>`).join('')}
+    </div>
+
+    <div style="background:var(--nude);border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid rgba(201,144,122,.18)">
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:8px">🎛️ Or set custom calories</div>
+      <div class="input-row">
+        <div class="input-group"><label class="input-label">Low Day Cals</label><input type="number" class="input-field" id="customLowCal" value="${customData.lowCal}" placeholder="1600"></div>
+        <div class="input-group"><label class="input-label">High Day Cals</label><input type="number" class="input-field" id="customHighCal" value="${customData.highCal}" placeholder="1900"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label class="input-label">Protein (g)</label><input type="number" class="input-field" id="customProtein" value="${customData.protein}" placeholder="165"></div>
+        <div class="input-group"><label class="input-label">Fat Max (g)</label><input type="number" class="input-field" id="customFatMax" value="${customData.fatMax}" placeholder="50"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label class="input-label">Low Carbs (g)</label><input type="number" class="input-field" id="customLowCarbs" value="${customData.lowCarbs}" placeholder="120"></div>
+        <div class="input-group"><label class="input-label">High Carbs (g)</label><input type="number" class="input-field" id="customHighCarbs" value="${customData.highCarbs}" placeholder="175"></div>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:4px" onclick="saveCustomPhase()">Use Custom Calories</button>
+    </div>`;
+}
+
+function selectPhase(id){
+  activePhaseId=id;
+  localStorage.setItem('rf_active_phase',id);
+  applyActivePhase();
+  renderPhaseModal();
+  updatePhaseCard();
+  showToast('✨ Phase switched to '+PHASES[id].name+'!');
+}
+
+function saveCustomPhase(){
+  const lowCal=parseInt(document.getElementById('customLowCal').value)||1600;
+  const highCal=parseInt(document.getElementById('customHighCal').value)||1900;
+  const protein=parseInt(document.getElementById('customProtein').value)||165;
+  const fatMax=parseInt(document.getElementById('customFatMax').value)||50;
+  const lowCarbs=parseInt(document.getElementById('customLowCarbs').value)||120;
+  const highCarbs=parseInt(document.getElementById('customHighCarbs').value)||175;
+
+  const customData={
+    lowCal,highCal,protein,fatMax,lowCarbs,highCarbs,
+    schedule:{
+      0:{type:'low',cal:lowCal,carbs:lowCarbs},1:{type:'low',cal:lowCal,carbs:lowCarbs},
+      2:{type:'high',cal:highCal,carbs:highCarbs},3:{type:'low',cal:lowCal,carbs:lowCarbs},
+      4:{type:'low',cal:lowCal,carbs:lowCarbs},5:{type:'high',cal:highCal,carbs:highCarbs},
+      6:{type:'low',cal:lowCal,carbs:lowCarbs},
+    },
+    protein,fatMax,
+    note:`Low ${lowCal} · High ${highCal} · Protein ${protein}g`,
+  };
+  localStorage.setItem('rf_phase_custom',JSON.stringify(customData));
+  PHASES.custom={...PHASES.custom,...customData};
+  activePhaseId='custom';
+  localStorage.setItem('rf_active_phase','custom');
+  applyActivePhase();
+  renderPhaseModal();
+  updatePhaseCard();
+  showToast('✨ Custom calories saved!');
+}
+
+function updatePhaseCard(){
+  const phase=getActivePhase();
+  const dow=new Date().getDay();
+  const daySched=phase.schedule[dow];
+  const phEl=document.getElementById('phName');
+  const phDEl=document.getElementById('phDates');
+  const tcEl=document.getElementById('targetCal');
+  const sCalEl=document.getElementById('sCal');
+  const sCarbEl=document.getElementById('sCarb');
+  const noteEl=document.getElementById('phaseNote');
+  if(phEl) phEl.textContent=phase.name;
+  if(phDEl) phDEl.textContent=phase.dates;
+  if(tcEl) tcEl.textContent=daySched.cal.toLocaleString();
+  if(sCalEl) sCalEl.textContent=daySched.cal+' kcal';
+  if(sCarbEl) sCarbEl.textContent=daySched.carbs+'g';
+  if(noteEl) noteEl.textContent=phase.note;
+  // Update protein targets in UI
+  document.querySelectorAll('.circ-sub').forEach(el=>{
+    if(el.textContent==='165g'||el.textContent.includes('g')&&el.closest('.macro-circ')) {
+      try{const macroLabel=el.closest('.macro-circ').querySelector('.circ-label');
+      if(macroLabel&&macroLabel.textContent==='Protein') el.textContent=phase.protein+'g';}catch{}
+    }
+  });
+  // Update phase timeline
+  renderPhaseTimeline();
+}
+
 // ── SAVE TODAY'S MEALS + STEPS + WATER + TASKS ──────────────────────────────
 async function saveTodayLocal(){
   const t=getTotals();
@@ -1455,16 +1666,6 @@ async function saveTodayLocal(){
   });
   calHistory[todayKey()]=t.cal;
   stepsHistory[todayKey()]=steps;
-
-  // ── SHIP SYNC BRIDGE: write to localStorage so Ship + Planner read live ──
-  const tk='rf_today_'+todayKey();
-  const existing=JSON.parse(localStorage.getItem(tk)||'{}');
-  existing.meals=meals;
-  existing.steps=steps;
-  localStorage.setItem(tk,JSON.stringify(existing));
-  localStorage.setItem('rf_steps',JSON.stringify(stepsHistory));
-  localStorage.setItem('rf_cals',JSON.stringify(calHistory));
-  localStorage.setItem('rf_water_'+todayKey(),String(waterCount));
 }
 
 // ══ INIT ════════════════════════════════════════════════════════════════════
@@ -1503,33 +1704,28 @@ async function appStart(){
   renderMeals();updateMacros();
 
   renderGoals();renderWeightHistory();renderSavedFoods();renderDosAndDonts();renderRecentStats();
+  renderBeforeVsNow();
+  renderPhaseTimeline();
+  updatePhaseCard();
   prefillCalc();
   setTimeout(()=>{renderCharts();updateFeedback();},100);
 }
 
 async function init(){
-  // Listen for auth state changes
-  sb.auth.onAuthStateChange(async(event,session)=>{
-    if(session){
-      currentUser=session.user;
-      document.getElementById('authOverlay').style.display='none';
-      document.getElementById('syncStatus').style.display='flex';
-      // Load all data from Supabase first, then start app
-      await loadAllData();
-      await appStart();
-    } else {
-      currentUser=null;
-      document.getElementById('authOverlay').style.display='flex';
-      document.getElementById('syncStatus').style.display='none';
-    }
-  });
-
-  // Check if already signed in
+  // Ship handles auth — RumaFit starts directly
+  // Try to get existing session silently for Supabase sync
   const{data:{session}}=await sb.auth.getSession();
-  if(!session){
-    // Show auth overlay — already visible by default
-    document.getElementById('authOverlay').style.display='flex';
+  if(session){
+    currentUser=session.user;
+    const ss=document.getElementById('syncStatus');
+    if(ss) ss.style.display='flex';
+    await loadAllData();
+  } else {
+    // No session — load from localStorage only (offline mode)
+    loadFromLocalStorage();
   }
+  applyActivePhase();
+  await appStart();
 }
 
 // ══ WEEK STRIP ═══════════════════════════════════════════════════════════════
@@ -1717,8 +1913,6 @@ function saveSteps(val){
   const s=parseInt(val)||0;
   updateStepsBar(s);
   stepsHistory[todayKey()]=s;
-  // ── SYNC: write to shared rf_steps so Planner + Ship read live ──
-  localStorage.setItem('rf_steps',JSON.stringify(stepsHistory));
   saveTodayLocal();updateFeedback();renderWeekStrip();
   if(s>=10000&&!tasksDone['steps']){tasksDone['steps']=true;saveTodayLocal();showToast('👑 10K steps done! Task marked complete!');}
 }
@@ -1775,13 +1969,57 @@ async function saveTodayStats(){
   weightHistory.unshift({weight:w,date:todayKey(),...entry});
   statsLog.unshift(entry);
   statsLoggedToday=true;
-  // ── SHIP SYNC: write weight to localStorage so Ship reads live ──
-  localStorage.setItem('rf_weights',JSON.stringify(weightHistory));
   document.getElementById('statsLoggedBadge').style.display='block';
   document.getElementById('statsForm').style.display='none';
-  renderWeightHistory();renderRecentStats();renderCharts();
+  renderWeightHistory();renderRecentStats();renderBeforeVsNow();renderCharts();
   showToast('✓ Stats saved!');
   setTimeout(()=>{showPage('stats',document.querySelectorAll('.tab')[2]);},800);
+}
+
+function renderPhaseTimeline(){
+  const el=document.getElementById('phaseTimeline');
+  if(!el) return;
+  const phases=[
+    {id:'tyker_cut',name:"Tyker's Cut Phase",dates:'Mar 22 – Apr 27, 2026',detail:'1,600 Low / 1,900 High',color:'var(--gold)'},
+    {id:'reverse_diet',name:'Phase 1 · Reverse Diet',dates:'Apr 28 – Jun 22, 2026',detail:'1,700–2,400 cals',color:'var(--mauve)'},
+    {id:'muscle_build',name:'Phase 2 · Muscle Building',dates:'Jun 22 – Oct 2026',detail:'2,300 Low / 2,700 High',color:'var(--teal)'},
+    {id:'cut_to_goal',name:'Phase 3 · Cut to Goal 👑',dates:'Oct 2026 – May 2027',detail:'Goal: 140–150 lbs',color:'var(--gold)'},
+  ];
+  el.innerHTML=phases.map(p=>{
+    const isActive=activePhaseId===p.id;
+    return`<div style="display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border-radius:8px;${isActive?'background:rgba(201,144,122,.08);border:1px solid rgba(201,144,122,.18)':''}cursor:pointer" onclick="selectPhase('${p.id}')">
+      <div style="width:8px;height:8px;border-radius:50%;background:${p.color};margin-top:3px;flex-shrink:0;${isActive?'box-shadow:0 0 6px rgba(201,168,76,.4)':''}"></div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:${p.color}">${isActive?'ACTIVE · ':''}${p.name}</div>
+        <div style="font-size:9px;color:var(--light)">${p.dates} · ${p.detail}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderBeforeVsNow(){
+  const el=document.getElementById('beforeVsNow');
+  if(!el) return;
+  const currentWt=weightHistory.length?weightHistory[0].weight:null;
+  const currentWtDisplay=currentWt||'—';
+  const startWt=247.5;
+  const lostLbs=currentWt?(startWt-currentWt).toFixed(1):null;
+
+  // Get latest stats log entry for body comp
+  const latestStats=statsLog.length?statsLog[0]:null;
+  const nowMuscle=latestStats&&latestStats.muscle?latestStats.muscle:'94.4';
+  const nowBF=latestStats&&latestStats.body_fat?latestStats.body_fat:'55.1';
+
+  el.innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-box"><div class="sb-val">${startWt}</div><div class="sb-unit">lbs</div><div class="sb-label">Start Weight</div></div>
+      <div class="stat-box"><div class="sb-val" id="nowWeight" style="color:var(--teal)">${currentWtDisplay}</div><div class="sb-unit">lbs</div><div class="sb-label">Current</div></div>
+      <div class="stat-box"><div class="sb-val">88.5</div><div class="sb-unit">lbs</div><div class="sb-label">Start Muscle</div></div>
+      <div class="stat-box"><div class="sb-val" style="color:var(--teal)">${nowMuscle}</div><div class="sb-unit">lbs</div><div class="sb-label">Now Muscle</div></div>
+      <div class="stat-box"><div class="sb-val">61.9</div><div class="sb-unit">%</div><div class="sb-label">Start Body Fat</div></div>
+      <div class="stat-box"><div class="sb-val" style="color:var(--teal)">${nowBF}</div><div class="sb-unit">%</div><div class="sb-label">Now Body Fat</div></div>
+    </div>
+    ${lostLbs?`<div style="background:var(--teal-light);border-radius:8px;padding:8px;text-align:center"><span style="font-size:11px;color:var(--teal);font-weight:600">-${lostLbs} lbs lost 🔥</span></div>`:''}`;
 }
 
 function renderWeightHistory(){
@@ -3454,8 +3692,8 @@ window.addEventListener('resize',()=>setTimeout(renderCharts,100));
 
 <!-- ⚓ BACK TO SHIP -->
 <style>
-.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s;cursor:pointer}
-.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);box-shadow:0 6px 24px rgba(201,168,76,0.15);transform:translateY(-1px);color:#f5efe0}
+.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s}
+.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);transform:translateY(-1px);color:#f5efe0}
 .ship-home-btn .sh-anchor{font-size:15px;line-height:1}
 </style>
 <a class="ship-home-btn" href="index.html"><span class="sh-anchor">⚓</span> The Ship</a>
