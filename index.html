@@ -420,11 +420,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
     <div class="qa-row">
+      <div class="qa" onclick="qf('What\\'s my schedule today?')">📅 My schedule</div>
+      <div class="qa" onclick="qf('What\\'s the weather like today?')">🌤 Weather</div>
       <div class="qa" onclick="qf('I had my PB shake and 3 eggs for breakfast')">💛 Log breakfast</div>
       <div class="qa" onclick="qf('Need to follow up with Lyka this week')">🧠 Log task</div>
-      <div class="qa" onclick="qf('Had rotisserie chicken rice bowl for lunch')">💛 Log lunch</div>
+      <div class="qa" onclick="qf('How am I doing on nutrition today?')">📊 Today\\'s stats</div>
       <div class="qa" onclick="qf('Help me plan my week')">🧠 Plan my week</div>
-      <div class="qa" onclick="qf('I need some sunshine today')">☀️ Sunshine</div>
     </div>
     <div class="input-area">
       <div class="input-wrap">
@@ -589,7 +590,11 @@ function loadLiveData(){
 // ══ INTENT DETECTION ═════════════════════════════════════════════════════════
 function detectIntent(text){
   const l=text.toLowerCase();
-  const food=['had','ate','just had','just ate','for breakfast','for lunch','for dinner','for snack','i ate','i had','calories','shake','bowl','chicken','rice','egg','protein','coffee','salad','burger','pizza','kbbq','bread','fruit','banana','yogurt','oats','pb','tuna','salmon','beef','turkey','tofu','veggies','broccoli','spinach','drank','drink'];
+  // Schedule and weather queries always go to chat
+  const chatFirst=['weather','schedule','what time','what\\'s on','what is on','my day','today look','forecast','temperature','raining','sunny','what do i have','what\\'s happening','how am i doing','my stats','nutrition today','steps today'];
+  if(chatFirst.some(w=>l.includes(w))) return 'chat';
+
+  const food=['had','ate','just had','just ate','for breakfast','for lunch','for dinner','for snack','i ate','i had','shake','bowl','chicken','rice','egg','coffee','salad','burger','pizza','kbbq','bread','fruit','banana','yogurt','oats','pb','tuna','salmon','beef','turkey','tofu','veggies','broccoli','spinach','drank','drink','logged','log my','add to meals'];
   const task=['need to','i need','remind me','don\'t forget','add task','follow up','schedule','book','buy','pick up','check on','finish','complete','submit','send','review','update','fix','prepare','meet','contact','reach out','write','draft','pay','order','call'];
   const isFood=food.some(w=>l.includes(w));
   const isTask=task.some(w=>l.includes(w));
@@ -650,10 +655,131 @@ function writeTasksToGM(tasks){
 }
 
 // ══ GENERAL CHAT ═════════════════════════════════════════════════════════════
+// ══ CONTEXT ENGINE — reads weather, schedule, tasks, nutrition ════════════════
+
+let cachedWeather=null;
+let weatherFetchedAt=0;
+
+async function fetchWeather(){
+  // Cache for 30 minutes
+  if(cachedWeather&&Date.now()-weatherFetchedAt<30*60*1000) return cachedWeather;
+  try{
+    // Get user location
+    const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));
+    const{latitude:lat,longitude:lon}=pos.coords;
+    // Open-Meteo — completely free, no API key
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weathercode,windspeed_10m,relativehumidity_2m&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
+    const r=await fetch(url);
+    const d=await r.json();
+    const c=d.current;
+    const codes={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Light showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm with hail',99:'Severe thunderstorm'};
+    const desc=codes[c.weathercode]||'Unknown';
+    cachedWeather={
+      temp:Math.round(c.temperature_2m),
+      feels:Math.round(c.apparent_temperature),
+      desc,
+      humidity:c.relativehumidity_2m,
+      wind:Math.round(c.windspeed_10m),
+      precip:c.precipitation,
+      summary:`${Math.round(c.temperature_2m)}°F, feels like ${Math.round(c.apparent_temperature)}°F — ${desc}. Humidity ${c.relativehumidity_2m}%, wind ${Math.round(c.windspeed_10m)} mph.${c.precipitation>0?' Rain: '+c.precipitation+'"':''}`
+    };
+    weatherFetchedAt=Date.now();
+    return cachedWeather;
+  }catch(e){
+    return{summary:'Weather unavailable (location permission needed)'};
+  }
+}
+
+function buildShipContext(){
+  const pad=n=>String(n).padStart(2,'0');
+  const d=new Date();
+  const todayKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const dow=d.getDay();
+  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const ctx=[];
+
+  // ── DATE & DAY ──
+  ctx.push(`TODAY: ${dayNames[dow]}, ${d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · ${d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`);
+
+  // ── NUTRITION PHASE ──
+  const phaseTarget={0:1600,1:1600,2:1900,3:1600,4:1600,5:1900,6:1600}[dow];
+  const phaseType=dow===2||dow===5?'HIGH DAY':'Low Day';
+  const activePhaseId=localStorage.getItem('rf_active_phase')||'reverse_diet';
+  const phaseNames={tyker_cut:"Tyker's Cut",reverse_diet:'Phase 1 Reverse Diet',muscle_build:'Phase 2 Muscle Build',cut_to_goal:'Phase 3 Cut',custom:'Custom Phase'};
+  ctx.push(`ACTIVE PHASE: ${phaseNames[activePhaseId]||'Reverse Diet'} · ${phaseType} · ${phaseTarget} cal target · 165g+ protein · steps goal 10,000`);
+
+  // ── RUMAFIT TODAY ──
+  try{
+    const rf=JSON.parse(localStorage.getItem('rf_today_'+todayKey)||'{}');
+    const meals=rf.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]};
+    const all=Object.values(meals).flat();
+    const cal=Math.round(all.reduce((a,i)=>a+(i.cal||0),0));
+    const pro=Math.round(all.reduce((a,i)=>a+(i.pro||0),0));
+    const fat=Math.round(all.reduce((a,i)=>a+(i.fat||0),0));
+    const steps=parseInt(rf.steps||localStorage.getItem('rf_steps')&&JSON.parse(localStorage.getItem('rf_steps'))[todayKey]||0);
+    const water=parseInt(localStorage.getItem('rf_water_'+todayKey)||'0');
+    const wts=JSON.parse(localStorage.getItem('rf_weights')||'[]');
+    const weight=wts.length?wts[0].weight:null;
+    ctx.push(`NUTRITION TODAY: ${cal} cal logged / ${phaseTarget} target (${Math.max(0,phaseTarget-cal)} remaining) · Protein: ${pro}g / 165g · Fat: ${fat}g · Steps: ${steps} / 10,000 · Water: ${water}L / 3L${weight?` · Last weight: ${weight} lbs`:''}`);
+    const mealList=Object.entries(meals).map(([m,items])=>items.length?`${m}: ${items.map(i=>i.name).join(', ')}`:null).filter(Boolean);
+    if(mealList.length) ctx.push(`MEALS LOGGED: ${mealList.join(' | ')}`);
+    else ctx.push('MEALS LOGGED: Nothing logged yet today');
+  }catch(e){}
+
+  // ── GARDENMIND TASKS ──
+  try{
+    const todos=JSON.parse(localStorage.getItem('bd_todos')||'[]');
+    const done=new Set(JSON.parse(localStorage.getItem('bd_done')||'[]'));
+    const pending=todos.filter(t=>!done.has(t.id));
+    const urgent=pending.filter(t=>t.priority==='urgent');
+    const soon=pending.filter(t=>t.priority==='soon');
+    if(pending.length){
+      ctx.push(`TASKS (${pending.length} pending): ${urgent.length} urgent, ${soon.length} due soon`);
+      if(urgent.length) ctx.push(`URGENT TASKS: ${urgent.slice(0,5).map(t=>`[${t.bucket}] ${t.text}`).join(' · ')}`);
+      if(soon.length) ctx.push(`SOON TASKS: ${soon.slice(0,5).map(t=>`[${t.bucket}] ${t.text}`).join(' · ')}`);
+    } else {
+      ctx.push('TASKS: All clear! No pending tasks.');
+    }
+  }catch(e){}
+
+  // ── PLANNER EVENTS TODAY ──
+  try{
+    const plannerTasks=JSON.parse(localStorage.getItem('magda_tasks')||'[]');
+    const todayEvents=plannerTasks.filter(t=>t.date===todayKey&&t.time).sort((a,b)=>a.time.localeCompare(b.time));
+    if(todayEvents.length){
+      ctx.push(`PLANNER TODAY (${todayEvents.length} events): ${todayEvents.map(t=>`${t.time} ${t.name}${t.duration?' ('+t.duration+'min)':''}`).join(' · ')}`);
+    } else {
+      ctx.push('PLANNER TODAY: No time-blocked events scheduled.');
+    }
+  }catch(e){}
+
+  return ctx.join('\n');
+}
+
 async function callAgent(id,text){
   const ag=AGENTS[id];
+
+  // Build live context for RM and all agents
+  const shipCtx=buildShipContext();
+
+  // Fetch weather (non-blocking — if fails, continues without it)
+  let weatherLine='';
+  try{
+    const w=await fetchWeather();
+    weatherLine=`WEATHER (Los Angeles): ${w.summary}`;
+  }catch(e){}
+
+  // Inject context into system prompt
+  const contextBlock=`
+MAGDA'S LIVE DATA RIGHT NOW:
+${shipCtx}
+${weatherLine}
+
+You have FULL visibility into Magda's day. When she asks about her schedule, tasks, nutrition, or weather — answer from the data above. Be specific with real numbers and real task names. Do not say you don't have access to this info.`;
+
+  const fullSystem=ag.system+contextBlock;
   const msgs=[...fleetHistory.slice(-8),{role:'user',content:text}];
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,system:ag.system,messages:msgs})});
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:fullSystem,messages:msgs})});
   const data=await r.json();
   if(data.error) throw new Error(data.error.message);
   return data.content[0].text;
