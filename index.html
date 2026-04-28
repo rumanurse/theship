@@ -425,11 +425,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
     <div class="qa-row">
-      <div class="qa" onclick="qf('What\\'s my schedule today?')">📅 My schedule</div>
-      <div class="qa" onclick="qf('What\\'s the weather like today?')">🌤 Weather</div>
+      <div class="qa" onclick="qf('What is my schedule today?')">📅 My schedule</div>
+      <div class="qa" onclick="qf('Weather today please')">🌤 Weather</div>
       <div class="qa" onclick="qf('I had my PB shake and 3 eggs for breakfast')">💛 Log breakfast</div>
       <div class="qa" onclick="qf('Need to follow up with Lyka this week')">🧠 Log task</div>
-      <div class="qa" onclick="qf('How am I doing on nutrition today?')">📊 Today\\'s stats</div>
+      <div class="qa" onclick="qf('How am I doing on nutrition today')">📊 Today stats</div>
       <div class="qa" onclick="qf('Help me plan my week')">🧠 Plan my week</div>
     </div>
     <div class="input-area">
@@ -741,7 +741,7 @@ function loadLiveData(){
 function detectIntent(text){
   const l=text.toLowerCase();
   // Schedule and weather queries always go to chat
-  const chatFirst=['weather','schedule','what time','what\\'s on','what is on','my day','today look','forecast','temperature','raining','sunny','what do i have','what\\'s happening','how am i doing','my stats','nutrition today','steps today'];
+  const chatFirst=['weather','schedule','what time','whats on','what is on','my day','today look','forecast','temperature','raining','sunny','what do i have','whats happening','how am i doing','my stats','nutrition today','steps today'];
   if(chatFirst.some(w=>l.includes(w))) return 'chat';
 
   const food=['had','ate','just had','just ate','for breakfast','for lunch','for dinner','for snack','i ate','i had','shake','bowl','chicken','rice','egg','coffee','salad','burger','pizza','kbbq','bread','fruit','banana','yogurt','oats','pb','tuna','salmon','beef','turkey','tofu','veggies','broccoli','spinach','drank','drink','logged','log my','add to meals'];
