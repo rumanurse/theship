@@ -3100,13 +3100,29 @@ async function mhLoadAll(){
       .eq('user_id',mhUser.id).order('created_at',{ascending:false}).limit(20);
     if(j&&j.length){
       const entries=j.map(r=>({id:r.id,title:r.title||'Entry',body:r.response||'',
-        date:r.date||'',emotions:r.emotions,chips:r.chips||[]}));
+        date:r.date||new Date(r.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+        emotions:r.emotions,chips:r.chips||[]}));
       localStorage.setItem('journalMH',JSON.stringify(entries));
+      // Re-render entries so they show immediately on new device
+      try{
+        const c=document.getElementById('savedEntries');
+        if(c){
+          c.innerHTML='<h3 style="font-family:var(--font-display);font-size:22px;color:var(--champagne);margin:24px 0 16px;font-style:italic;">Past Entries</h3>';
+          entries.forEach(e=>{
+            const excerpt=e.body.substring(0,120)+'...';
+            c.innerHTML+=`<div class="glass-card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><h3 style="font-size:18px">${e.title}</h3><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">${e.date}</span></div><p style="font-style:italic">${excerpt}</p></div>`;
+          });
+        }
+      }catch(re){}
     }
     // Load safe place
     const{data:sp}=await mhSb.from('mindhaven_safe_place').select('*')
       .eq('user_id',mhUser.id).single();
-    if(sp?.content) localStorage.setItem('safePlaceMH',sp.content);
+    if(sp?.content){
+      localStorage.setItem('safePlaceMH',sp.content);
+      const spEl=document.getElementById('safePlaceText');
+      if(spEl) spEl.value=sp.content;
+    }
     // Load feelings log
     const{data:fl}=await mhSb.from('mindhaven_journal').select('*')
       .eq('user_id',mhUser.id).not('emotions','is',null)
