@@ -970,8 +970,24 @@ function savePost(){
   DB.s('posts',posts);
   // ── CLOUD SYNC ──
   msSavePost(post).catch(()=>{});
-  closeM('m-post');renderBlog();
+  // Clear fields
+  document.getElementById('pTitle').value='';
+  document.getElementById('pBody').value='';
+  document.getElementById('pMusic').value='';
+  document.getElementById('pTags').value='';
+  document.getElementById('pImgData').value='';
+  selectedMood=null;
+  editId=null;
+  blogImgData='';
+  // Close modal and refresh blog immediately
+  closeM('m-post');
+  renderBlog();
   toast(editId?'✿ entry updated!':'✿ entry published! 💜');
+  // Scroll to blog section
+  setTimeout(()=>{
+    const el=document.getElementById('blogList');
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  },200);
 }
 
 function delPost(id){
