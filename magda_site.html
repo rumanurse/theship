@@ -735,7 +735,7 @@ what i'm carrying into next week:`
 
 // ── SEED ────────────────────────────────────────────────────────────────────
 function seed(){
-  if(DB.g('seeded3'))return;
+  if(DB.g('seeded3')||localStorage.getItem('y2k_seeded3'))return;
   DB.s('posts',[
     {id:1001,title:'the way God moves in quiet moments 🙏',date:'Saturday, April 26, 2026 · 10:14 PM',mood:'grateful & full',moodE:'🌙',music:'BTS - Magic Shop',img:'',body:"okay so i know i always post at weird hours but hear me out.\n\nthere's this thing that happens when it gets quiet and you're just sitting there and suddenly you feel it — like this warmth that doesn't come from anything around you, it just... IS there. and you just KNOW.\n\ni had that tonight. after everything this week, after all the chaos and the noise, God just quietly showed up in the stillness and reminded me that He's got it. He's always had it.\n\ni genuinely have no words for how grateful i am. not just for the big things. for the small signs. for the songs that play at exactly the right moment. for the friends who check in just when you needed it most.\n\nif you're reading this — you're one of the good things in my life, i hope you know that 💜",tags:['faith','grateful','late night','God is good']},
     {id:1000,title:'2am playlist mode: activated 🌙',date:'Thursday, April 24, 2026 · 2:07 AM',mood:'soft chaos',moodE:'✨',music:'BTS - Spring Day',img:'',body:"i was SUPPOSED to sleep three hours ago.\n\nbut instead i made four playlists, texted three people who are definitely asleep, and started redecorating my whole room in my head at 1:47am like a normal person.\n\nthe playlist i made tonight is called \"if 2am had a color it would be lavender\" and i stand by that completely.\n\nalso decided my 2026 aesthetic is \"soft girl who could also ruin ur life\" and i will be taking no questions about this 💅\n\nif you're up at weird hours too — hi, we should be friends, leave me a guestbook entry.",tags:['music','late night','2am thoughts','playlists']}
@@ -1365,7 +1365,9 @@ async function msLoadPosts(){
         date:new Date(r.created_at).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
         tags:[],music:'',img:''
       }));
+      // Cloud posts override everything including seeded demo posts
       localStorage.setItem('y2k_posts',JSON.stringify(posts));
+      localStorage.setItem('y2k_seeded3','true'); // prevent seed from overwriting
       renderBlog();
     }
   }catch(e){console.error('msLoadPosts',e);}
