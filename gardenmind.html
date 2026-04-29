@@ -296,6 +296,14 @@ const BUCKET_CONFIG = {
 // ─── API KEY ──────────────────────────────────────────────────────────────────
 function checkKey() {
   const modal = document.getElementById('keyModal');
+  // Pull API key from Ship's stored keys first
+  if(!API_KEY){
+    const shipKey=localStorage.getItem('rn_api_key')||localStorage.getItem('rf_jin_key')||localStorage.getItem('bd_apikey');
+    if(shipKey&&shipKey.startsWith('sk-')){
+      API_KEY=shipKey;
+      localStorage.setItem('bd_apikey',shipKey);
+    }
+  }
   if (!API_KEY) {
     modal.style.display = 'flex';
   } else {
@@ -521,6 +529,14 @@ async function handleSend() {
     });
 
     const data = await res.json();
+
+    // If API error, show it clearly
+    if(data.error){
+      setReply(`API error: ${data.error.message} — check your API key in settings. 🔑`);
+      loading = false; updateSendBtn();
+      return;
+    }
+
     const raw = (data.content?.find(b => b.type === 'text')?.text || '{}')
       .replace(/```json|```/g, '').trim();
 
