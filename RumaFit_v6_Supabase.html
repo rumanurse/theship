@@ -444,6 +444,55 @@ select.input-field{appearance:none}
 
 <!-- ══ MEALS ══════════════════════════════════════════════════════════════════ -->
 <div class="page" id="meals">
+  <!-- NUTRITION PROGRESS CARD -->
+  <div class="card" id="mealsNutritionCard" style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-title" style="margin:0">Today's Nutrition</div>
+      <div id="mealsCalBadge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--nude);color:var(--mauve)">0 cal</div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:10px;font-weight:600;color:var(--dark)">Calories</span>
+        <span style="font-size:10px;color:var(--light)" id="mCalNums">0 / 0 kcal</span>
+      </div>
+      <div style="height:7px;background:rgba(201,144,122,.12);border-radius:10px;overflow:hidden">
+        <div id="mCalBar" style="height:100%;width:0%;background:linear-gradient(90deg,#C9907A,#D4A090);border-radius:10px;transition:width .5s ease"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:9px;font-weight:600;color:var(--teal)">Protein</span>
+          <span style="font-size:9px;color:var(--light)" id="mProNums">0g</span>
+        </div>
+        <div style="height:5px;background:rgba(74,155,142,.15);border-radius:10px;overflow:hidden">
+          <div id="mProBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--teal),#3A8A7E);border-radius:10px;transition:width .5s ease"></div>
+        </div>
+        <div style="font-size:8px;color:var(--light);margin-top:2px" id="mProTarget">/ 165g</div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:9px;font-weight:600;color:#c9a84c">Carbs</span>
+          <span style="font-size:9px;color:var(--light)" id="mCarbNums">0g</span>
+        </div>
+        <div style="height:5px;background:rgba(201,168,76,.15);border-radius:10px;overflow:hidden">
+          <div id="mCarbBar" style="height:100%;width:0%;background:linear-gradient(90deg,#c9a84c,#b8960a);border-radius:10px;transition:width .5s ease"></div>
+        </div>
+        <div style="font-size:8px;color:var(--light);margin-top:2px" id="mCarbTarget">/ 0g</div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:9px;font-weight:600;color:#D4956A">Fat</span>
+          <span style="font-size:9px;color:var(--light)" id="mFatNums">0g</span>
+        </div>
+        <div style="height:5px;background:rgba(212,149,106,.15);border-radius:10px;overflow:hidden">
+          <div id="mFatBar" style="height:100%;width:0%;background:linear-gradient(90deg,#D4956A,#C4854A);border-radius:10px;transition:width .5s ease"></div>
+        </div>
+        <div style="font-size:8px;color:var(--light);margin-top:2px" id="mFatTarget">/ 50g</div>
+      </div>
+    </div>
+    <div id="mRemainingPill" style="margin-top:10px;text-align:center;font-size:11px;padding:5px;border-radius:8px;background:var(--nude);color:var(--mauve);font-weight:600"></div>
+  </div>
   <div class="card">
     <div class="card-title">🔍 Search Food Database</div>
     <input type="text" class="input-field" id="foodSearch" placeholder="Search your recipes & foods..." oninput="searchFoods(this.value)" style="margin-bottom:5px">
@@ -1711,15 +1760,28 @@ function updatePhaseCard(){
 async function saveTodayLocal(){
   const t=getTotals();
   const steps=parseInt(document.getElementById('stepsInput').value)||0;
-  if(!currentUser) return;
-  await dbUpsertByDate('daily_logs',todayKey(),{
-    meals,
-    steps,
-    water:waterCount,
-    tasks:tasksDone,
-    calories:t.cal,
-    stats_logged:statsLoggedToday
-  });
+
+  // ── WRITE TO localStorage SO THE SHIP READS LIVE DATA ──
+  const pad=n=>String(n).padStart(2,'0');
+  const d=new Date();
+  const tk='rf_today_'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  localStorage.setItem(tk,JSON.stringify({meals,steps,water:waterCount,tasks:tasksDone,calories:t.cal}));
+  localStorage.setItem('rf_weights',JSON.stringify(weightHistory));
+  const stepsHist=JSON.parse(localStorage.getItem('rf_steps')||'{}');
+  stepsHist[todayKey()]=steps;
+  localStorage.setItem('rf_steps',JSON.stringify(stepsHist));
+  const calHist=JSON.parse(localStorage.getItem('rf_cals')||'{}');
+  calHist[todayKey()]=t.cal;
+  localStorage.setItem('rf_cals',JSON.stringify(calHist));
+
+  // ── SAVE TO SUPABASE ──
+  if(currentUser){
+    await dbUpsertByDate('daily_logs',todayKey(),{
+      meals,steps,water:waterCount,
+      tasks:tasksDone,calories:t.cal,
+      stats_logged:statsLoggedToday
+    });
+  }
   calHistory[todayKey()]=t.cal;
   stepsHistory[todayKey()]=steps;
 }
