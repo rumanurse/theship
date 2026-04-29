@@ -63,6 +63,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 }
 .login-btn:hover{box-shadow:0 6px 20px rgba(201,168,76,0.25);transform:translateY(-1px)}
 .login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .login-error{font-size:11px;color:var(--red);margin-top:4px;min-height:16px}
 .login-note{font-size:9px;color:rgba(245,239,224,0.18);margin-top:12px;line-height:1.6;letter-spacing:.3px}
 
@@ -233,13 +234,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="login-box">
     <span class="login-anchor">⚓</span>
     <div class="login-title">Welcome back, <em>Magda</em></div>
-    <div class="login-sub">Your command center is ready.<br>Sign in to set sail.</div>
-    <input type="email" class="login-input" id="loginEmail" placeholder="Email" autocomplete="email">
-    <input type="password" class="login-input" id="loginPass" placeholder="Password" autocomplete="current-password"
-      onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-sub">Your command center is ready.<br>Enter your password to set sail.</div>
+    <input type="password" class="login-input" id="loginPass" placeholder="Password"
+      autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" id="loginBtn" onclick="doLogin()">Set Sail →</button>
     <div class="login-error" id="loginError"></div>
-    <div class="login-note">Private · Secure · Yours only<br>Powered by Supabase</div>
+    <div class="login-note">Private · Secure · Yours only</div>
   </div>
 </div>
 
@@ -600,40 +600,68 @@ window.addEventListener('load',()=>{
 });
 
 // ══ AUTH ═════════════════════════════════════════════════════════════════════
-async function checkAuth(){
-  const{data:{session}}=await sb.auth.getSession();
-  if(session){
+// ══ SIMPLE PASSWORD AUTH ═════════════════════════════════════════════════════
+const SHIP_PASS='#Spageti-630';
+const AUTH_KEY='ship_unlocked';
+
+function checkAuth(){
+  if(localStorage.getItem(AUTH_KEY)==='yes'){
     document.getElementById('loginOverlay').classList.add('hidden');
+    // Silent background Supabase reconnect
+    sb.auth.signInWithPassword({
+      email:'admin@rumanurse.com',
+      password:'#Spageti-630'
+    }).then(({data,error})=>{
+      if(!error&&data.user){
+        currentUser=data.user;
+        const ss=document.getElementById('syncStatus');
+        if(ss) ss.style.display='flex';
+      }
+    }).catch(()=>{});
     onLoggedIn();
   }
+  setTimeout(()=>{
+    const p=document.getElementById('loginPass');
+    if(p&&!document.getElementById('loginOverlay').classList.contains('hidden')) p.focus();
+  },300);
 }
 
-async function doLogin(){
-  const email=document.getElementById('loginEmail').value.trim();
+function doLogin(){
   const pass=document.getElementById('loginPass').value;
   const btn=document.getElementById('loginBtn');
   const err=document.getElementById('loginError');
-  if(!email||!pass){err.textContent='Please enter email and password.';return;}
-  btn.disabled=true;btn.textContent='Sailing…';err.textContent='';
-  const{error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error){
-    err.textContent=error.message==='Invalid login credentials'?'Wrong email or password. Try again.':error.message;
-    btn.disabled=false;btn.textContent='Set Sail →';
-  } else {
+  if(pass===SHIP_PASS){
+    localStorage.setItem(AUTH_KEY,'yes');
     document.getElementById('loginOverlay').classList.add('hidden');
     onLoggedIn();
+    // Silent Supabase background sign-in for cloud sync
+    sb.auth.signInWithPassword({
+      email:'admin@rumanurse.com',
+      password:'#Spageti-630'
+    }).then(({data,error})=>{
+      if(!error&&data.user){
+        currentUser=data.user;
+        const ss=document.getElementById('syncStatus');
+        if(ss) ss.style.display='flex';
+      }
+    }).catch(()=>{});
+  } else {
+    err.textContent='Wrong password. Try again. 🔒';
+    document.getElementById('loginPass').value='';
+    document.getElementById('loginPass').focus();
+    btn.style.animation='shake .3s ease';
+    setTimeout(()=>btn.style.animation='',400);
   }
 }
 
-async function doLogout(){
-  await sb.auth.signOut();
+function doLogout(){
+  localStorage.removeItem(AUTH_KEY);
   document.getElementById('loginOverlay').classList.remove('hidden');
-  document.getElementById('loginEmail').value='';
   document.getElementById('loginPass').value='';
   document.getElementById('loginError').textContent='';
-  // Clear fleet chat
   document.getElementById('fleetMsgs').innerHTML=`<div class="fleet-welcome"><div class="fw-crown">👑</div><div class="fw-title">Welcome aboard, <em>Magda</em></div><div class="fw-sub">Log food · log tasks · or just talk.<br>I'll route everything to the right place.</div></div>`;
   fleetHistory=[];
+  setTimeout(()=>document.getElementById('loginPass').focus(),300);
 }
 
 function onLoggedIn(){
@@ -704,13 +732,29 @@ function loadLiveData(){
   let wts=[];try{wts=JSON.parse(localStorage.getItem('rf_weights')||'[]')}catch{}
   const wt=wts.length?wts[0].weight:null;
   const dow=d.getDay();
-  const target={0:1600,1:1600,2:1900,3:1600,4:1600,5:1900,6:1600}[dow];
+  // Read active phase targets from RumaFit localStorage
+  const activePhaseId=localStorage.getItem('rf_active_phase')||'reverse_diet';
+  const customPhase=JSON.parse(localStorage.getItem('rf_phase_custom')||'null');
+  const phaseSchedules={
+    tyker_cut:{0:1600,1:1600,2:1900,3:1600,4:1600,5:1900,6:1600},
+    reverse_diet:{0:1700,1:1700,2:2100,3:1700,4:1700,5:2100,6:1700},
+    muscle_build:{0:2300,1:2300,2:2700,3:2300,4:2300,5:2700,6:2300},
+    cut_to_goal:{0:1600,1:1600,2:1900,3:1600,4:1600,5:1900,6:1600},
+  };
+  let target,proTarget=165;
+  if(activePhaseId==='custom'&&customPhase){
+    const sched=customPhase.schedule||{};
+    target=(sched[dow]||{cal:1600}).cal;
+    proTarget=customPhase.protein||165;
+  } else {
+    target=(phaseSchedules[activePhaseId]||phaseSchedules.reverse_diet)[dow];
+  }
 
   document.getElementById('sCal').textContent=cal||'—';
   document.getElementById('sCalSub').textContent=`/ ${target} kcal`;
   document.getElementById('bCal').style.width=cal?Math.min(cal/target*100,100)+'%':'0%';
   document.getElementById('sPro').textContent=pro?pro+'g':'—';
-  document.getElementById('bPro').style.width=pro?Math.min(pro/165*100,100)+'%':'0%';
+  document.getElementById('bPro').style.width=pro?Math.min(pro/proTarget*100,100)+'%':'0%';
   document.getElementById('sSteps').textContent=steps?steps.toLocaleString():'—';
   document.getElementById('bSteps').style.width=steps?Math.min(steps/10000*100,100)+'%':'0%';
   document.getElementById('sWeight').textContent=wt||'—';
