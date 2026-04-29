@@ -3995,6 +3995,7 @@ function showPage(id,tab){
   if(id==='calc') prefillCalc();
   if(id==='workout') initWorkout();
   if(id==='jin'){initJin();updateJinMacroSnap();}
+  if(id==='meals') updateMacros(); // refresh nutrition card on tab open
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
