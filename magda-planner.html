@@ -1214,6 +1214,25 @@ function createTaskBlock(task, isWeek = false) {
   return div;
 }
 
+function doDropTask(task, date, hour, isMove) {
+  const timeStr = `${String(hour).padStart(2,'00')}:00`;
+  if(isMove){
+    const idx = tasks.findIndex(t => t.id === task.id);
+    if(idx > -1){
+      tasks[idx].date = date;
+      tasks[idx].time = timeStr;
+      saveTasks();
+      renderView(); // show immediately
+    }
+  } else {
+    addTask({
+      name: task.name, type: task.type,
+      date: date, time: timeStr,
+      duration: task.duration, notes: '',
+    });
+  }
+}
+
 function setupDropZone(el) {
   el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
   el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
@@ -1598,6 +1617,7 @@ function addTask(data) {
     }
   }
   saveTasks();
+  renderView(); // show immediately after drop/add
 }
 
 function deleteTask(id) {
