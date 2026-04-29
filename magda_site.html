@@ -249,6 +249,7 @@ footer { text-align:center; padding:20px 16px; font-size:12px; color:var(--light
 #secret { cursor:default; user-select:none; }
 .empty { text-align:center; padding:30px; color:var(--light); font-style:italic; font-size:14px; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -540,7 +541,6 @@ footer { text-align:center; padding:20px 16px; font-size:12px; color:var(--light
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ── DB ──────────────────────────────────────────────────────────────────────
 const DB = {
@@ -968,32 +968,26 @@ function savePost(){
   let posts=DB.posts();
   posts=editId?posts.map(p=>p.id===editId?post:p):[post,...posts];
   DB.s('posts',posts);
-  // ── CLOUD SYNC ──
-  msSavePost(post).catch(()=>{});
+  // Cloud sync
+  if(typeof msSavePost==='function') msSavePost(post).catch(()=>{});
   // Clear fields
   document.getElementById('pTitle').value='';
   document.getElementById('pBody').value='';
   document.getElementById('pMusic').value='';
   document.getElementById('pTags').value='';
   document.getElementById('pImgData').value='';
-  selectedMood=null;
-  editId=null;
-  blogImgData='';
-  // Close modal and refresh blog immediately
+  blogImgData=''; selectedMood=null; editId=null;
+  // Close modal and refresh immediately
   closeM('m-post');
   renderBlog();
-  toast(editId?'✿ entry updated!':'✿ entry published! 💜');
-  // Scroll to blog section
-  setTimeout(()=>{
-    const el=document.getElementById('blogList');
-    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-  },200);
+  toast('✿ entry published! 💜');
+  setTimeout(()=>{const el=document.getElementById('blogList');if(el)el.scrollIntoView({behavior:'smooth'});},200);
 }
 
 function delPost(id){
   if(!confirm('delete this entry? 🥺'))return;
   DB.s('posts',DB.posts().filter(p=>p.id!==id));
-  msDeletePost(id).catch(()=>{});
+  if(typeof msDeletePost==='function') msDeletePost(id).catch(()=>{});
   renderBlog();toast('✿ entry deleted');
 }
 
@@ -1352,64 +1346,22 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 init();
 </script>
+
+<style>
+.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s}
+.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);transform:translateY(-1px);color:#f5efe0}
+</style>
+<a class="ship-home-btn" href="index.html">⚓ The Ship</a>
 <script>
-// ══ SUPABASE SYNC ════════════════════════════════════════════════════════════
 const MS_SB_URL='https://jjjwzgshvqjcmwamiwsg.supabase.co';
 const MS_SB_KEY='sb_publishable_jnL1Pw-15hVGGrhC7_Ltjg_TL2_SGuP';
 const msSb=supabase.createClient(MS_SB_URL,MS_SB_KEY);
 let msUser=null;
-
-async function msInit(){
-  const{data,error}=await msSb.auth.signInWithPassword({
-    email:'admin@rumanurse.com',password:'#Spageti-630'
-  });
-  if(!error&&data.user){
-    msUser=data.user;
-    await msLoadPosts();
-  }
-}
-
-async function msLoadPosts(){
-  if(!msUser) return;
-  try{
-    const{data}=await msSb.from('magda_posts').select('*')
-      .eq('user_id',msUser.id).order('created_at',{ascending:false});
-    if(data&&data.length){
-      const posts=data.map(r=>({
-        id:r.id,title:r.title,body:r.content,
-        mood:r.mood||'',moodE:'🌸',
-        date:new Date(r.created_at).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
-        tags:[],music:'',img:''
-      }));
-      // Cloud posts override everything including seeded demo posts
-      localStorage.setItem('y2k_posts',JSON.stringify(posts));
-      localStorage.setItem('y2k_seeded3','true'); // prevent seed from overwriting
-      renderBlog();
-    }
-  }catch(e){console.error('msLoadPosts',e);}
-}
-
-async function msSavePost(post){
-  if(!msUser) return;
-  try{
-    await msSb.from('magda_posts').upsert({
-      id:String(post.id),user_id:msUser.id,
-      title:post.title,content:post.body,mood:post.mood||''
-    },{onConflict:'id'});
-  }catch(e){console.error('msSavePost',e);}
-}
-
-async function msDeletePost(id){
-  if(!msUser) return;
-  try{
-    await msSb.from('magda_posts').delete()
-      .eq('id',String(id)).eq('user_id',msUser.id);
-  }catch(e){console.error('msDeletePost',e);}
-}
-
+async function msInit(){const{data,error}=await msSb.auth.signInWithPassword({email:'admin@rumanurse.com',password:'#Spageti-630'});if(!error&&data.user){msUser=data.user;await msLoadPosts();}}
+async function msLoadPosts(){if(!msUser)return;try{const{data}=await msSb.from('magda_posts').select('*').eq('user_id',msUser.id).order('created_at',{ascending:false});if(data&&data.length){const posts=data.map(r=>({id:r.id,title:r.title,body:r.content,mood:r.mood||'',moodE:'🌸',date:new Date(r.created_at).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),tags:[],music:'',img:''}));localStorage.setItem('y2k_posts',JSON.stringify(posts));localStorage.setItem('y2k_seeded3','true');if(typeof renderBlog==='function')renderBlog();}}catch(e){console.error('msLoadPosts',e);}}
+async function msSavePost(post){if(!msUser)return;try{await msSb.from('magda_posts').upsert({id:String(post.id),user_id:msUser.id,title:post.title,content:post.body,mood:post.mood||''},{onConflict:'id'});}catch(e){}}
+async function msDeletePost(id){if(!msUser)return;try{await msSb.from('magda_posts').delete().eq('id',String(id)).eq('user_id',msUser.id);}catch(e){}}
 window.addEventListener('load',()=>msInit().catch(()=>{}));
-<style>.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s}.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);transform:translateY(-1px);color:#f5efe0}.ship-home-btn .sh-anchor{font-size:15px;line-height:1}</style>
-<a class="ship-home-btn" href="index.html"><span class="sh-anchor">⚓</span> The Ship</a>
 </script>
 </body>
 </html>
