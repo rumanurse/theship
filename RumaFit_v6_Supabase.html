@@ -1981,6 +1981,8 @@ function getTotals(){
 function updateMacros(){
   const t=getTotals();
   const sched=DAY_SCHED[new Date().getDay()];
+
+  // ── Today tab rings + bars ──
   document.getElementById('vCal').textContent=t.cal;
   document.getElementById('vPro').textContent=t.pro;
   document.getElementById('vCarb').textContent=t.carb;
@@ -1989,6 +1991,34 @@ function updateMacros(){
   document.getElementById('pbCal').textContent=t.cal+'/'+sched.cal;
   document.getElementById('pbPro').textContent=t.pro+'g/165g';
   setRing('rCal',t.cal,sched.cal);setRing('rPro',t.pro,165);setRing('rCarb',t.carb,sched.carbs);setRing('rFat',t.fat,50);
+
+  // ── Meals tab nutrition progress card ──
+  const safe=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
+  const safeW=(id,v,mx)=>{const el=document.getElementById(id);if(el)el.style.width=Math.min(v/mx*100,100)+'%';};
+  safe('mCalNums',t.cal+' / '+sched.cal+' kcal');
+  safe('mProNums',t.pro+'g');
+  safe('mCarbNums',t.carb+'g');
+  safe('mFatNums',t.fat+'g');
+  safe('mProTarget','/ 165g');
+  safe('mCarbTarget','/ '+sched.carbs+'g');
+  safe('mFatTarget','/ 50g');
+  safe('mealsCalBadge',t.cal+' cal');
+  safeW('mCalBar',t.cal,sched.cal);
+  safeW('mProBar',t.pro,165);
+  safeW('mCarbBar',t.carb,sched.carbs);
+  safeW('mFatBar',t.fat,50);
+  const remaining=Math.max(sched.cal-t.cal,0);
+  const pill=document.getElementById('mRemainingPill');
+  if(pill){
+    if(t.cal>=sched.cal){
+      pill.textContent='🎯 Target reached! '+sched.type.toUpperCase()+' DAY';
+      pill.style.color='var(--teal)';pill.style.background='var(--teal-light)';
+    } else {
+      pill.textContent=remaining+' cal remaining · '+sched.type.toUpperCase()+' DAY';
+      pill.style.color='var(--mauve)';pill.style.background='var(--nude)';
+    }
+  }
+
   calHistory[todayKey()]=t.cal;
   saveTodayLocal();updateFeedback();
 }
