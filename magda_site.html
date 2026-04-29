@@ -965,23 +965,31 @@ function savePost(){
     body,
     tags:document.getElementById('pTags').value.split(',').map(t=>t.trim()).filter(Boolean)
   };
+  // Capture image data NOW before anything gets cleared
+  const postToSave = {...post};
+  
   let posts=DB.posts();
-  posts=editId?posts.map(p=>p.id===editId?post:p):[post,...posts];
+  posts=editId?posts.map(p=>p.id===editId?postToSave:p):[postToSave,...posts];
   DB.s('posts',posts);
-  // Cloud sync
-  if(typeof msSavePost==='function') msSavePost(post).catch(()=>{});
-  // Clear fields
+  
+  // Clear fields and close modal immediately for good UX
   document.getElementById('pTitle').value='';
   document.getElementById('pBody').value='';
   document.getElementById('pMusic').value='';
   document.getElementById('pTags').value='';
   document.getElementById('pImgData').value='';
   blogImgData=''; selectedMood=null; editId=null;
-  // Close modal and refresh immediately
   closeM('m-post');
   renderBlog();
   toast('✿ entry published! 💜');
   setTimeout(()=>{const el=document.getElementById('blogList');if(el)el.scrollIntoView({behavior:'smooth'});},200);
+  
+  // Cloud sync AFTER UI update, with captured post data
+  if(typeof msSavePost==='function'){
+    msSavePost(postToSave).then(()=>{
+      console.log('Post synced to cloud ✅');
+    }).catch(e=>console.error('Post sync failed:',e));
+  }
 }
 
 function delPost(id){
