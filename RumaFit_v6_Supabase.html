@@ -456,13 +456,17 @@ select.input-field{appearance:none}
       <button onclick="setSearchMode('saved')" id="sm-saved" style="font-size:10px;padding:3px 10px;border-radius:20px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);cursor:pointer;font-family:inherit">My Foods</button>
       <button onclick="setSearchMode('db')" id="sm-db" style="font-size:10px;padding:3px 10px;border-radius:20px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);cursor:pointer;font-family:inherit">Food Database</button>
     </div>
-    <div id="searchResults"></div>
-    <div id="searchMealSel" style="display:none;margin-top:6px">
-      <select class="input-field" id="searchMealTarget">
-        <option value="breakfast">Breakfast</option><option value="lunch">Lunch</option>
-        <option value="dinner">Dinner</option><option value="snacks">Snacks</option>
+    <div style="margin-bottom:8px">
+      <label style="font-size:10px;font-weight:600;color:var(--light);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px">Log to meal:</label>
+      <select class="input-field" id="searchMealTarget" style="font-size:12px">
+        <option value="breakfast">🌄 Breakfast</option>
+        <option value="lunch">☀️ Lunch</option>
+        <option value="dinner">🌙 Dinner</option>
+        <option value="snacks">🍎 Snacks</option>
       </select>
     </div>
+    <div id="searchResults"></div>
+    <div id="searchMealSel" style="display:none"></div>
   </div>
   <div class="meal-section"><div class="meal-header"><div class="meal-name">🌄 Breakfast</div><div class="meal-cals" id="cal-breakfast">0 kcal</div></div><div id="items-breakfast"></div><button class="add-food-btn" onclick="openFoodModal('breakfast')">+ Add Manually</button></div>
   <div class="meal-section"><div class="meal-header"><div class="meal-name">☀️ Lunch</div><div class="meal-cals" id="cal-lunch">0 kcal</div></div><div id="items-lunch"></div><button class="add-food-btn" onclick="openFoodModal('lunch')">+ Add Manually</button></div>
@@ -1579,20 +1583,30 @@ function renderPhaseModal(){
     </div>
 
     <div style="background:var(--nude);border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid rgba(201,144,122,.18)">
-      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:8px">🎛️ Or set custom calories</div>
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:8px">🎛️ Set Custom Phase</div>
+      <div class="input-row">
+        <div class="input-group"><label class="input-label">Phase Name</label><input type="text" class="input-field" id="customPhaseName" value="${customData.name||'My Custom Phase'}" placeholder="My Phase"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label class="input-label">Start Date</label><input type="date" class="input-field" id="customDateStart" value="${customData.dateStart||new Date().toISOString().split('T')[0]}"></div>
+        <div class="input-group"><label class="input-label">End Date</label><input type="date" class="input-field" id="customDateEnd" value="${customData.dateEnd||''}"></div>
+      </div>
       <div class="input-row">
         <div class="input-group"><label class="input-label">Low Day Cals</label><input type="number" class="input-field" id="customLowCal" value="${customData.lowCal}" placeholder="1600"></div>
         <div class="input-group"><label class="input-label">High Day Cals</label><input type="number" class="input-field" id="customHighCal" value="${customData.highCal}" placeholder="1900"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label class="input-label">Protein (g)</label><input type="number" class="input-field" id="customProtein" value="${customData.protein}" placeholder="165"></div>
+        <div class="input-group"><label class="input-label">Protein Min (g)</label><input type="number" class="input-field" id="customProtein" value="${customData.protein}" placeholder="165"></div>
         <div class="input-group"><label class="input-label">Fat Max (g)</label><input type="number" class="input-field" id="customFatMax" value="${customData.fatMax}" placeholder="50"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label class="input-label">Low Carbs (g)</label><input type="number" class="input-field" id="customLowCarbs" value="${customData.lowCarbs}" placeholder="120"></div>
-        <div class="input-group"><label class="input-label">High Carbs (g)</label><input type="number" class="input-field" id="customHighCarbs" value="${customData.highCarbs}" placeholder="175"></div>
+        <div class="input-group"><label class="input-label">Low Day Carbs (g)</label><input type="number" class="input-field" id="customLowCarbs" value="${customData.lowCarbs}" placeholder="120"></div>
+        <div class="input-group"><label class="input-label">High Day Carbs (g)</label><input type="number" class="input-field" id="customHighCarbs" value="${customData.highCarbs}" placeholder="175"></div>
       </div>
-      <button class="btn btn-secondary" style="margin-top:4px" onclick="saveCustomPhase()">Use Custom Calories</button>
+      <div style="font-size:9px;color:var(--light);margin-bottom:6px;padding:4px 0">
+        💡 Low days: Sun/Mon/Wed/Thu/Sat · High days: Tue/Fri
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="saveCustomPhase()">✨ Save Custom Phase</button>
     </div>`;
 }
 
@@ -1606,29 +1620,49 @@ function selectPhase(id){
 }
 
 function saveCustomPhase(){
-  // Read ALL values first before any DOM changes
-  const lowCalEl=document.getElementById('customLowCal');
-  const highCalEl=document.getElementById('customHighCal');
-  const proteinEl=document.getElementById('customProtein');
-  const fatMaxEl=document.getElementById('customFatMax');
-  const lowCarbsEl=document.getElementById('customLowCarbs');
-  const highCarbsEl=document.getElementById('customHighCarbs');
+  // Grab all elements first
+  const els={
+    name:document.getElementById('customPhaseName'),
+    dateStart:document.getElementById('customDateStart'),
+    dateEnd:document.getElementById('customDateEnd'),
+    lowCal:document.getElementById('customLowCal'),
+    highCal:document.getElementById('customHighCal'),
+    protein:document.getElementById('customProtein'),
+    fatMax:document.getElementById('customFatMax'),
+    lowCarbs:document.getElementById('customLowCarbs'),
+    highCarbs:document.getElementById('customHighCarbs'),
+  };
 
-  if(!lowCalEl){showToast('Please open the phase panel first');return;}
+  if(!els.lowCal){showToast('Please open the phase settings first');return;}
 
-  const lowCal=parseInt(lowCalEl.value)||1600;
-  const highCal=parseInt(highCalEl.value)||1900;
-  const protein=parseInt(proteinEl.value)||165;
-  const fatMax=parseInt(fatMaxEl.value)||50;
-  const lowCarbs=parseInt(lowCarbsEl.value)||120;
-  const highCarbs=parseInt(highCarbsEl.value)||175;
+  // Read values
+  const phaseName=(els.name&&els.name.value.trim())||'My Custom Phase';
+  const dateStart=(els.dateStart&&els.dateStart.value)||new Date().toISOString().split('T')[0];
+  const dateEnd=(els.dateEnd&&els.dateEnd.value)||'';
+  const lowCal=parseInt(els.lowCal.value)||1600;
+  const highCal=parseInt(els.highCal.value)||1900;
+  const protein=parseInt(els.protein.value)||165;
+  const fatMax=parseInt(els.fatMax.value)||50;
+  const lowCarbs=parseInt(els.lowCarbs.value)||120;
+  const highCarbs=parseInt(els.highCarbs.value)||175;
 
   // Validate
-  if(lowCal<1000||highCal<1000){showToast('Calories must be at least 1000');return;}
-  if(protein<100){showToast('Protein should be at least 100g');return;}
+  if(lowCal<800){showToast('⚠️ Low day calories too low — minimum 800');return;}
+  if(highCal<lowCal){showToast('⚠️ High day should be higher than low day');return;}
+  if(protein<80){showToast('⚠️ Protein minimum is 80g');return;}
+
+  // Format date display
+  const fmtDate=d=>{if(!d)return'';const[y,m,da]=d.split('-');const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return`${months[parseInt(m)-1]} ${da}, ${y}`;};
+  const datesDisplay=dateEnd?`${fmtDate(dateStart)} – ${fmtDate(dateEnd)}`:`From ${fmtDate(dateStart)}`;
 
   const customData={
+    name:phaseName,
+    dates:datesDisplay,
+    dateStart,dateEnd,
     lowCal,highCal,protein,fatMax,lowCarbs,highCarbs,
+    color:'#9B7DD4',
+    custom:true,
+    note:`Low ${lowCal} · High ${highCal} · ${protein}g protein`,
     schedule:{
       0:{type:'low',cal:lowCal,carbs:lowCarbs},
       1:{type:'low',cal:lowCal,carbs:lowCarbs},
@@ -1638,31 +1672,23 @@ function saveCustomPhase(){
       5:{type:'high',cal:highCal,carbs:highCarbs},
       6:{type:'low',cal:lowCal,carbs:lowCarbs},
     },
-    protein,fatMax,
-    note:`Low ${lowCal} · High ${highCal} · Protein ${protein}g`,
-    name:'Custom Phase',
-    dates:'My own protocol',
-    color:'var(--purple)',
-    custom:true,
   };
 
-  // Save everything
+  // Save to storage
   localStorage.setItem('rf_phase_custom',JSON.stringify(customData));
   PHASES.custom={...PHASES.custom,...customData};
   activePhaseId='custom';
   localStorage.setItem('rf_active_phase','custom');
 
-  // Apply to DAY_SCHED immediately
+  // Apply targets immediately
   applyActivePhase();
-
-  // Update UI
   updatePhaseCard();
-  showToast(`✨ Custom phase saved! Low: ${lowCal}cal · High: ${highCal}cal · Protein: ${protein}g`);
 
-  // Close modal
+  // Close and show success
   closeModal('phaseModal');
+  showToast(`✨ ${phaseName} saved! ${lowCal}–${highCal} cal · ${protein}g protein`);
 
-  // Re-render today's tasks with new targets
+  // Re-render today
   try{renderTasks(new Date().getDay(),DAY_SCHED[new Date().getDay()]);}catch(e){}
 }
 
@@ -2233,12 +2259,16 @@ function renderFoodItem(name,cal,pro,carb,fat,cat,source,serving){
 }
 
 function selectFood(name,cal,pro,carb,fat){
-  const meal=document.getElementById('searchMealTarget').value;
+  const mealEl=document.getElementById('searchMealTarget');
+  const meal=mealEl?mealEl.value:'snacks';
   meals[meal].push({name,cal,pro,carb,fat,id:Date.now()});
   document.getElementById('foodSearch').value='';
   document.getElementById('searchResults').innerHTML='';
   document.getElementById('searchMealSel').style.display='none';
-  renderMeals();updateMacros();showToast('✓ '+name+' → '+meal+'!');
+  renderMeals();
+  updateMacros();
+  saveTodayLocal(); // ← actually save it!
+  showToast('✓ '+name+' → '+meal+'!');
 }
 
 function openFoodModal(meal){
