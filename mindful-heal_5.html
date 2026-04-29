@@ -3091,7 +3091,16 @@ const MH_SB_URL='https://jjjwzgshvqjcmwamiwsg.supabase.co';
 const MH_SB_KEY='sb_publishable_jnL1Pw-15hVGGrhC7_Ltjg_TL2_SGuP';
 const mhSb=supabase.createClient(MH_SB_URL,MH_SB_KEY);
 let mhUser=null;
-async function mhInit(){const{data,error}=await mhSb.auth.signInWithPassword({email:'admin@rumanurse.com',password:'#Spageti-630'});if(!error&&data.user){mhUser=data.user;await mhLoadAll();}}
+async function mhInit(){
+  console.log('mhInit: signing in...');
+  const{data,error}=await mhSb.auth.signInWithPassword({email:'admin@rumanurse.com',password:'#Spageti-630'});
+  if(error){console.error('mhInit sign-in error:',error.message);}
+  else if(data.user){
+    mhUser=data.user;
+    console.log('mhInit: signed in as',data.user.email);
+    await mhLoadAll();
+  }
+}
 async function mhLoadAll(){
   if(!mhUser) return;
   try{
@@ -3121,16 +3130,30 @@ async function mhLoadAll(){
   }catch(e){console.error('mhLoadAll error:',e);}
 }
 async function mhSaveJournal(entry){
-  if(!mhUser) return;
+  console.log('mhSaveJournal called, mhUser:',mhUser?'yes':'NO USER');
+  if(!mhUser){
+    // Try to reconnect
+    const{data,error}=await mhSb.auth.signInWithPassword({email:'admin@rumanurse.com',password:'#Spageti-630'});
+    if(!error&&data.user){mhUser=data.user;console.log('Reconnected!');}
+    else{console.error('Cannot reconnect:',error);return;}
+  }
   try{
-    const{error}=await mhSb.from('mindhaven_journal').upsert({
-      id:String(entry.id),user_id:mhUser.id,
-      title:entry.title,response:entry.body,
-      date:entry.date,emotions:'journal',chips:[]
+    console.log('Upserting to mindhaven_journal:', entry.title);
+    const{data,error}=await mhSb.from('mindhaven_journal').upsert({
+      id:String(entry.id),
+      user_id:mhUser.id,
+      title:entry.title,
+      response:entry.body,
+      date:entry.date,
+      emotions:'journal'
     },{onConflict:'id'});
-    if(error) console.error('mhSaveJournal error:',error);
-    else console.log('mhSaveJournal success:',entry.title);
-  }catch(e){console.error('mhSaveJournal catch:',e);}
+    if(error){
+      console.error('mhSaveJournal DB error:',error.message,error.details,error.hint);
+      if(typeof showToast==='function') showToast('Sync error — check console 🔴');
+    } else {
+      console.log('mhSaveJournal SUCCESS ✅',entry.title);
+    }
+  }catch(e){console.error('mhSaveJournal exception:',e);}
 }
 async function mhSaveSafePlace(txt){if(!mhUser)return;try{await mhSb.from('mindhaven_safe_place').upsert({user_id:mhUser.id,content:txt,updated_at:new Date().toISOString()},{onConflict:'user_id'});}catch(e){}}
 async function mhSaveFeeling(log){if(!mhUser)return;try{await mhSb.from('mindhaven_journal').upsert({id:String(log.id),user_id:mhUser.id,emotions:log.emotions,response:log.validation||'',date:log.date,time:log.time||'',chips:log.chips||[]},{onConflict:'id'});}catch(e){}}
