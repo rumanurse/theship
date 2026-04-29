@@ -2759,6 +2759,8 @@
         </div>`;
     });
   }
+  // Expose globally so Supabase sync can call it
+  window.mhRenderEntries = renderEntries;
   renderEntries();
 
   // ═══════════════════ TOAST
@@ -3090,8 +3092,46 @@ const MH_SB_KEY='sb_publishable_jnL1Pw-15hVGGrhC7_Ltjg_TL2_SGuP';
 const mhSb=supabase.createClient(MH_SB_URL,MH_SB_KEY);
 let mhUser=null;
 async function mhInit(){const{data,error}=await mhSb.auth.signInWithPassword({email:'admin@rumanurse.com',password:'#Spageti-630'});if(!error&&data.user){mhUser=data.user;await mhLoadAll();}}
-async function mhLoadAll(){if(!mhUser)return;try{const{data:j}=await mhSb.from('mindhaven_journal').select('*').eq('user_id',mhUser.id).order('created_at',{ascending:false}).limit(20);if(j&&j.length){const entries=j.map(r=>({id:r.id,title:r.title||'Entry',body:r.response||'',date:r.date||new Date(r.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}));localStorage.setItem('journalMH',JSON.stringify(entries));const c=document.getElementById('savedEntries');if(c){c.innerHTML='<h3 style="font-family:serif;font-size:22px;margin:24px 0 16px;font-style:italic;">Past Entries</h3>';entries.forEach(e=>{c.innerHTML+=`<div class="glass-card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><h3 style="font-size:18px">${e.title}</h3><span style="font-size:11px;opacity:.6">${e.date}</span></div><p style="font-style:italic">${e.body.substring(0,120)}...</p></div>`;});}}const{data:sp}=await mhSb.from('mindhaven_safe_place').select('*').eq('user_id',mhUser.id).single();if(sp&&sp.content){localStorage.setItem('safePlaceMH',sp.content);const el=document.getElementById('safePlaceText');if(el)el.value=sp.content;}}catch(e){console.error('mhLoadAll',e);}}
-async function mhSaveJournal(entry){if(!mhUser)return;try{await mhSb.from('mindhaven_journal').upsert({id:String(entry.id),user_id:mhUser.id,title:entry.title,response:entry.body,date:entry.date,emotions:'journal',chips:[]},{onConflict:'id'});}catch(e){}}
+async function mhLoadAll(){
+  if(!mhUser) return;
+  try{
+    const{data:j,error:je}=await mhSb.from('mindhaven_journal').select('*')
+      .eq('user_id',mhUser.id).order('created_at',{ascending:false}).limit(20);
+    if(je) console.error('mhLoadAll journal error:',je);
+    if(j&&j.length){
+      const entries=j.map(r=>({
+        id:r.id,
+        title:r.title||'Entry',
+        body:r.response||r.body||'',
+        date:r.date||new Date(r.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+      }));
+      localStorage.setItem('journalMH',JSON.stringify(entries));
+      // Call global render function (exposed from IIFE scope)
+      setTimeout(()=>{
+        if(typeof window.mhRenderEntries==='function') window.mhRenderEntries();
+      },100);
+    }
+    const{data:sp}=await mhSb.from('mindhaven_safe_place').select('*')
+      .eq('user_id',mhUser.id).single();
+    if(sp&&sp.content){
+      localStorage.setItem('safePlaceMH',sp.content);
+      const el=document.getElementById('safePlaceText');
+      if(el) el.value=sp.content;
+    }
+  }catch(e){console.error('mhLoadAll error:',e);}
+}
+async function mhSaveJournal(entry){
+  if(!mhUser) return;
+  try{
+    const{error}=await mhSb.from('mindhaven_journal').upsert({
+      id:String(entry.id),user_id:mhUser.id,
+      title:entry.title,response:entry.body,
+      date:entry.date,emotions:'journal',chips:[]
+    },{onConflict:'id'});
+    if(error) console.error('mhSaveJournal error:',error);
+    else console.log('mhSaveJournal success:',entry.title);
+  }catch(e){console.error('mhSaveJournal catch:',e);}
+}
 async function mhSaveSafePlace(txt){if(!mhUser)return;try{await mhSb.from('mindhaven_safe_place').upsert({user_id:mhUser.id,content:txt,updated_at:new Date().toISOString()},{onConflict:'user_id'});}catch(e){}}
 async function mhSaveFeeling(log){if(!mhUser)return;try{await mhSb.from('mindhaven_journal').upsert({id:String(log.id),user_id:mhUser.id,emotions:log.emotions,response:log.validation||'',date:log.date,time:log.time||'',chips:log.chips||[]},{onConflict:'id'});}catch(e){}}
 window.addEventListener('load',()=>mhInit().catch(()=>{}));
