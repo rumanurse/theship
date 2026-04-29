@@ -1358,8 +1358,35 @@ const MS_SB_KEY='sb_publishable_jnL1Pw-15hVGGrhC7_Ltjg_TL2_SGuP';
 const msSb=supabase.createClient(MS_SB_URL,MS_SB_KEY);
 let msUser=null;
 async function msInit(){const{data,error}=await msSb.auth.signInWithPassword({email:'admin@rumanurse.com',password:'#Spageti-630'});if(!error&&data.user){msUser=data.user;await msLoadPosts();}}
-async function msLoadPosts(){if(!msUser)return;try{const{data}=await msSb.from('magda_posts').select('*').eq('user_id',msUser.id).order('created_at',{ascending:false});if(data&&data.length){const posts=data.map(r=>({id:r.id,title:r.title,body:r.content,mood:r.mood||'',moodE:'🌸',date:new Date(r.created_at).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),tags:[],music:'',img:''}));localStorage.setItem('y2k_posts',JSON.stringify(posts));localStorage.setItem('y2k_seeded3','true');if(typeof renderBlog==='function')renderBlog();}}catch(e){console.error('msLoadPosts',e);}}
-async function msSavePost(post){if(!msUser)return;try{await msSb.from('magda_posts').upsert({id:String(post.id),user_id:msUser.id,title:post.title,content:post.body,mood:post.mood||''},{onConflict:'id'});}catch(e){}}
+async function msLoadPosts(){if(!msUser)return;try{const{data}=await msSb.from('magda_posts').select('*').eq('user_id',msUser.id).order('created_at',{ascending:false});if(data&&data.length){const posts=data.map(r=>({id:r.id,title:r.title,body:r.content,mood:r.mood||'',moodE:'🌸',date:new Date(r.created_at).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),tags:[],music:'',img:r.image_url||''}));localStorage.setItem('y2k_posts',JSON.stringify(posts));localStorage.setItem('y2k_seeded3','true');if(typeof renderBlog==='function')renderBlog();}}catch(e){console.error('msLoadPosts',e);}}
+async function msSavePost(post){
+  if(!msUser) return;
+  try{
+    let imageUrl='';
+    // Upload image to Supabase Storage if present
+    if(post.img&&post.img.startsWith('data:')){
+      try{
+        const blob=await fetch(post.img).then(r=>r.blob());
+        const ext=blob.type.includes('png')?'png':blob.type.includes('gif')?'gif':'jpg';
+        const path=`posts/${msUser.id}/${post.id}.${ext}`;
+        const{data:upData,error:upErr}=await msSb.storage.from('magda-images').upload(path,blob,{upsert:true,contentType:blob.type});
+        if(upErr) console.error('Image upload error:',upErr);
+        else{
+          const{data:urlData}=msSb.storage.from('magda-images').getPublicUrl(path);
+          imageUrl=urlData.publicUrl;
+        }
+      }catch(ie){console.error('Image processing error:',ie);}
+    }
+    const{error}=await msSb.from('magda_posts').upsert({
+      id:String(post.id),user_id:msUser.id,
+      title:post.title,content:post.body,
+      mood:post.mood||'',
+      image_url:imageUrl||''
+    },{onConflict:'id'});
+    if(error) console.error('msSavePost error:',error);
+    else console.log('msSavePost success:',post.title);
+  }catch(e){console.error('msSavePost catch:',e);}
+}
 async function msDeletePost(id){if(!msUser)return;try{await msSb.from('magda_posts').delete().eq('id',String(id)).eq('user_id',msUser.id);}catch(e){}}
 window.addEventListener('load',()=>msInit().catch(()=>{}));
 </script>
