@@ -244,7 +244,6 @@ select.input-field{appearance:none}
 .sync-dot.syncing{background:var(--gold);animation:pulse .8s infinite}
 .sync-dot.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -281,6 +280,7 @@ select.input-field{appearance:none}
   <div class="tab" onclick="showPage('stats',this)"><span class="tab-icon">📊</span>Stats</div>
   <div class="tab" onclick="showPage('checkin',this)"><span class="tab-icon">✨</span>Check-In</div>
   <div class="tab" onclick="showPage('progress',this)"><span class="tab-icon">📈</span>Progress</div>
+  <div class="tab" onclick="showPage('weekly',this);loadWeeklyReview()"><span class="tab-icon">📊</span>Weekly</div>
   <div class="tab" onclick="showPage('workout',this)"><span class="tab-icon">🏋️</span>Workout</div>
   <div class="tab" onclick="showPage('jin',this)"><span class="tab-icon">🐹</span>Jin</div>
   <div class="tab" onclick="showPage('calc',this)"><span class="tab-icon">🧮</span>Calc</div>
@@ -446,27 +446,14 @@ select.input-field{appearance:none}
 <div class="page" id="meals">
   <div class="card">
     <div class="card-title">🔍 Search Food Database</div>
-    <div style="position:relative">
-      <input type="text" class="input-field" id="foodSearch" placeholder="Search 3M+ foods or your saved recipes..."
-        oninput="searchFoodsDebounced(this.value)" style="margin-bottom:5px;padding-right:36px">
-      <div id="searchSpinner" style="display:none;position:absolute;right:10px;top:10px;width:14px;height:14px;border:2px solid var(--mauve);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite"></div>
-    </div>
-    <div style="display:flex;gap:6px;margin-bottom:8px">
-      <button onclick="setSearchMode('all')" id="sm-all" style="font-size:10px;padding:3px 10px;border-radius:20px;border:1.5px solid var(--mauve);background:var(--mauve);color:white;cursor:pointer;font-family:inherit;font-weight:600">All</button>
-      <button onclick="setSearchMode('saved')" id="sm-saved" style="font-size:10px;padding:3px 10px;border-radius:20px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);cursor:pointer;font-family:inherit">My Foods</button>
-      <button onclick="setSearchMode('db')" id="sm-db" style="font-size:10px;padding:3px 10px;border-radius:20px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);cursor:pointer;font-family:inherit">Food Database</button>
-    </div>
-    <div style="margin-bottom:8px">
-      <label style="font-size:10px;font-weight:600;color:var(--light);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px">Log to meal:</label>
-      <select class="input-field" id="searchMealTarget" style="font-size:12px">
-        <option value="breakfast">🌄 Breakfast</option>
-        <option value="lunch">☀️ Lunch</option>
-        <option value="dinner">🌙 Dinner</option>
-        <option value="snacks">🍎 Snacks</option>
+    <input type="text" class="input-field" id="foodSearch" placeholder="Search your recipes & foods..." oninput="searchFoods(this.value)" style="margin-bottom:5px">
+    <div id="searchResults"></div>
+    <div id="searchMealSel" style="display:none;margin-top:6px">
+      <select class="input-field" id="searchMealTarget">
+        <option value="breakfast">Breakfast</option><option value="lunch">Lunch</option>
+        <option value="dinner">Dinner</option><option value="snacks">Snacks</option>
       </select>
     </div>
-    <div id="searchResults"></div>
-    <div id="searchMealSel" style="display:none"></div>
   </div>
   <div class="meal-section"><div class="meal-header"><div class="meal-name">🌄 Breakfast</div><div class="meal-cals" id="cal-breakfast">0 kcal</div></div><div id="items-breakfast"></div><button class="add-food-btn" onclick="openFoodModal('breakfast')">+ Add Manually</button></div>
   <div class="meal-section"><div class="meal-header"><div class="meal-name">☀️ Lunch</div><div class="meal-cals" id="cal-lunch">0 kcal</div></div><div id="items-lunch"></div><button class="add-food-btn" onclick="openFoodModal('lunch')">+ Add Manually</button></div>
@@ -702,6 +689,61 @@ select.input-field{appearance:none}
   <div class="card"><div class="card-title">🎯 Goal Calculator</div>
     <div class="input-group"><label class="input-label">Current Weight (lbs)</label><input type="number" class="input-field" id="goalWt" placeholder="223.9" oninput="calcGoal()"></div>
     <div id="goalResult" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ══ WEEKLY REVIEW ══════════════════════════════════════════════════════════ -->
+<div class="page" id="weekly">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div class="card-title" style="margin:0">📊 Weekly Review</div>
+      <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="loadWeeklyReview()">↺ Refresh</button>
+    </div>
+    <div style="font-size:10px;color:var(--light)" id="weeklyDateRange">Last 7 days</div>
+  </div>
+
+  <!-- 7-DAY CHART -->
+  <div class="card">
+    <div class="card-title">Calorie History</div>
+    <div id="weeklyCalChart" style="display:flex;align-items:flex-end;gap:6px;height:100px;margin-bottom:8px">
+      <div style="font-size:10px;color:var(--light);width:100%;text-align:center;padding-top:40px">Loading...</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:50%;background:var(--mauve)"></div><span style="font-size:9px;color:var(--light)">Low Day</span></div>
+      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:50%;background:var(--teal)"></div><span style="font-size:9px;color:var(--light)">High Day</span></div>
+      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:rgba(201,144,122,.3)"></div><span style="font-size:9px;color:var(--light)">Target</span></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY AVERAGES -->
+  <div class="card">
+    <div class="card-title">Weekly Averages</div>
+    <div id="weeklyAverages" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+      <div style="text-align:center;font-size:11px;color:var(--light)">Loading...</div>
+    </div>
+  </div>
+
+  <!-- DAY BY DAY -->
+  <div class="card">
+    <div class="card-title">Day by Day</div>
+    <div id="weeklyDayList"></div>
+  </div>
+
+  <!-- JIN WEEKLY ANALYSIS -->
+  <div class="card" style="background:linear-gradient(135deg,#FFF0F0,#FFF8F0)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#FF9BB0,#FFB347);display:flex;align-items:center;justify-content:center;font-size:16px">🐹</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--dark)">Jin's Weekly Analysis</div>
+        <div style="font-size:10px;color:var(--light)">Personalized health insights + next steps</div>
+      </div>
+    </div>
+    <div id="jinWeeklyAnalysis" style="font-size:12px;color:var(--dark);line-height:1.7">
+      <div style="color:var(--light);font-style:italic">Load your weekly data first, then Jin will analyze your patterns. 🐹</div>
+    </div>
+    <button id="jinWeeklyBtn" class="btn btn-primary" style="margin-top:12px;width:100%;display:none" onclick="runJinWeeklyAnalysis()">
+      🐹 Get Jin's Weekly Analysis
+    </button>
   </div>
 </div>
 
@@ -1583,30 +1625,20 @@ function renderPhaseModal(){
     </div>
 
     <div style="background:var(--nude);border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid rgba(201,144,122,.18)">
-      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:8px">🎛️ Set Custom Phase</div>
-      <div class="input-row">
-        <div class="input-group"><label class="input-label">Phase Name</label><input type="text" class="input-field" id="customPhaseName" value="${customData.name||'My Custom Phase'}" placeholder="My Phase"></div>
-      </div>
-      <div class="input-row">
-        <div class="input-group"><label class="input-label">Start Date</label><input type="date" class="input-field" id="customDateStart" value="${customData.dateStart||new Date().toISOString().split('T')[0]}"></div>
-        <div class="input-group"><label class="input-label">End Date</label><input type="date" class="input-field" id="customDateEnd" value="${customData.dateEnd||''}"></div>
-      </div>
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:8px">🎛️ Or set custom calories</div>
       <div class="input-row">
         <div class="input-group"><label class="input-label">Low Day Cals</label><input type="number" class="input-field" id="customLowCal" value="${customData.lowCal}" placeholder="1600"></div>
         <div class="input-group"><label class="input-label">High Day Cals</label><input type="number" class="input-field" id="customHighCal" value="${customData.highCal}" placeholder="1900"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label class="input-label">Protein Min (g)</label><input type="number" class="input-field" id="customProtein" value="${customData.protein}" placeholder="165"></div>
+        <div class="input-group"><label class="input-label">Protein (g)</label><input type="number" class="input-field" id="customProtein" value="${customData.protein}" placeholder="165"></div>
         <div class="input-group"><label class="input-label">Fat Max (g)</label><input type="number" class="input-field" id="customFatMax" value="${customData.fatMax}" placeholder="50"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label class="input-label">Low Day Carbs (g)</label><input type="number" class="input-field" id="customLowCarbs" value="${customData.lowCarbs}" placeholder="120"></div>
-        <div class="input-group"><label class="input-label">High Day Carbs (g)</label><input type="number" class="input-field" id="customHighCarbs" value="${customData.highCarbs}" placeholder="175"></div>
+        <div class="input-group"><label class="input-label">Low Carbs (g)</label><input type="number" class="input-field" id="customLowCarbs" value="${customData.lowCarbs}" placeholder="120"></div>
+        <div class="input-group"><label class="input-label">High Carbs (g)</label><input type="number" class="input-field" id="customHighCarbs" value="${customData.highCarbs}" placeholder="175"></div>
       </div>
-      <div style="font-size:9px;color:var(--light);margin-bottom:6px;padding:4px 0">
-        💡 Low days: Sun/Mon/Wed/Thu/Sat · High days: Tue/Fri
-      </div>
-      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="saveCustomPhase()">✨ Save Custom Phase</button>
+      <button class="btn btn-secondary" style="margin-top:4px" onclick="saveCustomPhase()">Use Custom Calories</button>
     </div>`;
 }
 
@@ -1620,76 +1652,32 @@ function selectPhase(id){
 }
 
 function saveCustomPhase(){
-  // Grab all elements first
-  const els={
-    name:document.getElementById('customPhaseName'),
-    dateStart:document.getElementById('customDateStart'),
-    dateEnd:document.getElementById('customDateEnd'),
-    lowCal:document.getElementById('customLowCal'),
-    highCal:document.getElementById('customHighCal'),
-    protein:document.getElementById('customProtein'),
-    fatMax:document.getElementById('customFatMax'),
-    lowCarbs:document.getElementById('customLowCarbs'),
-    highCarbs:document.getElementById('customHighCarbs'),
-  };
-
-  if(!els.lowCal){showToast('Please open the phase settings first');return;}
-
-  // Read values
-  const phaseName=(els.name&&els.name.value.trim())||'My Custom Phase';
-  const dateStart=(els.dateStart&&els.dateStart.value)||new Date().toISOString().split('T')[0];
-  const dateEnd=(els.dateEnd&&els.dateEnd.value)||'';
-  const lowCal=parseInt(els.lowCal.value)||1600;
-  const highCal=parseInt(els.highCal.value)||1900;
-  const protein=parseInt(els.protein.value)||165;
-  const fatMax=parseInt(els.fatMax.value)||50;
-  const lowCarbs=parseInt(els.lowCarbs.value)||120;
-  const highCarbs=parseInt(els.highCarbs.value)||175;
-
-  // Validate
-  if(lowCal<800){showToast('⚠️ Low day calories too low — minimum 800');return;}
-  if(highCal<lowCal){showToast('⚠️ High day should be higher than low day');return;}
-  if(protein<80){showToast('⚠️ Protein minimum is 80g');return;}
-
-  // Format date display
-  const fmtDate=d=>{if(!d)return'';const[y,m,da]=d.split('-');const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return`${months[parseInt(m)-1]} ${da}, ${y}`;};
-  const datesDisplay=dateEnd?`${fmtDate(dateStart)} – ${fmtDate(dateEnd)}`:`From ${fmtDate(dateStart)}`;
+  const lowCal=parseInt(document.getElementById('customLowCal').value)||1600;
+  const highCal=parseInt(document.getElementById('customHighCal').value)||1900;
+  const protein=parseInt(document.getElementById('customProtein').value)||165;
+  const fatMax=parseInt(document.getElementById('customFatMax').value)||50;
+  const lowCarbs=parseInt(document.getElementById('customLowCarbs').value)||120;
+  const highCarbs=parseInt(document.getElementById('customHighCarbs').value)||175;
 
   const customData={
-    name:phaseName,
-    dates:datesDisplay,
-    dateStart,dateEnd,
     lowCal,highCal,protein,fatMax,lowCarbs,highCarbs,
-    color:'#9B7DD4',
-    custom:true,
-    note:`Low ${lowCal} · High ${highCal} · ${protein}g protein`,
     schedule:{
-      0:{type:'low',cal:lowCal,carbs:lowCarbs},
-      1:{type:'low',cal:lowCal,carbs:lowCarbs},
-      2:{type:'high',cal:highCal,carbs:highCarbs},
-      3:{type:'low',cal:lowCal,carbs:lowCarbs},
-      4:{type:'low',cal:lowCal,carbs:lowCarbs},
-      5:{type:'high',cal:highCal,carbs:highCarbs},
+      0:{type:'low',cal:lowCal,carbs:lowCarbs},1:{type:'low',cal:lowCal,carbs:lowCarbs},
+      2:{type:'high',cal:highCal,carbs:highCarbs},3:{type:'low',cal:lowCal,carbs:lowCarbs},
+      4:{type:'low',cal:lowCal,carbs:lowCarbs},5:{type:'high',cal:highCal,carbs:highCarbs},
       6:{type:'low',cal:lowCal,carbs:lowCarbs},
     },
+    protein,fatMax,
+    note:`Low ${lowCal} · High ${highCal} · Protein ${protein}g`,
   };
-
-  // Save to storage
   localStorage.setItem('rf_phase_custom',JSON.stringify(customData));
   PHASES.custom={...PHASES.custom,...customData};
   activePhaseId='custom';
   localStorage.setItem('rf_active_phase','custom');
-
-  // Apply targets immediately
   applyActivePhase();
+  renderPhaseModal();
   updatePhaseCard();
-
-  // Close and show success
-  closeModal('phaseModal');
-  showToast(`✨ ${phaseName} saved! ${lowCal}–${highCal} cal · ${protein}g protein`);
-
-  // Re-render today
-  try{renderTasks(new Date().getDay(),DAY_SCHED[new Date().getDay()]);}catch(e){}
+  showToast('✨ Custom calories saved!');
 }
 
 function updatePhaseCard(){
@@ -2090,6 +2078,202 @@ function renderBeforeVsNow(){
     ${lostLbs?`<div style="background:var(--teal-light);border-radius:8px;padding:8px;text-align:center"><span style="font-size:11px;color:var(--teal);font-weight:600">-${lostLbs} lbs lost 🔥</span></div>`:''}`;
 }
 
+// ══ WEEKLY REVIEW ══════════════════════════════════════════════════════════
+let weeklyData=[];
+
+async function loadWeeklyReview(){
+  const el=document.getElementById('weeklyDayList');
+  if(el) el.innerHTML='<div style="color:var(--light);font-size:11px;text-align:center;padding:12px">Loading 7 days of data...</div>';
+
+  // Build last 7 days array
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const dayName=d.toLocaleDateString('en-US',{weekday:'short'});
+    const dayLabel=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const dow=d.getDay();
+    const sched=DAY_SCHED[dow];
+    days.push({key,dayName,dayLabel,dow,target:sched.cal,type:sched.type,carbs:sched.carbs});
+  }
+
+  // Update date range label
+  const rangeEl=document.getElementById('weeklyDateRange');
+  if(rangeEl) rangeEl.textContent=days[0].dayLabel+' – '+days[6].dayLabel;
+
+  // Try Supabase first, fall back to localStorage
+  let dbRows={};
+  if(currentUser){
+    try{
+      const{data}=await sb.from('daily_logs').select('*')
+        .eq('user_id',currentUser.id)
+        .gte('date',days[0].key)
+        .lte('date',days[6].key);
+      if(data) data.forEach(r=>{dbRows[r.date]=r;});
+    }catch(e){console.error('Weekly load error',e);}
+  }
+
+  // Build complete weekly dataset
+  weeklyData=days.map(day=>{
+    const db=dbRows[day.key];
+    const local=JSON.parse(localStorage.getItem('rf_today_'+day.key)||'{}');
+    // Prefer Supabase data, fall back to local
+    const meals=db?.meals||local.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]};
+    const all=Object.values(meals).flat();
+    const cal=db?.calories||Math.round(all.reduce((a,i)=>a+(i.cal||0),0));
+    const pro=Math.round(all.reduce((a,i)=>a+(i.pro||0),0));
+    const carb=Math.round(all.reduce((a,i)=>a+(i.carb||0),0));
+    const fat=Math.round(all.reduce((a,i)=>a+(i.fat||0),0));
+    const steps=db?.steps||local.steps||0;
+    const water=db?.water||local.water||0;
+    const foods=all.map(f=>f.name).filter(Boolean);
+    return{...day,cal,pro,carb,fat,steps,water,meals,foods,logged:cal>0};
+  });
+
+  renderWeeklyChart();
+  renderWeeklyAverages();
+  renderWeeklyDayList();
+
+  // Show Jin button if we have data
+  const hasData=weeklyData.some(d=>d.logged);
+  const jinBtn=document.getElementById('jinWeeklyBtn');
+  if(jinBtn) jinBtn.style.display=hasData?'block':'none';
+}
+
+function renderWeeklyChart(){
+  const chart=document.getElementById('weeklyCalChart');
+  if(!chart) return;
+  const max=Math.max(...weeklyData.map(d=>Math.max(d.cal,d.target)),2000);
+  chart.innerHTML=weeklyData.map(d=>{
+    const calH=d.cal?Math.max((d.cal/max)*90,4):0;
+    const tgtH=(d.target/max)*90;
+    const color=d.type==='high'?'var(--teal)':'var(--mauve)';
+    const isOver=d.cal>d.target*1.1;
+    const isUnder=d.cal<d.target*0.85&&d.logged;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="font-size:8px;color:var(--light);font-weight:600">${d.cal||'—'}</div>
+      <div style="width:100%;height:90px;position:relative;display:flex;align-items:flex-end;justify-content:center">
+        <div style="position:absolute;bottom:${tgtH}px;left:0;right:0;height:1.5px;background:rgba(201,144,122,.3);border-radius:1px"></div>
+        <div style="width:70%;height:${calH}px;background:${isOver?'#E8856A':isUnder&&d.logged?'#A0C4C1':color};border-radius:4px 4px 0 0;transition:height .5s ease;min-height:${d.logged?2:0}px"></div>
+      </div>
+      <div style="font-size:9px;font-weight:600;color:var(--dark)">${d.dayName}</div>
+      <div style="font-size:8px;color:var(--light)">${d.dayLabel}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderWeeklyAverages(){
+  const logged=weeklyData.filter(d=>d.logged);
+  if(!logged.length){
+    document.getElementById('weeklyAverages').innerHTML='<div style="font-size:11px;color:var(--light);grid-column:span 2;text-align:center">No data logged this week yet</div>';
+    return;
+  }
+  const avg=v=>Math.round(logged.reduce((a,d)=>a+d[v],0)/logged.length);
+  const avgCal=avg('cal'),avgPro=avg('pro'),avgCarb=avg('carb'),avgFat=avg('fat');
+  const avgSteps=avg('steps');
+  const daysOnTarget=logged.filter(d=>d.cal>=d.target*0.9&&d.cal<=d.target*1.1).length;
+  const proTarget=165;
+  const daysHitPro=logged.filter(d=>d.pro>=proTarget).length;
+
+  document.getElementById('weeklyAverages').innerHTML=[
+    {label:'Avg Calories',val:avgCal+' kcal',color:'var(--mauve)',sub:`${daysOnTarget}/${logged.length} days on target`},
+    {label:'Avg Protein',val:avgPro+'g',color:'var(--teal)',sub:`${daysHitPro}/${logged.length} days hit goal`},
+    {label:'Avg Carbs',val:avgCarb+'g',color:'#c9a84c',sub:'per day'},
+    {label:'Avg Fat',val:avgFat+'g',color:'#D4956A',sub:'per day'},
+    {label:'Avg Steps',val:avgSteps.toLocaleString(),color:'var(--dark)',sub:avgSteps>=10000?'🎯 Goal hit!':'Goal: 10,000'},
+    {label:'Days Logged',val:logged.length+'/7',color:'var(--teal)',sub:logged.length>=5?'Great consistency! 🔥':'Keep logging!'},
+  ].map(s=>`<div style="background:var(--warm);border-radius:10px;padding:10px;text-align:center">
+    <div style="font-size:15px;font-weight:700;color:${s.color}">${s.val}</div>
+    <div style="font-size:10px;font-weight:600;color:var(--dark);margin-top:2px">${s.label}</div>
+    <div style="font-size:9px;color:var(--light);margin-top:1px">${s.sub}</div>
+  </div>`).join('');
+}
+
+function renderWeeklyDayList(){
+  const el=document.getElementById('weeklyDayList');
+  if(!el) return;
+  el.innerHTML=weeklyData.map(d=>{
+    if(!d.logged) return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)">
+      <div><div style="font-size:12px;font-weight:600;color:var(--dark)">${d.dayName} ${d.dayLabel}</div>
+      <div style="font-size:10px;color:var(--light)">${d.type==='high'?'⬆️ High':'⬇️ Low'} day · nothing logged</div></div>
+      <div style="font-size:11px;color:var(--light)">—</div>
+    </div>`;
+    const pct=Math.round(d.cal/d.target*100);
+    const status=pct>=90&&pct<=110?'✅':pct>110?'⚠️ Over':'⬇️ Under';
+    const proHit=d.pro>=165;
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--bd)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--dark)">${d.dayName} ${d.dayLabel} ${status}</div>
+          <div style="font-size:10px;color:var(--light)">${d.type==='high'?'⬆️ High Day':'⬇️ Low Day'} · Target: ${d.target} cal</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:700;color:${d.type==='high'?'var(--teal)':'var(--mauve)'}">${d.cal}</div>
+          <div style="font-size:9px;color:var(--light)">kcal</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;font-size:10px;flex-wrap:wrap">
+        <span style="color:var(--teal);font-weight:600">${proHit?'✅':'⚠️'} ${d.pro}g protein</span>
+        <span style="color:#c9a84c">${d.carb}g carbs</span>
+        <span style="color:#D4956A">${d.fat}g fat</span>
+        ${d.steps?`<span style="color:var(--dark)">👣 ${d.steps.toLocaleString()} steps</span>`:''}
+        ${d.water?`<span style="color:#4A9BB0">💧 ${d.water}L</span>`:''}
+      </div>
+      ${d.foods.length?`<div style="font-size:9px;color:var(--light);margin-top:4px;font-style:italic">${d.foods.slice(0,4).join(' · ')}${d.foods.length>4?' +'+( d.foods.length-4)+' more':''}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function runJinWeeklyAnalysis(){
+  if(!jinApiKey){showToast('Add your Jin API key first!');return;}
+  const btn=document.getElementById('jinWeeklyBtn');
+  const el=document.getElementById('jinWeeklyAnalysis');
+  if(btn) btn.disabled=true;
+  if(el) el.innerHTML='<div style="color:var(--light);font-style:italic">🐹 Jin is analyzing your week... give me a moment sayang...</div>';
+
+  const logged=weeklyData.filter(d=>d.logged);
+  if(!logged.length){
+    if(el) el.innerHTML='<div style="color:var(--light)">No logged days to analyze yet!</div>';
+    if(btn){btn.disabled=false;}
+    return;
+  }
+
+  // Build rich data summary for Jin
+  const avgCal=Math.round(logged.reduce((a,d)=>a+d.cal,0)/logged.length);
+  const avgPro=Math.round(logged.reduce((a,d)=>a+d.pro,0)/logged.length);
+  const avgFat=Math.round(logged.reduce((a,d)=>a+d.fat,0)/logged.length);
+  const avgCarb=Math.round(logged.reduce((a,d)=>a+d.carb,0)/logged.length);
+  const avgSteps=Math.round(logged.reduce((a,d)=>a+d.steps,0)/logged.length);
+  const daysOnTarget=logged.filter(d=>d.cal>=d.target*0.9&&d.cal<=d.target*1.1).length;
+  const daysHitPro=logged.filter(d=>d.pro>=165).length;
+  const highDays=logged.filter(d=>d.type==='high');
+  const lowDays=logged.filter(d=>d.type==='low');
+  const avgHighCal=highDays.length?Math.round(highDays.reduce((a,d)=>a+d.cal,0)/highDays.length):0;
+  const avgLowCal=lowDays.length?Math.round(lowDays.reduce((a,d)=>a+d.cal,0)/lowDays.length):0;
+
+  const dayBreakdown=weeklyData.map(d=>
+    `${d.dayName} (${d.type==='high'?'High':'Low'} day, target ${d.target}): ${d.logged?`${d.cal} cal, ${d.pro}g P, ${d.carb}g C, ${d.fat}g F, ${d.steps||0} steps`:'not logged'}`
+  ).join('\n');
+
+  const prompt=`Here is Magda's nutrition data for the past 7 days:\n\n${dayBreakdown}\n\nSUMMARY:\n- Days logged: ${logged.length}/7\n- Average calories: ${avgCal} (target varies: Low=${lowDays[0]?.target||1700}, High=${highDays[0]?.target||2100})\n- Avg Low Day calories: ${avgLowCal} kcal\n- Avg High Day calories: ${avgHighCal} kcal\n- Average protein: ${avgPro}g (goal: 165g+)\n- Average carbs: ${avgCarb}g\n- Average fat: ${avgFat}g (limit: 50g on cut)\n- Days hit calorie target: ${daysOnTarget}/${logged.length}\n- Days hit protein goal: ${daysHitPro}/${logged.length}\n- Average daily steps: ${avgSteps.toLocaleString()}\n\nPlease give Magda a warm, personal weekly health review. Include:\n1. What went well this week (be specific with her numbers)\n2. What patterns you noticed (both good and concerning)\n3. Top 3 specific, actionable improvements for next week based on HER data\n4. One encouraging note about her overall progress\n\nBe warm like Jin, specific with her actual numbers, practical and honest. Keep it to 200-250 words.`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':jinApiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,system:buildJinSystemPrompt(),messages:[{role:'user',content:prompt}]})
+    });
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    const reply=data.content[0].text;
+    if(el) el.innerHTML=reply.replace(/\n/g,'<br>');
+    if(btn){btn.disabled=false;btn.textContent='🐹 Refresh Analysis';}
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--light)">Something went wrong — '+e.message+'</div>';
+    if(btn) btn.disabled=false;
+  }
+}
+
 function renderWeightHistory(){
   const c=document.getElementById('weightHistory');
   if(!weightHistory.length){c.innerHTML='<p style="font-size:11px;color:var(--light);text-align:center;padding:12px">No entries yet. Log your weight in Today tab!</p>';return;}
@@ -2130,145 +2314,28 @@ function renderRecentStats(){
 }
 
 // ══ FOOD ════════════════════════════════════════════════════════════════════
-function parseOFFProducts(products){
-  return products
-    .filter(p=>p.product_name&&p.nutriments)
-    .map(p=>{
-      const n=p.nutriments;
-      const cal=Math.round(n['energy-kcal_serving']||n['energy-kcal_100g']||0);
-      const pro=Math.round((n['proteins_serving']||n['proteins_100g']||0)*10)/10;
-      const carb=Math.round((n['carbohydrates_serving']||n['carbohydrates_100g']||0)*10)/10;
-      const fat=Math.round((n['fat_serving']||n['fat_100g']||0)*10)/10;
-      const name=p.product_name+(p.brands?` (${p.brands.split(',')[0]})`:'');
-      const serving=p.serving_size||'100g';
-      return{name,cal,pro,carb,fat,serving};
-    })
-    .filter(p=>p.cal>0);
-}
-
-let searchMode='all';
-let searchDebounceTimer=null;
-
-function setSearchMode(mode){
-  searchMode=mode;
-  ['all','saved','db'].forEach(m=>{
-    const btn=document.getElementById('sm-'+m);
-    if(!btn) return;
-    if(m===mode){btn.style.background='var(--mauve)';btn.style.color='white';}
-    else{btn.style.background='transparent';btn.style.color='var(--mauve)';}
-  });
-  const q=document.getElementById('foodSearch').value;
-  if(q.trim()) searchFoodsDebounced(q);
-}
-
-function searchFoodsDebounced(q){
-  clearTimeout(searchDebounceTimer);
-  if(!q.trim()){
-    document.getElementById('searchResults').innerHTML='';
-    document.getElementById('searchMealSel').style.display='none';
-    return;
-  }
-  searchDebounceTimer=setTimeout(()=>searchFoods(q),400);
-}
-
-async function searchFoods(q){
+function searchFoods(q){
   const res=document.getElementById('searchResults');
   const ms=document.getElementById('searchMealSel');
-  const spinner=document.getElementById('searchSpinner');
   if(!q.trim()){res.innerHTML='';ms.style.display='none';return;}
-
-  // Always search saved foods first
-  const savedHits=savedFoods.filter(f=>f.name.toLowerCase().includes(q.toLowerCase())).slice(0,5);
-
-  if(searchMode==='saved'){
-    if(!savedHits.length){res.innerHTML='<p style="font-size:11px;color:var(--light);padding:5px">No saved foods found.</p>';ms.style.display='none';return;}
-    ms.style.display='block';
-    res.innerHTML=savedHits.map(f=>renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat,'saved')).join('');
-    return;
-  }
-
-  // Hit Open Food Facts for db or all mode
-  if(spinner) spinner.style.display='block';
-  res.innerHTML='<p style="font-size:11px;color:var(--light);padding:5px;text-align:center">Searching food database... 🔍</p>';
-
-  try{
-    const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,serving_size,serving_quantity`;
-    const resp=await fetch(url,{
-      headers:{'Accept':'application/json','User-Agent':'RumaFit/1.0 (magda@rumanurse.com)'}
-    });
-    const data=await resp.json();
-    if(spinner) spinner.style.display='none';
-
-    const dbItems=parseOFFProducts(data.products||[]).slice(0,12);
-
-    const allItems=searchMode==='all'?[...savedHits.map(f=>({...f,_saved:true})),...dbItems]:dbItems;
-
-    if(!allItems.length){
-      res.innerHTML=`<p style="font-size:11px;color:var(--light);padding:5px">No results found. <a href="#" onclick="openFoodModal(document.getElementById('searchMealTarget').value||'snacks');return false" style="color:var(--mauve)">Add manually?</a></p>`;
-      ms.style.display='none';
-      return;
-    }
-
-    ms.style.display='block';
-    res.innerHTML=allItems.map(f=>
-      renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat||'',f._saved?'saved':'db',f.serving||'')
-    ).join('');
-
-  }catch(e){
-    if(spinner) spinner.style.display='none';
-    // Fallback to saved foods only on network error
-    if(savedHits.length){
-      ms.style.display='block';
-      res.innerHTML='<p style="font-size:10px;color:var(--light);padding:3px 5px">⚠️ Database offline — showing saved foods</p>'+
-        savedHits.map(f=>renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat,'saved')).join('');
-    } else {
-      // Try alternative API endpoint
-      try{
-        const url2=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=10`;
-        const resp2=await fetch(url2);
-        const data2=await resp2.json();
-        if(data2.products&&data2.products.length>0){
-          const dbItems2=parseOFFProducts(data2.products);
-          if(dbItems2.length){
-            ms.style.display='block';
-            const allItems2=searchMode==='all'?[...savedHits.map(f=>({...f,_saved:true})),...dbItems2]:dbItems2;
-            res.innerHTML=allItems2.map(f=>renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat||'',f._saved?'saved':'db',f.serving||'')).join('');
-            return;
-          }
-        }
-      }catch(e2){}
-      res.innerHTML=savedHits.length?
-        '<p style="font-size:10px;color:var(--light);padding:3px 5px">⚠️ Live database unavailable — showing saved foods only</p>'+savedHits.map(f=>renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat,'saved')).join(''):
-        '<p style="font-size:11px;color:var(--light);padding:5px">Database unavailable. Add food manually or try again.</p>';
-    }
-  }
-}
-
-function renderFoodItem(name,cal,pro,carb,fat,cat,source,serving){
-  const safeName=name.replace(/'/g,"\'").replace(/"/g,'&quot;');
-  const badge=source==='saved'
-    ? `<span style="font-size:8px;background:var(--teal-light);color:var(--teal);padding:1px 5px;border-radius:10px;font-weight:600">SAVED</span>`
-    : `<span style="font-size:8px;background:var(--nude);color:var(--mauve);padding:1px 5px;border-radius:10px">DB${serving?' · '+serving:''}</span>`;
-  return `<div class="search-item" onclick="selectFood('${safeName}',${cal},${pro},${carb},${fat})">
-    <div style="flex:1;min-width:0">
-      <div class="si-name" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${name.length>45?name.substring(0,45)+'…':name} ${badge}</div>
-      <div class="si-mac">${pro}g P · ${carb}g C · ${fat}g F</div>
-    </div>
-    <div class="si-cal">${cal}</div>
-  </div>`;
+  const hits=savedFoods.filter(f=>f.name.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+  if(!hits.length){res.innerHTML='<p style="font-size:11px;color:var(--light);padding:5px">No results. Try adding manually.</p>';ms.style.display='none';return;}
+  ms.style.display='block';
+  res.innerHTML=hits.map(f=>`
+    <div class="search-item" onclick="selectFood('${f.name.replace(/'/g,"\\'")}',${f.cal},${f.pro},${f.carb},${f.fat})">
+      <div><div class="si-name">${f.name}${["Magda's Recipes","Tyker's Recipes",'KBBQ','Meal Prep'].includes(f.cat)?`<span class="tag-cat">${f.cat}</span>`:''}</div>
+      <div class="si-mac">${f.pro}g P · ${f.carb}g C · ${f.fat}g F</div></div>
+      <div class="si-cal">${f.cal}</div>
+    </div>`).join('');
 }
 
 function selectFood(name,cal,pro,carb,fat){
-  const mealEl=document.getElementById('searchMealTarget');
-  const meal=mealEl?mealEl.value:'snacks';
+  const meal=document.getElementById('searchMealTarget').value;
   meals[meal].push({name,cal,pro,carb,fat,id:Date.now()});
   document.getElementById('foodSearch').value='';
   document.getElementById('searchResults').innerHTML='';
   document.getElementById('searchMealSel').style.display='none';
-  renderMeals();
-  updateMacros();
-  saveTodayLocal(); // ← actually save it!
-  showToast('✓ '+name+' → '+meal+'!');
+  renderMeals();updateMacros();showToast('✓ '+name+' → '+meal+'!');
 }
 
 function openFoodModal(meal){
@@ -2699,35 +2766,6 @@ ${mealLog?`Meals logged:\n${mealLog}`:'Nothing logged yet today.'}
 IMPORTANT: Always include the [LOG:{...}] tag when food is being logged so the app can auto-parse and add it. Never include the LOG tag for non-food messages.`;
 }
 
-async function queryFoodDB(query){
-  // Search Open Food Facts for a given food query - returns top 3 results for Jin context
-  try{
-    const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,brands,nutriments,serving_size`;
-    const resp=await fetch(url,{signal:AbortSignal.timeout(5000),headers:{'Accept':'application/json','User-Agent':'RumaFit/1.0'}});
-    const data=await resp.json();
-    return (data.products||[])
-      .filter(p=>p.product_name&&p.nutriments)
-      .map(p=>{
-        const n=p.nutriments;
-        const cal=Math.round(n['energy-kcal_serving']||n['energy-kcal_100g']||0);
-        const pro=Math.round((n['proteins_serving']||n['proteins_100g']||0)*10)/10;
-        const carb=Math.round((n['carbohydrates_serving']||n['carbohydrates_100g']||0)*10)/10;
-        const fat=Math.round((n['fat_serving']||n['fat_100g']||0)*10)/10;
-        const name=p.product_name+(p.brands?` (${p.brands.split(',')[0]})`:'');
-        const serving=p.serving_size||'100g';
-        return cal>0?`${name} — ${cal}cal, ${pro}g P, ${carb}g C, ${fat}g F (per ${serving})`:'';
-      })
-      .filter(Boolean)
-      .slice(0,3)
-      .join('\n');
-  }catch(e){return '';}
-}
-
-function extractFoodKeywords(msg){
-  // Strip common conversational words to get food-relevant terms
-  return msg.replace(/i (had|ate|just ate|just had|finished|grabbed|got)|for (breakfast|lunch|dinner|snack)|today|this morning|tonight|earlier|just now/gi,'').trim().substring(0,60);
-}
-
 async function sendToJin(){
   const input=document.getElementById('jinInput');
   const msg=input.value.trim();
@@ -2742,21 +2780,6 @@ async function sendToJin(){
   const typingId='typing_'+Date.now();
   appendJinMessage('typing','',typingId);
 
-  // If message looks like food logging, search database first for accurate macros
-  const isFoodLog=/had|ate|just had|just ate|finished|for breakfast|for lunch|for dinner|for snack|ate|drank|drinking/i.test(msg);
-  let dbContext='';
-  if(isFoodLog){
-    const keywords=extractFoodKeywords(msg);
-    if(keywords.length>3){
-      dbContext=await queryFoodDB(keywords);
-    }
-  }
-
-  // Build system prompt with optional DB context
-  const systemPrompt=buildJinSystemPrompt()+(dbContext?
-    `\n\n## FOOD DATABASE LOOKUP RESULTS\nI searched the Open Food Facts database for this message and found these verified macros. Use these EXACT numbers if they match what Magda described:\n${dbContext}\n(These are verified database values — prioritize them over estimates)`
-    :'');
-
   try{
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -2764,7 +2787,7 @@ async function sendToJin(){
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
-        system:systemPrompt,
+        system:buildJinSystemPrompt(),
         messages:jinHistory
       })
     });
