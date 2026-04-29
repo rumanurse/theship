@@ -198,7 +198,7 @@ body {
   cursor:pointer; text-align:center; transition:all .2s; position:relative;
 }
 .prof-upload-btn input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-.admin-on .prof-upload-btn { display:block; }
+.prof-upload-btn { display:block; } /* always visible for owner */
 /* MODALS */
 .overlay { position:fixed; inset:0; background:rgba(60,10,90,.35); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; }
 .overlay.on { display:flex; }
@@ -779,10 +779,15 @@ function applyCfg(){
   document.getElementById('footName').textContent=c.name;
   if(c.about)document.getElementById('aboutMe').innerHTML=esc(c.about).replace(/\n/g,'<br>');
   const photo=DB.g('profPhoto');
+  const photoUrl=DB.g('profPhotoUrl');
   const img=document.getElementById('profPhoto');
   const em=document.getElementById('profEmoji');
-  if(photo){img.src=photo;img.style.display='block';em.style.display='none';}
-  else{img.style.display='none';em.style.display='block';em.textContent=c.emoji||'🌸';}
+  if(photo||photoUrl){
+    img.src=photoUrl||photo;
+    img.style.display='block';em.style.display='none';
+  } else {
+    img.style.display='none';em.style.display='block';em.textContent=c.emoji||'🌸';
+  }
 }
 
 // ── TABS ────────────────────────────────────────────────────────────────────
@@ -794,15 +799,32 @@ function showTab(name,btn){
 }
 
 // ── PROFILE PHOTO ───────────────────────────────────────────────────────────
-function uploadProfilePhoto(input){
+async function uploadProfilePhoto(input){
   const file=input.files[0];if(!file)return;
+  toast('✿ uploading photo...');
   const reader=new FileReader();
-  reader.onload=function(e){
-    DB.s('profPhoto',e.target.result);
-    document.getElementById('profPhoto').src=e.target.result;
+  reader.onload=async function(e){
+    const data=e.target.result;
+    // Save locally first for instant display
+    DB.s('profPhoto',data);
+    document.getElementById('profPhoto').src=data;
     document.getElementById('profPhoto').style.display='block';
     document.getElementById('profEmoji').style.display='none';
     toast('✿ profile photo updated! 💜');
+    // Sync to Supabase Storage so it shows on all devices
+    if(msUser){
+      try{
+        const blob=await fetch(data).then(r=>r.blob());
+        const path=`profile/${msUser.id}/avatar.jpg`;
+        const{error}=await msSb.storage.from('magda-images').upload(path,blob,{upsert:true,contentType:'image/jpeg'});
+        if(error) console.error('Profile photo upload error:',error);
+        else{
+          const{data:urlData}=msSb.storage.from('magda-images').getPublicUrl(path);
+          DB.s('profPhotoUrl',urlData.publicUrl);
+          console.log('Profile photo synced to cloud ✅');
+        }
+      }catch(e){console.error('Profile photo sync error:',e);}
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -890,20 +912,21 @@ function fillPrompt(){
 
 // ── BLOG ────────────────────────────────────────────────────────────────────
 function openPost(id){
-  const p=DB.posts().find(x=>x.id===id);
-  if(!p) return;
+  const p=DB.posts().find(x=>String(x.id)===String(id));
+  if(!p){console.error('Post not found:',id);return;}
   const c=document.getElementById('viewPostContent');
+  if(!c){console.error('viewPostContent not found');return;}
   c.innerHTML=`
-    <div style="margin-bottom:6px;font-size:12px;color:var(--mid)">📅 ${p.date}</div>
-    <div style="font-family:var(--font-display);font-size:28px;color:var(--pink);margin-bottom:8px">${esc(p.title)}</div>
-    <div style="display:flex;gap:10px;margin-bottom:12px;font-size:13px;color:var(--mid)">
+    <div style="font-size:12px;color:var(--mid);margin-bottom:8px">📅 ${p.date}</div>
+    <div style="font-family:var(--font-display);font-size:26px;color:var(--pink);margin-bottom:10px;line-height:1.2">${esc(p.title)}</div>
+    <div style="display:flex;gap:12px;margin-bottom:14px;font-size:12px;color:var(--mid);flex-wrap:wrap">
       <span>${p.moodE||'🌸'} ${esc(p.mood||'')}</span>
       ${p.music?`<span>🎵 ${esc(p.music)}</span>`:''}
     </div>
-    ${p.img?`<img src="${p.img}" alt="blog photo" style="width:100%;border-radius:12px;margin-bottom:14px;border:2px solid var(--bd-lav);cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight?'':'none'">`:''}
-    <div style="font-size:14px;line-height:1.8;color:var(--dark);white-space:pre-wrap">${esc(p.body||'')}</div>
-    ${p.tags&&p.tags.length?`<div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap">${p.tags.map(t=>`<span class="btag">${esc(t.trim())}</span>`).join('')}</div>`:''}
-    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--bd-lav);font-size:12px;color:var(--mid)">✿ ${esc(DB.cfg().name)}</div>
+    ${p.img?`<img src="${p.img}" alt="blog photo" style="width:100%;border-radius:14px;margin-bottom:16px;border:2px solid var(--bd-lav);display:block">`:''}
+    <div style="font-size:14px;line-height:1.9;color:var(--dark);white-space:pre-wrap">${esc(p.body||'')}</div>
+    ${p.tags&&p.tags.length?`<div style="margin-top:16px;display:flex;gap:6px;flex-wrap:wrap">${p.tags.map(t=>`<span class="btag">${esc(t.trim())}</span>`).join('')}</div>`:''}
+    <div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--bd-lav);font-size:12px;color:var(--mid)">✿ ${esc(DB.cfg().name)}</div>
   `;
   openM('m-view');
 }
@@ -911,17 +934,20 @@ function openPost(id){
 function renderBlog(){
   const posts=DB.posts(),el=document.getElementById('blogList');
   if(!posts.length){el.innerHTML='<div class="empty">no entries yet 🌸 check back soon!</div>';return;}
-  el.innerHTML=posts.map(p=>`
-    <div class="bpost" style="cursor:pointer" onclick="openPost(${p.id})">
+  el.innerHTML=posts.map(p=>{
+    const thumb=p.img?`<div style="position:relative;margin:10px 0;border-radius:12px;overflow:hidden" onclick="event.stopPropagation();openPost(${p.id})"><img src="${p.img}" alt="photo" style="width:100%;height:200px;object-fit:cover;display:block"><div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(80,0,80,0.5));padding:12px;color:#fff;font-size:11px;font-style:italic">tap to read full post ✿</div></div>`:'';
+    const preview=esc(p.body||'').substring(0,160).replace(/\n/g,' ')+(p.body&&p.body.length>160?'<span style="color:var(--purple)"> ··· read more</span>':'');
+    const tags=p.tags&&p.tags.length?`<div class="btags">${p.tags.map(t=>`<span class="btag">${esc(t.trim())}</span>`).join('')}</div>`:'';
+    return `<div class="bpost" style="cursor:pointer" onclick="openPost(${p.id})">
       <div class="bdate">📅 ${p.date}</div>
       <div class="btitle">${esc(p.title)}</div>
-      <div class="bmeta">
-        <span>${p.moodE||'🌸'} ${esc(p.mood||'')}</span>
-        ${p.music?`<span>🎵 ${esc(p.music)}</span>`:''}
-      </div>
-      ${p.img?`<img class="bimg" src="${p.img}" alt="blog photo" onclick="event.stopPropagation();openPost(${p.id})">`:''}
-      <div class="bbody">${esc(p.body||'').substring(0,200).replace(/\n/g,' ')}${p.body&&p.body.length>200?'...':''}</div>
-      ${p.tags&&p.tags.length?`<div class="btags">${p.tags.map(t=>`<span class="btag">${esc(t.trim())}</span>`).join('')}</div>`:''}
+      <div class="bmeta"><span>${p.moodE||'🌸'} ${esc(p.mood||'')}</span>${p.music?`<span>🎵 ${esc(p.music)}</span>`:''}</div>
+      ${thumb}
+      <div class="bbody" style="font-size:13px;color:var(--mid);margin-top:8px;line-height:1.6">${preview}</div>
+      ${tags}
+      <div class="bfoot"><span>✿ ${esc(DB.cfg().name)}</span><div class="aa"><button class="abtn" onclick="event.stopPropagation();editPost(${p.id})">✏ edit</button><button class="abtn del" onclick="event.stopPropagation();delPost(${p.id})">✕ delete</button></div></div>
+    </div>`;
+  }).join('');</div>`:''}
       <div class="bfoot">
         <span>✿ ${esc(DB.cfg().name)}</span>
         <div class="aa">
