@@ -884,7 +884,7 @@ function setupMoodGrid(){
     <div class="mood-cell" id="mc-${i}" onclick="selectMood(${i})">
       <span class="me2">${m.e}</span>
       <div class="mt2">${m.t}</div>
-    </div>`;}).join('');
+    </div>`).join('');
 }
 
 function selectMood(i){
@@ -928,27 +928,30 @@ function openPost(id){
 function renderBlog(){
   const posts=DB.posts(),el=document.getElementById('blogList');
   if(!posts.length){el.innerHTML='<div class="empty">no entries yet 🌸 check back soon!</div>';return;}
-  el.innerHTML=posts.map(p=>{
-    const thumb=p.img?`<div style="position:relative;margin:10px 0;border-radius:12px;overflow:hidden;cursor:pointer" onclick="event.stopPropagation();openPost(${p.id})"><img src="${p.img}" alt="photo" style="width:100%;height:200px;object-fit:cover;display:block"><div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(80,0,80,0.45));padding:10px 12px;color:#fff;font-size:11px;font-style:italic">tap to read full post ✿</div></div>`:'';
-    return `<div class="bpost" style="cursor:pointer" onclick="openPost(${p.id})">
+  el.innerHTML=posts.map(p=>`
+    <div class="bpost" onclick="openPost(${p.id})" style="cursor:pointer">
       <div class="bdate">📅 ${p.date}</div>
       <div class="btitle">${esc(p.title)}</div>
       <div class="bmeta">
         <span>${p.moodE||'🌸'} ${esc(p.mood||'')}</span>
         ${p.music?`<span>🎵 ${esc(p.music)}</span>`:''}
       </div>
-      ${thumb}
-      <div class="bbody" style="font-size:13px;color:var(--mid);margin-top:6px">${esc(p.body||'').substring(0,180).replace(/\n/g,' ')}${p.body&&p.body.length>180?'<span style="color:var(--purple)"> ··· read more</span>':''}</div>
+      ${p.img?`<div style="position:relative;margin:10px 0;border-radius:12px;overflow:hidden" onclick="event.stopPropagation();openPost(${p.id})">
+        <img src="${p.img}" style="width:100%;height:200px;object-fit:cover;display:block;border-radius:12px">
+        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(80,0,80,0.45));padding:10px 12px;color:#fff;font-size:11px;font-style:italic">tap to read full post ✿</div>
+      </div>`:''}
+      <div class="bbody" style="font-size:13px;color:var(--mid);margin-top:6px;line-height:1.6">${esc(p.body||'').substring(0,160).replace(/\n/g,' ')}${p.body&&p.body.length>160?'<span style="color:var(--purple)"> ··· read more</span>':''}</div>
       ${p.tags&&p.tags.length?`<div class="btags">${p.tags.map(t=>`<span class="btag">${esc(t.trim())}</span>`).join('')}</div>`:''}
       <div class="bfoot">
         <span>✿ ${esc(DB.cfg().name)}</span>
         <div class="aa">
-          <button class="abtn" onclick="editPost(${p.id})">✏ edit</button>
-          <button class="abtn del" onclick="delPost(${p.id})">✕ delete</button>
+          <button class="abtn" onclick="event.stopPropagation();editPost(${p.id})">✏ edit</button>
+          <button class="abtn del" onclick="event.stopPropagation();delPost(${p.id})">✕ delete</button>
         </div>
       </div>
     </div>`).join('');
 }
+
 
 function openNewPost(){
   editId=null;blogImgData='';
