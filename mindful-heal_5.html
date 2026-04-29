@@ -1434,6 +1434,7 @@
     font-weight: 500;
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -2271,7 +2272,6 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // ═══════════════════ STARS
   (function(){
@@ -2507,7 +2507,7 @@
     const txt = document.getElementById('safePlaceText').value;
     if(txt) {
       localStorage.setItem('safePlaceMH', txt);
-      mhSaveSafePlace(txt).catch(()=>{});
+      if(typeof mhSaveSafePlace==='function') mhSaveSafePlace(txt).catch(()=>{});
       showToast('Your safe place is saved 🏡');
     }
   }
@@ -2720,21 +2720,20 @@
     const title = document.getElementById('journalTitle').value || 'Untitled Entry';
     const body = document.getElementById('journalBody').value;
     if(!body.trim()) { showToast('Write something first 🖊️'); return; }
-    const entries = JSON.parse(localStorage.getItem('journalMH')||'[]');
     const entry = { id: Date.now(), title, body, date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) };
+    const entries = JSON.parse(localStorage.getItem('journalMH')||'[]');
     entries.unshift(entry);
     localStorage.setItem('journalMH', JSON.stringify(entries.slice(0,20)));
-    // ── CLOUD SYNC ──
-    mhSaveJournal(entry).catch(()=>{});
-    // ── CLEAR FIELDS + RENDER IMMEDIATELY ──
+    // Cloud sync
+    if(typeof mhSaveJournal==='function') mhSaveJournal(entry).catch(()=>{});
+    // Clear fields immediately
     document.getElementById('journalTitle').value = '';
     document.getElementById('journalBody').value = '';
-    if(typeof updateWordCount === 'function') updateWordCount();
+    try{updateWordCount();}catch(e){}
+    // Show entry immediately
     renderEntries();
     showToast('Entry saved 🌿');
-    // Scroll to entries
-    const el = document.getElementById('savedEntries');
-    if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 100);
+    setTimeout(()=>{const el=document.getElementById('savedEntries');if(el)el.scrollIntoView({behavior:'smooth'});},150);
   }
 
   function clearJournal() {
@@ -3062,11 +3061,8 @@
 
   function saveLog(emotions,date,time,response){
     const logs=JSON.parse(localStorage.getItem('feelingsLogMH')||'[]');
-    const log={id:Date.now(),emotions,date:date||new Date().toISOString().split('T')[0],time:time||'',chips:selectedEmotions.map(e=>({label:e.label,color:e.color})),validation:response.validation};
-    logs.unshift(log);
+    logs.unshift({id:Date.now(),emotions,date:date||new Date().toISOString().split('T')[0],time:time||'',chips:selectedEmotions.map(e=>({label:e.label,color:e.color})),validation:response.validation});
     localStorage.setItem('feelingsLogMH',JSON.stringify(logs.slice(0,30)));
-    // ── CLOUD SYNC ──
-    mhSaveFeeling(log).catch(()=>{});
     renderFeelingsLog();
   }
 
@@ -3082,102 +3078,23 @@
   function showCrisisModal() { document.getElementById('crisisModal').classList.add('open'); }
   function hideCrisisModal() { document.getElementById('crisisModal').classList.remove('open'); }
 </script>
+
+<style>
+.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s}
+.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);transform:translateY(-1px);color:#f5efe0}
+</style>
+<a class="ship-home-btn" href="index.html">⚓ The Ship</a>
 <script>
-// ══ SUPABASE SYNC ════════════════════════════════════════════════════════════
 const MH_SB_URL='https://jjjwzgshvqjcmwamiwsg.supabase.co';
 const MH_SB_KEY='sb_publishable_jnL1Pw-15hVGGrhC7_Ltjg_TL2_SGuP';
 const mhSb=supabase.createClient(MH_SB_URL,MH_SB_KEY);
 let mhUser=null;
-
-async function mhInit(){
-  const{data,error}=await mhSb.auth.signInWithPassword({
-    email:'admin@rumanurse.com',password:'#Spageti-630'
-  });
-  if(!error&&data.user){
-    mhUser=data.user;
-    await mhLoadAll();
-  }
-}
-
-async function mhLoadAll(){
-  if(!mhUser) return;
-  try{
-    // Load journal entries
-    const{data:j}=await mhSb.from('mindhaven_journal').select('*')
-      .eq('user_id',mhUser.id).order('created_at',{ascending:false}).limit(20);
-    if(j&&j.length){
-      const entries=j.map(r=>({id:r.id,title:r.title||'Entry',body:r.response||'',
-        date:r.date||new Date(r.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
-        emotions:r.emotions,chips:r.chips||[]}));
-      localStorage.setItem('journalMH',JSON.stringify(entries));
-      // Re-render entries so they show immediately on new device
-      try{
-        const c=document.getElementById('savedEntries');
-        if(c){
-          c.innerHTML='<h3 style="font-family:var(--font-display);font-size:22px;color:var(--champagne);margin:24px 0 16px;font-style:italic;">Past Entries</h3>';
-          entries.forEach(e=>{
-            const excerpt=e.body.substring(0,120)+'...';
-            c.innerHTML+=`<div class="glass-card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><h3 style="font-size:18px">${e.title}</h3><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">${e.date}</span></div><p style="font-style:italic">${excerpt}</p></div>`;
-          });
-        }
-      }catch(re){}
-    }
-    // Load safe place
-    const{data:sp}=await mhSb.from('mindhaven_safe_place').select('*')
-      .eq('user_id',mhUser.id).single();
-    if(sp?.content){
-      localStorage.setItem('safePlaceMH',sp.content);
-      const spEl=document.getElementById('safePlaceText');
-      if(spEl) spEl.value=sp.content;
-    }
-    // Load feelings log
-    const{data:fl}=await mhSb.from('mindhaven_journal').select('*')
-      .eq('user_id',mhUser.id).not('emotions','is',null)
-      .order('created_at',{ascending:false}).limit(30);
-    if(fl&&fl.length){
-      const logs=fl.map(r=>({id:r.id,emotions:r.emotions,date:r.date,
-        time:r.time,chips:r.chips||[],validation:r.response}));
-      localStorage.setItem('feelingsLogMH',JSON.stringify(logs));
-    }
-  }catch(e){console.error('mhLoadAll',e);}
-}
-
-async function mhSaveJournal(entry){
-  if(!mhUser) return;
-  try{
-    await mhSb.from('mindhaven_journal').upsert({
-      id:String(entry.id),user_id:mhUser.id,
-      title:entry.title||'Entry',response:entry.body||'',
-      date:entry.date||new Date().toISOString().split('T')[0],
-      emotions:entry.title||'journal',chips:[]
-    },{onConflict:'id'});
-  }catch(e){console.error('mhSaveJournal',e);}
-}
-
-async function mhSaveSafePlace(txt){
-  if(!mhUser) return;
-  try{
-    await mhSb.from('mindhaven_safe_place').upsert({
-      user_id:mhUser.id,content:txt,updated_at:new Date().toISOString()
-    },{onConflict:'user_id'});
-  }catch(e){console.error('mhSaveSafePlace',e);}
-}
-
-async function mhSaveFeeling(log){
-  if(!mhUser) return;
-  try{
-    await mhSb.from('mindhaven_journal').upsert({
-      id:String(log.id),user_id:mhUser.id,
-      emotions:log.emotions,response:log.validation||'',
-      date:log.date,time:log.time||'',
-      chips:log.chips||[]
-    },{onConflict:'id'});
-  }catch(e){console.error('mhSaveFeeling',e);}
-}
-
+async function mhInit(){const{data,error}=await mhSb.auth.signInWithPassword({email:'admin@rumanurse.com',password:'#Spageti-630'});if(!error&&data.user){mhUser=data.user;await mhLoadAll();}}
+async function mhLoadAll(){if(!mhUser)return;try{const{data:j}=await mhSb.from('mindhaven_journal').select('*').eq('user_id',mhUser.id).order('created_at',{ascending:false}).limit(20);if(j&&j.length){const entries=j.map(r=>({id:r.id,title:r.title||'Entry',body:r.response||'',date:r.date||new Date(r.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}));localStorage.setItem('journalMH',JSON.stringify(entries));const c=document.getElementById('savedEntries');if(c){c.innerHTML='<h3 style="font-family:serif;font-size:22px;margin:24px 0 16px;font-style:italic;">Past Entries</h3>';entries.forEach(e=>{c.innerHTML+=`<div class="glass-card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><h3 style="font-size:18px">${e.title}</h3><span style="font-size:11px;opacity:.6">${e.date}</span></div><p style="font-style:italic">${e.body.substring(0,120)}...</p></div>`;});}}const{data:sp}=await mhSb.from('mindhaven_safe_place').select('*').eq('user_id',mhUser.id).single();if(sp&&sp.content){localStorage.setItem('safePlaceMH',sp.content);const el=document.getElementById('safePlaceText');if(el)el.value=sp.content;}}catch(e){console.error('mhLoadAll',e);}}
+async function mhSaveJournal(entry){if(!mhUser)return;try{await mhSb.from('mindhaven_journal').upsert({id:String(entry.id),user_id:mhUser.id,title:entry.title,response:entry.body,date:entry.date,emotions:'journal',chips:[]},{onConflict:'id'});}catch(e){}}
+async function mhSaveSafePlace(txt){if(!mhUser)return;try{await mhSb.from('mindhaven_safe_place').upsert({user_id:mhUser.id,content:txt,updated_at:new Date().toISOString()},{onConflict:'user_id'});}catch(e){}}
+async function mhSaveFeeling(log){if(!mhUser)return;try{await mhSb.from('mindhaven_journal').upsert({id:String(log.id),user_id:mhUser.id,emotions:log.emotions,response:log.validation||'',date:log.date,time:log.time||'',chips:log.chips||[]},{onConflict:'id'});}catch(e){}}
 window.addEventListener('load',()=>mhInit().catch(()=>{}));
-<style>.ship-home-btn{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#0d1b2a,#152234);border:1px solid rgba(201,168,76,0.35);border-radius:20px;padding:8px 16px 8px 12px;text-decoration:none;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:#e2c97e;letter-spacing:.5px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all .2s}.ship-home-btn:hover{border-color:rgba(201,168,76,0.65);transform:translateY(-1px);color:#f5efe0}.ship-home-btn .sh-anchor{font-size:15px;line-height:1}</style>
-<a class="ship-home-btn" href="index.html"><span class="sh-anchor">⚓</span> The Ship</a>
 </script>
 </body>
 </html>
