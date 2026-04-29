@@ -1154,17 +1154,22 @@ function createTaskBlock(task, isWeek = false) {
 
   // ── TOUCH DRAG SUPPORT FOR MOBILE ──
   let touchStartY=0,touchStartX=0,touchClone=null;
+  let touchTimer=null;
   div.addEventListener('touchstart',(e)=>{
     const touch=e.touches[0];
     touchStartY=touch.clientY;touchStartX=touch.clientX;
-    draggedTask=task;
-    // Create visual clone
-    touchClone=div.cloneNode(true);
-    touchClone.style.cssText=`position:fixed;z-index:9999;opacity:0.75;pointer-events:none;width:${div.offsetWidth}px;left:${touch.clientX-div.offsetWidth/2}px;top:${touch.clientY-20}px;`;
-    document.body.appendChild(touchClone);
-    div.style.opacity='0.4';
+    // Long press (300ms) to start drag — prevents conflict with scroll/tap
+    touchTimer=setTimeout(()=>{
+      draggedTask=task;
+      touchClone=div.cloneNode(true);
+      touchClone.style.cssText=`position:fixed;z-index:9999;opacity:0.8;pointer-events:none;width:${div.offsetWidth}px;left:${touch.clientX-div.offsetWidth/2}px;top:${touch.clientY-20}px;border:2px solid #c9a84c;border-radius:12px;`;
+      document.body.appendChild(touchClone);
+      div.style.opacity='0.4';
+      if(navigator.vibrate) navigator.vibrate(50); // haptic feedback
+    },300);
   },{passive:true});
   div.addEventListener('touchmove',(e)=>{
+    if(!draggedTask) return; // not dragging yet (long press not triggered)
     e.preventDefault();
     const touch=e.touches[0];
     if(touchClone){
@@ -1178,13 +1183,26 @@ function createTaskBlock(task, isWeek = false) {
     if(dropZone) dropZone.classList.add('drag-over');
   },{passive:false});
   div.addEventListener('touchend',(e)=>{
+    clearTimeout(touchTimer); // cancel long press if finger lifted early
     const touch=e.changedTouches[0];
+    // Remove clone FIRST so elementFromPoint finds what's underneath
     if(touchClone){touchClone.remove();touchClone=null;}
     div.style.opacity='1';
     document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-    // Find drop target
-    const el=document.elementFromPoint(touch.clientX,touch.clientY);
-    const dropZone=el?.closest('[data-hour]');
+    // Find drop target — check multiple points around finger for better hit detection
+    const points=[
+      [touch.clientX,touch.clientY],
+      [touch.clientX-10,touch.clientY],
+      [touch.clientX+10,touch.clientY],
+      [touch.clientX,touch.clientY-20],
+      [touch.clientX,touch.clientY+20],
+    ];
+    let dropZone=null;
+    for(const[x,y] of points){
+      const el=document.elementFromPoint(x,y);
+      const dz=el?.closest('[data-hour]');
+      if(dz){dropZone=dz;break;}
+    }
     if(dropZone&&draggedTask){
       const hour=dropZone.dataset.hour;
       const date=dropZone.dataset.date||dropZone.closest('[data-date]')?.dataset.date||new Date().toISOString().slice(0,10);
