@@ -2726,8 +2726,15 @@
     localStorage.setItem('journalMH', JSON.stringify(entries.slice(0,20)));
     // ── CLOUD SYNC ──
     mhSaveJournal(entry).catch(()=>{});
-    showToast('Entry saved 🌿');
+    // ── CLEAR FIELDS + RENDER IMMEDIATELY ──
+    document.getElementById('journalTitle').value = '';
+    document.getElementById('journalBody').value = '';
+    if(typeof updateWordCount === 'function') updateWordCount();
     renderEntries();
+    showToast('Entry saved 🌿');
+    // Scroll to entries
+    const el = document.getElementById('savedEntries');
+    if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 100);
   }
 
   function clearJournal() {
