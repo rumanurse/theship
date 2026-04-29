@@ -1606,32 +1606,64 @@ function selectPhase(id){
 }
 
 function saveCustomPhase(){
-  const lowCal=parseInt(document.getElementById('customLowCal').value)||1600;
-  const highCal=parseInt(document.getElementById('customHighCal').value)||1900;
-  const protein=parseInt(document.getElementById('customProtein').value)||165;
-  const fatMax=parseInt(document.getElementById('customFatMax').value)||50;
-  const lowCarbs=parseInt(document.getElementById('customLowCarbs').value)||120;
-  const highCarbs=parseInt(document.getElementById('customHighCarbs').value)||175;
+  // Read ALL values first before any DOM changes
+  const lowCalEl=document.getElementById('customLowCal');
+  const highCalEl=document.getElementById('customHighCal');
+  const proteinEl=document.getElementById('customProtein');
+  const fatMaxEl=document.getElementById('customFatMax');
+  const lowCarbsEl=document.getElementById('customLowCarbs');
+  const highCarbsEl=document.getElementById('customHighCarbs');
+
+  if(!lowCalEl){showToast('Please open the phase panel first');return;}
+
+  const lowCal=parseInt(lowCalEl.value)||1600;
+  const highCal=parseInt(highCalEl.value)||1900;
+  const protein=parseInt(proteinEl.value)||165;
+  const fatMax=parseInt(fatMaxEl.value)||50;
+  const lowCarbs=parseInt(lowCarbsEl.value)||120;
+  const highCarbs=parseInt(highCarbsEl.value)||175;
+
+  // Validate
+  if(lowCal<1000||highCal<1000){showToast('Calories must be at least 1000');return;}
+  if(protein<100){showToast('Protein should be at least 100g');return;}
 
   const customData={
     lowCal,highCal,protein,fatMax,lowCarbs,highCarbs,
     schedule:{
-      0:{type:'low',cal:lowCal,carbs:lowCarbs},1:{type:'low',cal:lowCal,carbs:lowCarbs},
-      2:{type:'high',cal:highCal,carbs:highCarbs},3:{type:'low',cal:lowCal,carbs:lowCarbs},
-      4:{type:'low',cal:lowCal,carbs:lowCarbs},5:{type:'high',cal:highCal,carbs:highCarbs},
+      0:{type:'low',cal:lowCal,carbs:lowCarbs},
+      1:{type:'low',cal:lowCal,carbs:lowCarbs},
+      2:{type:'high',cal:highCal,carbs:highCarbs},
+      3:{type:'low',cal:lowCal,carbs:lowCarbs},
+      4:{type:'low',cal:lowCal,carbs:lowCarbs},
+      5:{type:'high',cal:highCal,carbs:highCarbs},
       6:{type:'low',cal:lowCal,carbs:lowCarbs},
     },
     protein,fatMax,
     note:`Low ${lowCal} · High ${highCal} · Protein ${protein}g`,
+    name:'Custom Phase',
+    dates:'My own protocol',
+    color:'var(--purple)',
+    custom:true,
   };
+
+  // Save everything
   localStorage.setItem('rf_phase_custom',JSON.stringify(customData));
   PHASES.custom={...PHASES.custom,...customData};
   activePhaseId='custom';
   localStorage.setItem('rf_active_phase','custom');
+
+  // Apply to DAY_SCHED immediately
   applyActivePhase();
-  renderPhaseModal();
+
+  // Update UI
   updatePhaseCard();
-  showToast('✨ Custom calories saved!');
+  showToast(`✨ Custom phase saved! Low: ${lowCal}cal · High: ${highCal}cal · Protein: ${protein}g`);
+
+  // Close modal
+  closeModal('phaseModal');
+
+  // Re-render today's tasks with new targets
+  try{renderTasks(new Date().getDay(),DAY_SCHED[new Date().getDay()]);}catch(e){}
 }
 
 function updatePhaseCard(){
@@ -2072,6 +2104,22 @@ function renderRecentStats(){
 }
 
 // ══ FOOD ════════════════════════════════════════════════════════════════════
+function parseOFFProducts(products){
+  return products
+    .filter(p=>p.product_name&&p.nutriments)
+    .map(p=>{
+      const n=p.nutriments;
+      const cal=Math.round(n['energy-kcal_serving']||n['energy-kcal_100g']||0);
+      const pro=Math.round((n['proteins_serving']||n['proteins_100g']||0)*10)/10;
+      const carb=Math.round((n['carbohydrates_serving']||n['carbohydrates_100g']||0)*10)/10;
+      const fat=Math.round((n['fat_serving']||n['fat_100g']||0)*10)/10;
+      const name=p.product_name+(p.brands?` (${p.brands.split(',')[0]})`:'');
+      const serving=p.serving_size||'100g';
+      return{name,cal,pro,carb,fat,serving};
+    })
+    .filter(p=>p.cal>0);
+}
+
 let searchMode='all';
 let searchDebounceTimer=null;
 
@@ -2119,24 +2167,13 @@ async function searchFoods(q){
 
   try{
     const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,serving_size,serving_quantity`;
-    const resp=await fetch(url);
+    const resp=await fetch(url,{
+      headers:{'Accept':'application/json','User-Agent':'RumaFit/1.0 (magda@rumanurse.com)'}
+    });
     const data=await resp.json();
     if(spinner) spinner.style.display='none';
 
-    const dbItems=(data.products||[])
-      .filter(p=>p.product_name&&p.nutriments)
-      .map(p=>{
-        const n=p.nutriments;
-        const cal=Math.round(n['energy-kcal_serving']||n['energy-kcal_100g']||0);
-        const pro=Math.round((n['proteins_serving']||n['proteins_100g']||0)*10)/10;
-        const carb=Math.round((n['carbohydrates_serving']||n['carbohydrates_100g']||0)*10)/10;
-        const fat=Math.round((n['fat_serving']||n['fat_100g']||0)*10)/10;
-        const serving=p.serving_size||'100g';
-        const name=(p.product_name+(p.brands?` (${p.brands.split(',')[0]})`:''));
-        return{name,cal,pro,carb,fat,serving};
-      })
-      .filter(p=>p.cal>0)
-      .slice(0,12);
+    const dbItems=parseOFFProducts(data.products||[]).slice(0,12);
 
     const allItems=searchMode==='all'?[...savedHits.map(f=>({...f,_saved:true})),...dbItems]:dbItems;
 
@@ -2159,7 +2196,24 @@ async function searchFoods(q){
       res.innerHTML='<p style="font-size:10px;color:var(--light);padding:3px 5px">⚠️ Database offline — showing saved foods</p>'+
         savedHits.map(f=>renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat,'saved')).join('');
     } else {
-      res.innerHTML='<p style="font-size:11px;color:var(--light);padding:5px">Network error. Try again or add manually.</p>';
+      // Try alternative API endpoint
+      try{
+        const url2=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=10`;
+        const resp2=await fetch(url2);
+        const data2=await resp2.json();
+        if(data2.products&&data2.products.length>0){
+          const dbItems2=parseOFFProducts(data2.products);
+          if(dbItems2.length){
+            ms.style.display='block';
+            const allItems2=searchMode==='all'?[...savedHits.map(f=>({...f,_saved:true})),...dbItems2]:dbItems2;
+            res.innerHTML=allItems2.map(f=>renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat||'',f._saved?'saved':'db',f.serving||'')).join('');
+            return;
+          }
+        }
+      }catch(e2){}
+      res.innerHTML=savedHits.length?
+        '<p style="font-size:10px;color:var(--light);padding:3px 5px">⚠️ Live database unavailable — showing saved foods only</p>'+savedHits.map(f=>renderFoodItem(f.name,f.cal,f.pro,f.carb,f.fat,f.cat,'saved')).join(''):
+        '<p style="font-size:11px;color:var(--light);padding:5px">Database unavailable. Add food manually or try again.</p>';
     }
   }
 }
@@ -2619,7 +2673,7 @@ async function queryFoodDB(query){
   // Search Open Food Facts for a given food query - returns top 3 results for Jin context
   try{
     const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,brands,nutriments,serving_size`;
-    const resp=await fetch(url,{signal:AbortSignal.timeout(4000)});
+    const resp=await fetch(url,{signal:AbortSignal.timeout(5000),headers:{'Accept':'application/json','User-Agent':'RumaFit/1.0'}});
     const data=await resp.json();
     return (data.products||[])
       .filter(p=>p.product_name&&p.nutriments)
