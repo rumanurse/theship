@@ -1643,38 +1643,58 @@ let activePhaseId=localStorage.getItem('rf_active_phase')||'reverse_diet';
 
 // ══ PHASE CLOUD SYNC ════════════════════════════════════════════════════════
 async function savePhaseToCloud(phaseId, customData){
-  if(!currentUser) return;
+  if(!currentUser){
+    console.log('savePhaseToCloud: no user, retrying in 2s...');
+    setTimeout(()=>savePhaseToCloud(phaseId,customData),2000);
+    return;
+  }
   try{
+    console.log('Saving phase to cloud:',phaseId,customData?'with custom data':'preset only');
     const{error}=await sb.from('user_settings').upsert({
       user_id:currentUser.id,
       active_phase:phaseId,
       phase_custom:customData||null,
       updated_at:new Date().toISOString()
     },{onConflict:'user_id'});
-    if(error) console.error('savePhaseToCloud:',error);
-    else console.log('Phase saved to cloud:',phaseId);
-  }catch(e){console.error('savePhaseToCloud:',e);}
+    if(error){
+      console.error('savePhaseToCloud error:',error);
+      showToast('⚠️ Phase saved locally — cloud sync failed');
+    } else {
+      console.log('✅ Phase synced to cloud:',phaseId);
+      showToast('☁️ Phase synced across all devices!');
+    }
+  }catch(e){console.error('savePhaseToCloud exception:',e);}
 }
 
 async function loadPhaseFromCloud(){
-  if(!currentUser) return;
+  if(!currentUser){console.log('loadPhaseFromCloud: no user yet');return;}
   try{
+    console.log('Loading phase from cloud for user:',currentUser.id);
     const{data,error}=await sb.from('user_settings')
       .select('active_phase,phase_custom')
       .eq('user_id',currentUser.id)
       .single();
-    if(error||!data) return;
+    if(error){
+      console.log('No phase in cloud yet (first time):', error.message);
+      return;
+    }
+    if(!data){console.log('No user_settings row found');return;}
+    console.log('Cloud phase data:', data);
     if(data.active_phase){
       activePhaseId=data.active_phase;
       localStorage.setItem('rf_active_phase',data.active_phase);
     }
     if(data.phase_custom){
-      const c=data.phase_custom;
+      const c=typeof data.phase_custom==='string'?JSON.parse(data.phase_custom):data.phase_custom;
       localStorage.setItem('rf_phase_custom',JSON.stringify(c));
       PHASES.custom={...PHASES.custom,...c};
     }
-    console.log('Phase loaded from cloud:',activePhaseId);
-  }catch(e){console.error('loadPhaseFromCloud:',e);}
+    console.log('✅ Phase loaded from cloud:', activePhaseId);
+    // Apply and update UI
+    applyActivePhase();
+    updatePhaseCard();
+    renderPhaseTimeline();
+  }catch(e){console.error('loadPhaseFromCloud exception:',e);}
 }
 
 function getActivePhase(){
@@ -3064,22 +3084,39 @@ async function sendToJin(){
   );
 
   try{
-    // Build messages for API — convert image messages properly
+    // Build clean messages — strip image data from history to keep payload small
     const apiMessages=jinHistory.map(m=>{
       if(typeof m.content==='string') return m;
-      // Already properly formatted array content
+      // For array content (image messages), extract only text parts for history
+      if(Array.isArray(m.content)){
+        const textOnly=m.content.filter(c=>c.type==='text').map(c=>c.text).join(' ');
+        return{role:m.role,content:textOnly||'[shared a photo]'};
+      }
       return m;
     });
+
+    // If this message has an image, build it properly as the LAST message only
+    if(imageDataToSend){
+      // Replace last message with full image+text version
+      apiMessages[apiMessages.length-1]={
+        role:'user',
+        content:userContent // the original array with image
+      };
+    }
+
+    const payload={
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      system:systemPrompt,
+      messages:apiMessages
+    };
+
+    console.log('Sending to Jin, payload size:',JSON.stringify(payload).length,'bytes, hasImage:',!!imageDataToSend);
 
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':jinApiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:systemPrompt,
-        messages:apiMessages
-      })
+      body:JSON.stringify(payload)
     });
 
     const data=await response.json();
