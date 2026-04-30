@@ -3099,7 +3099,7 @@ async function sendToJin(){
   }
 
   const systemPrompt=buildJinSystemPrompt()+(imageDataToSend?
-    '\n\nMAGDA SENT A PHOTO OF HER PLATE. Analyze it carefully: identify every food item visible, estimate realistic portion sizes based on the plate, calculate macros for each item, give totals. Then offer to log it. Include a [LOG:{...}] tag if appropriate.':
+    '\n\nMAGDA SENT A PHOTO OF HER PLATE. Analyze it carefully: identify every food item visible separately, estimate realistic portion sizes, calculate macros for each item, give totals. ALWAYS include a [LOGMEAL:{...}] tag with all items in the array format.':
     dbContext?`\n\n## FOOD DATABASE LOOKUP\n${dbContext}\n(Use these verified macros if they match)`:''
   );
 
@@ -3152,22 +3152,37 @@ async function sendToJin(){
     removeTyping(typingId);
 
     // Parse LOGMEAL tag and show editable confirmation card
-    const logMatch=reply.match(/\[LOGMEAL:(\{.*?\})\]/s);
-    if(logMatch){
-      try{
-        const logData=JSON.parse(logMatch[1]);
-        const cleanReply=reply.replace(/\[LOGMEAL:\{.*?\}\]/s,'').trim();
-        appendJinMessage('jin',cleanReply);
-        showJinLogCard(logData);
-      }catch(e){
-        console.log('LOGMEAL parse error',e);
-        // Fallback: show reply without tag
-        const cleanReply=reply.replace(/\[LOGMEAL:.*?\]/s,'').trim();
-        appendJinMessage('jin',cleanReply);
+    // Parse LOGMEAL tag robustly - handles nested JSON arrays
+    let logData=null;
+    let cleanReply=reply;
+    const logStart=reply.indexOf('[LOGMEAL:');
+    if(logStart>-1){
+      const jsonStart=logStart+9;
+      // Find matching closing }] by tracking brace depth
+      let depth=0,jsonEnd=-1;
+      for(let ci=jsonStart;ci<reply.length-1;ci++){
+        if(reply[ci]==='{') depth++;
+        else if(reply[ci]==='}'){depth--;if(depth===0){jsonEnd=ci;break;}}
       }
+      if(jsonEnd>jsonStart){
+        const jsonStr=reply.substring(jsonStart,jsonEnd+1);
+        try{
+          logData=JSON.parse(jsonStr);
+          cleanReply=(reply.substring(0,logStart)+reply.substring(jsonEnd+2)).trim();
+          console.log('LOGMEAL parsed successfully:',logData.items?.length,'items');
+        }catch(e){
+          console.log('LOGMEAL parse error:',e.message,jsonStr.substring(0,100));
+          cleanReply=reply.substring(0,logStart).trim();
+        }
+      }
+    }
+    // Strip any stray old LOG tags
+    cleanReply=cleanReply.replace(/\[LOG:\{[^}]+\}\]/g,'').trim();
+
+    if(logData&&logData.items&&logData.items.length>0){
+      appendJinMessage('jin',cleanReply||'Here is what I found:');
+      showJinLogCard(logData);
     } else {
-      // No log tag - just show reply
-      const cleanReply=reply.replace(/\[LOG:\{[^}]+\}\]/g,'').trim();
       appendJinMessage('jin',cleanReply);
     }
 
