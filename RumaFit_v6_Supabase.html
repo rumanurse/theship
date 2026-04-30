@@ -892,15 +892,28 @@ select.input-field{appearance:none}
     <!-- Chat messages -->
     <div id="jinMessages" style="min-height:200px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;scroll-behavior:smooth"></div>
 
+    <!-- Image preview area -->
+    <div id="jinImagePreview" style="display:none;margin-bottom:8px;position:relative">
+      <img id="jinPreviewImg" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:2px solid rgba(201,144,122,.3)">
+      <button onclick="clearJinImage()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+      <div style="font-size:10px;color:var(--light);margin-top:4px;text-align:center;font-style:italic">📸 Photo ready — Jin will analyze your plate</div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="jinCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleJinImage(this)">
+
     <!-- Input area -->
     <div style="background:var(--warm);border-radius:12px;padding:10px;border:1px solid rgba(201,144,122,.2)">
       <textarea id="jinInput" 
-        placeholder="Tell Jin what you ate... e.g. 'I had rotisserie chicken, half cup rice and some broccoli' or 'just finished my PB shake' or 'had 10 nuggets and small pizza'"
+        placeholder="Tell Jin what you ate... or tap 📷 to photo your plate!"
         style="width:100%;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);outline:none;resize:none;height:60px;line-height:1.5"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendToJin()}"
       ></textarea>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-        <div style="font-size:9px;color:var(--light)">Enter to send · Shift+Enter for new line</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="document.getElementById('jinCameraInput').click()" style="background:rgba(201,144,122,.15);border:1px solid rgba(201,144,122,.3);border-radius:8px;padding:7px 12px;font-size:16px;cursor:pointer;transition:all .2s" title="Photo your plate">📷</button>
+          <div style="font-size:9px;color:var(--light)">Enter to send · Shift+Enter for new line</div>
+        </div>
         <button onclick="sendToJin()" id="jinSendBtn" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;border:none;border-radius:8px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">
           Send 🐹
         </button>
@@ -2876,7 +2889,8 @@ ${mealLog?`Meals logged:\n${mealLog}`:'Nothing logged yet today.'}
 ## YOUR ROLE
 1. When Magda describes food she ate — CALCULATE the macros accurately using your nutrition knowledge and the known foods list above. Estimate portions if not specified.
 2. ALWAYS respond with a structured log entry in this exact JSON format embedded in your response so the app can parse it:
-   [LOG:{"name":"Food description","cal":0,"pro":0,"carb":0,"fat":0,"meal":"meal_type"}]
+   [LOGMEAL:{"meal":"breakfast|lunch|dinner|snacks","items":[{"name":"Food 1","cal":0,"pro":0,"carb":0,"fat":0,"portion":"e.g. 150g"},{"name":"Food 2","cal":0,"pro":0,"carb":0,"fat":0,"portion":"e.g. 1 cup"}]}]
+   List EVERY food item separately in the items array. For photos, identify each dish/ingredient separately.
    meal_type must be one of: breakfast, lunch, dinner, snacks
    Infer the meal from time of day or context. If unclear, use "snacks".
 3. After the JSON log entry, give Magda a warm, encouraging response showing:
@@ -2890,32 +2904,108 @@ ${mealLog?`Meals logged:\n${mealLog}`:'Nothing logged yet today.'}
 6. Always prioritize protein. If fat is close to 50g limit, flag it gently.
 7. If she describes a meal that puts her over her daily calorie target, acknowledge it without guilt — one meal doesn't break the program, just note what's left for the day.
 
-IMPORTANT: Always include the [LOG:{...}] tag when food is being logged so the app can auto-parse and add it. Never include the LOG tag for non-food messages.`;
+IMPORTANT: Always include the [LOGMEAL:{...}] tag when food is being logged. List every food item separately in the items array. For photo analysis, identify each food/ingredient as a separate item. Never include the tag for non-food messages.`;
+}
+
+// ══ JIN CAMERA / PLATE ANALYSIS ══════════════════════════════════════════════
+let jinImageData=null; // base64 image data
+let jinImageType='image/jpeg';
+
+function handleJinImage(input){
+  const file=input.files[0];
+  if(!file) return;
+  jinImageType=file.type||'image/jpeg';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    jinImageData=e.target.result.split(',')[1]; // base64 only
+    document.getElementById('jinPreviewImg').src=e.target.result;
+    document.getElementById('jinImagePreview').style.display='block';
+    // Auto-fill hint text
+    const inp=document.getElementById('jinInput');
+    if(!inp.value.trim()) inp.value='What are the macros in this meal?';
+  };
+  reader.readAsDataURL(file);
+  input.value=''; // reset so same file can be picked again
+}
+
+function clearJinImage(){
+  jinImageData=null;
+  document.getElementById('jinImagePreview').style.display='none';
+  document.getElementById('jinPreviewImg').src='';
+  document.getElementById('jinCameraInput').value='';
 }
 
 async function sendToJin(){
   const input=document.getElementById('jinInput');
   const msg=input.value.trim();
-  if(!msg) return;
+  const hasImage=!!jinImageData;
+  if(!msg&&!hasImage) return;
   if(!jinApiKey){showToast('Connect your API key first!');return;}
 
+  const displayMsg=msg||(hasImage?'📷 Analyzing my plate...':'');
   input.value='';
-  appendJinMessage('user',msg);
-  jinHistory.push({role:'user',content:msg});
 
-  // Show typing indicator
+  // Show user message with image thumbnail if present
+  if(hasImage){
+    const preview=document.getElementById('jinPreviewImg').src;
+    appendJinMessage('user',`<img src="${preview}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:4px;display:block">${msg?`<div style="margin-top:4px">${msg}</div>`:''}`);
+  } else {
+    appendJinMessage('user',msg);
+  }
+
+  // Clear image after sending
+  const imageDataToSend=jinImageData;
+  const imageTypeToSend=jinImageType;
+  clearJinImage();
+
+  // Build message content — text + optional image
+  let userContent;
+  if(imageDataToSend){
+    userContent=[
+      {type:'image',source:{type:'base64',media_type:imageTypeToSend,data:imageDataToSend}},
+      {type:'text',text:msg||'Please analyze this meal photo. Identify all foods you can see, estimate portions, and calculate the macros (calories, protein, carbs, fat). Then log it for me.'}
+    ];
+  } else {
+    userContent=msg;
+  }
+
+  jinHistory.push({role:'user',content:userContent});
   const typingId='typing_'+Date.now();
   appendJinMessage('typing','',typingId);
 
+  // Search food DB if text message (not image)
+  let dbContext='';
+  if(!imageDataToSend&&msg){
+    const isFoodLog=/had|ate|just had|just ate|finished|for breakfast|for lunch|for dinner|for snack|drank/i.test(msg);
+    if(isFoodLog){
+      try{
+        const keywords=msg.replace(/i (had|ate|just ate|just had|finished|grabbed)|for (breakfast|lunch|dinner|snack)|today|this morning|tonight|earlier/gi,'').trim().substring(0,60);
+        if(keywords.length>3) dbContext=await queryFoodDB(keywords);
+      }catch(e){}
+    }
+  }
+
+  const systemPrompt=buildJinSystemPrompt()+(imageDataToSend?
+    '\n\nMAGDA SENT A PHOTO OF HER PLATE. Analyze it carefully: identify every food item visible, estimate realistic portion sizes based on the plate, calculate macros for each item, give totals. Then offer to log it. Include a [LOG:{...}] tag if appropriate.':
+    dbContext?`\n\n## FOOD DATABASE LOOKUP\n${dbContext}\n(Use these verified macros if they match)`:''
+  );
+
   try{
+    // Build messages for API — convert image messages properly
+    const apiMessages=jinHistory.map(m=>{
+      if(typeof m.content==='string') return m;
+      // Already properly formatted array content
+      return m;
+    });
+
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':jinApiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
-        system:buildJinSystemPrompt(),
-        messages:jinHistory
+        system:systemPrompt,
+        messages:apiMessages
       })
     });
 
@@ -2928,37 +3018,28 @@ async function sendToJin(){
 
     const reply=data.content[0].text;
     jinHistory.push({role:'assistant',content:reply});
-
-    // Keep conversation history manageable
     if(jinHistory.length>20) jinHistory=jinHistory.slice(-16);
-
     removeTyping(typingId);
 
-    // Parse LOG tag and auto-log food
-    const logMatch=reply.match(/\[LOG:(\{[^}]+\})\]/);
+    // Parse LOGMEAL tag and show editable confirmation card
+    const logMatch=reply.match(/\[LOGMEAL:(\{.*?\})\]/s);
     if(logMatch){
       try{
-        const foodData=JSON.parse(logMatch[1]);
-        const targetMeal=foodData.meal||'snacks';
-        meals[targetMeal].push({
-          name:foodData.name||'Jin logged item',
-          cal:Number(foodData.cal)||0,
-          pro:Number(foodData.pro)||0,
-          carb:Number(foodData.carb)||0,
-          fat:Number(foodData.fat)||0,
-          id:Date.now()
-        });
-        renderMeals();
-        updateMacros();
-        saveTodayLocal();
-        updateJinMacroSnap();
-        showToast('🐹 Jin logged: '+foodData.name+'!');
-      }catch(e){console.log('Log parse error',e);}
+        const logData=JSON.parse(logMatch[1]);
+        const cleanReply=reply.replace(/\[LOGMEAL:\{.*?\}\]/s,'').trim();
+        appendJinMessage('jin',cleanReply);
+        showJinLogCard(logData);
+      }catch(e){
+        console.log('LOGMEAL parse error',e);
+        // Fallback: show reply without tag
+        const cleanReply=reply.replace(/\[LOGMEAL:.*?\]/s,'').trim();
+        appendJinMessage('jin',cleanReply);
+      }
+    } else {
+      // No log tag - just show reply
+      const cleanReply=reply.replace(/\[LOG:\{[^}]+\}\]/g,'').trim();
+      appendJinMessage('jin',cleanReply);
     }
-
-    // Display reply without the LOG tag
-    const cleanReply=reply.replace(/\[LOG:\{[^}]+\}\]/g,'').trim();
-    appendJinMessage('jin',cleanReply);
 
   }catch(err){
     removeTyping(typingId);
@@ -2969,6 +3050,105 @@ async function sendToJin(){
 function quickJin(msg){
   document.getElementById('jinInput').value=msg;
   sendToJin();
+}
+
+function showJinLogCard(logData){
+  const meal=logData.meal||'snacks';
+  const items=logData.items||[];
+  if(!items.length) return;
+
+  // Build unique card ID
+  const cardId='jinlog_'+Date.now();
+
+  // Build editable rows for each food item
+  const rows=items.map((item,i)=>`
+    <div style="background:var(--warm);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid rgba(201,144,122,.15)">
+      <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:6px">
+        ${item.name}${item.portion?`<span style="font-size:10px;font-weight:400;color:var(--light);margin-left:6px">${item.portion}</span>`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+        <div>
+          <label style="font-size:8px;font-weight:600;color:var(--light);letter-spacing:.5px;display:block;margin-bottom:2px">CALS</label>
+          <input type="number" id="${cardId}_cal_${i}" value="${item.cal||0}"
+            style="width:100%;border:1px solid rgba(201,144,122,.25);border-radius:6px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);background:white;text-align:center">
+        </div>
+        <div>
+          <label style="font-size:8px;font-weight:600;color:var(--teal);letter-spacing:.5px;display:block;margin-bottom:2px">PROTEIN</label>
+          <input type="number" id="${cardId}_pro_${i}" value="${item.pro||0}"
+            style="width:100%;border:1px solid rgba(74,155,142,.3);border-radius:6px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);background:white;text-align:center">
+        </div>
+        <div>
+          <label style="font-size:8px;font-weight:600;color:#c9a84c;letter-spacing:.5px;display:block;margin-bottom:2px">CARBS</label>
+          <input type="number" id="${cardId}_carb_${i}" value="${item.carb||0}"
+            style="width:100%;border:1px solid rgba(201,168,76,.3);border-radius:6px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);background:white;text-align:center">
+        </div>
+        <div>
+          <label style="font-size:8px;font-weight:600;color:#D4956A;letter-spacing:.5px;display:block;margin-bottom:2px">FAT</label>
+          <input type="number" id="${cardId}_fat_${i}" value="${item.fat||0}"
+            style="width:100%;border:1px solid rgba(212,149,106,.3);border-radius:6px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);background:white;text-align:center">
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Meal selector
+  const mealOpts=['breakfast','lunch','dinner','snacks'].map(m=>
+    `<option value="${m}" ${m===meal?'selected':''}>${m.charAt(0).toUpperCase()+m.slice(1)}</option>`
+  ).join('');
+
+  const cardHTML=`
+    <div id="${cardId}" style="background:linear-gradient(135deg,#FFF8F5,#FFF0E8);border:1.5px solid rgba(201,144,122,.35);border-radius:14px;padding:14px;margin-top:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--dark)">🐹 Log to:</div>
+        <select id="${cardId}_meal" style="border:1px solid rgba(201,144,122,.3);border-radius:8px;padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);background:white">
+          ${mealOpts}
+        </select>
+      </div>
+      <div style="font-size:10px;color:var(--light);margin-bottom:8px;font-style:italic">✏️ Tap any number to adjust before logging</div>
+      ${rows}
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="confirmJinLog('${cardId}',${items.length})" style="flex:1;background:linear-gradient(135deg,var(--mauve),var(--rose));color:white;border:none;border-radius:10px;padding:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+          ✅ Log It!
+        </button>
+        <button onclick="document.getElementById('${cardId}').remove()" style="background:transparent;border:1px solid rgba(201,144,122,.3);border-radius:10px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--light);cursor:pointer">
+          ✕
+        </button>
+      </div>
+    </div>`;
+
+  // Append card to jin messages
+  const msgs=document.getElementById('jinMessages');
+  const div=document.createElement('div');
+  div.innerHTML=cardHTML;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function confirmJinLog(cardId,itemCount){
+  const meal=document.getElementById(cardId+'_meal').value;
+  let totalCal=0,totalPro=0,totalCarb=0,totalFat=0;
+  const loggedNames=[];
+
+  for(let i=0;i<itemCount;i++){
+    const cal=Number(document.getElementById(cardId+'_cal_'+i)?.value)||0;
+    const pro=Number(document.getElementById(cardId+'_pro_'+i)?.value)||0;
+    const carb=Number(document.getElementById(cardId+'_carb_'+i)?.value)||0;
+    const fat=Number(document.getElementById(cardId+'_fat_'+i)?.value)||0;
+    // Get item name from label above the inputs
+    const card=document.getElementById(cardId);
+    const nameEls=card.querySelectorAll('[style*="font-weight:600"][style*="color:var(--dark)"]');
+    const name=(nameEls[i+1]?.textContent||'Food item').trim().split('\n')[0].trim();
+    loggedNames.push(name);
+    meals[meal].push({name,cal,pro,carb,fat,id:Date.now()+i});
+    totalCal+=cal;totalPro+=pro;totalCarb+=carb;totalFat+=fat;
+  }
+
+  renderMeals();updateMacros();saveTodayLocal();updateJinMacroSnap();
+
+  // Remove card and show success message
+  document.getElementById(cardId).remove();
+  appendJinMessage('jin',`✅ Logged ${itemCount} item${itemCount>1?'s':''} to ${meal}!<br><strong>${totalCal} cal · ${totalPro}g P · ${totalCarb}g C · ${totalFat}g F</strong><br><span style="font-size:11px;opacity:.7">${loggedNames.join(', ')}</span>`);
+  showToast('🐹 '+itemCount+' item'+(itemCount>1?'s':'')+' logged to '+meal+'!');
+  document.getElementById('jinMessages').scrollTop=document.getElementById('jinMessages').scrollHeight;
 }
 
 function appendJinMessage(role,text,id){
