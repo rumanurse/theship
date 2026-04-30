@@ -2873,6 +2873,10 @@ let jinApiKey = localStorage.getItem('bd_apikey')||localStorage.getItem('rf_jin_
 let jinHistory = []; // conversation history for multi-turn
 
 function initJin(){
+  // Always recheck localStorage in case key arrived from cloud after page load
+  if(!jinApiKey){
+    jinApiKey=localStorage.getItem('rf_jin_key')||localStorage.getItem('bd_apikey')||localStorage.getItem('rn_api_key')||'';
+  }
   if(jinApiKey){
     document.getElementById('jinApiSetup').style.display='none';
     document.getElementById('jinChatInterface').style.display='block';
@@ -3080,11 +3084,30 @@ function clearJinImage(){
 }
 
 async function sendToJin(){
+  // Always try to reload API key in case it loaded from cloud after Jin initialized
+  if(!jinApiKey){
+    jinApiKey=localStorage.getItem('rf_jin_key')||localStorage.getItem('bd_apikey')||localStorage.getItem('rn_api_key')||'';
+  }
   const input=document.getElementById('jinInput');
   const msg=input.value.trim();
   const hasImage=!!jinImageData;
   if(!msg&&!hasImage) return;
-  if(!jinApiKey){showToast('Connect your API key first!');return;}
+  if(!jinApiKey){
+    // Try one more time from Supabase
+    if(currentUser){
+      try{
+        const{data}=await sb.from('user_settings').select('api_key').eq('user_id',currentUser.id).single();
+        if(data?.api_key){
+          jinApiKey=data.api_key;
+          localStorage.setItem('rf_jin_key',jinApiKey);
+        }
+      }catch(e){}
+    }
+    if(!jinApiKey){
+      showToast('API key not found — tap Change key to add it');
+      return;
+    }
+  }
 
   const displayMsg=msg||(hasImage?'📷 Analyzing my plate...':'');
   input.value='';
