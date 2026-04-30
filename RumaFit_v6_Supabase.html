@@ -1667,19 +1667,29 @@ async function savePhaseToCloud(phaseId, customData){
 }
 
 async function loadPhaseFromCloud(){
-  if(!currentUser){console.log('loadPhaseFromCloud: no user yet');return;}
+  if(!currentUser){console.log('loadUserSettings: no user yet');return;}
   try{
-    console.log('Loading phase from cloud for user:',currentUser.id);
+    console.log('Loading user settings from cloud...');
     const{data,error}=await sb.from('user_settings')
-      .select('active_phase,phase_custom')
+      .select('active_phase,phase_custom,api_key')
       .eq('user_id',currentUser.id)
       .single();
     if(error){
-      console.log('No phase in cloud yet (first time):', error.message);
+      console.log('No user_settings yet:', error.message);
       return;
     }
-    if(!data){console.log('No user_settings row found');return;}
-    console.log('Cloud phase data:', data);
+    if(!data){console.log('No user_settings row');return;}
+    
+    // ── Load API key ──
+    if(data.api_key&&!jinApiKey){
+      jinApiKey=data.api_key;
+      localStorage.setItem('rf_jin_key',data.api_key);
+      console.log('✅ API key loaded from cloud');
+      // Re-init Jin now that we have the key
+      setTimeout(()=>initJin(),100);
+    }
+    
+    // ── Load phase ──
     if(data.active_phase){
       activePhaseId=data.active_phase;
       localStorage.setItem('rf_active_phase',data.active_phase);
@@ -1689,12 +1699,11 @@ async function loadPhaseFromCloud(){
       localStorage.setItem('rf_phase_custom',JSON.stringify(c));
       PHASES.custom={...PHASES.custom,...c};
     }
-    console.log('✅ Phase loaded from cloud:', activePhaseId);
-    // Apply and update UI
+    console.log('✅ Settings loaded from cloud. Phase:', activePhaseId);
     applyActivePhase();
     updatePhaseCard();
-    renderPhaseTimeline();
-  }catch(e){console.error('loadPhaseFromCloud exception:',e);}
+    try{renderPhaseTimeline();}catch(e){}
+  }catch(e){console.error('loadUserSettings exception:',e);}
 }
 
 function getActivePhase(){
@@ -2850,9 +2859,20 @@ async function saveJinApiKey(){
   if(!key||!key.startsWith('sk-')){showToast('Please enter a valid API key (starts with sk-)');return;}
   jinApiKey=key;
   localStorage.setItem('rf_jin_key',key);
-  if(currentUser) await sb.auth.updateUser({data:{jin_key:key}});
+  // Save to Supabase so all devices get the key automatically
+  if(currentUser){
+    try{
+      const{error}=await sb.from('user_settings').upsert({
+        user_id:currentUser.id,
+        api_key:key,
+        updated_at:new Date().toISOString()
+      },{onConflict:'user_id'});
+      if(error) console.error('saveJinApiKey cloud error:',error);
+      else console.log('✅ API key saved to cloud');
+    }catch(e){console.error('saveJinApiKey:',e);}
+  }
   initJin();
-  showToast('🐹 Jin is connected! Tell him what you ate.');
+  showToast('🐹 Jin is connected across all your devices!');
 }
 
 function clearJinApiKey(){
