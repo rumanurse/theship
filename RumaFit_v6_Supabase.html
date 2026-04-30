@@ -1641,11 +1641,65 @@ const PHASES={
 
 let activePhaseId=localStorage.getItem('rf_active_phase')||'reverse_diet';
 
+// ══ PHASE CLOUD SYNC ════════════════════════════════════════════════════════
+async function savePhaseToCloud(phaseId, customData){
+  if(!currentUser) return;
+  try{
+    const{error}=await sb.from('user_settings').upsert({
+      user_id:currentUser.id,
+      active_phase:phaseId,
+      phase_custom:customData||null,
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'});
+    if(error) console.error('savePhaseToCloud:',error);
+    else console.log('Phase saved to cloud:',phaseId);
+  }catch(e){console.error('savePhaseToCloud:',e);}
+}
+
+async function loadPhaseFromCloud(){
+  if(!currentUser) return;
+  try{
+    const{data,error}=await sb.from('user_settings')
+      .select('active_phase,phase_custom')
+      .eq('user_id',currentUser.id)
+      .single();
+    if(error||!data) return;
+    if(data.active_phase){
+      activePhaseId=data.active_phase;
+      localStorage.setItem('rf_active_phase',data.active_phase);
+    }
+    if(data.phase_custom){
+      const c=data.phase_custom;
+      localStorage.setItem('rf_phase_custom',JSON.stringify(c));
+      PHASES.custom={...PHASES.custom,...c};
+    }
+    console.log('Phase loaded from cloud:',activePhaseId);
+  }catch(e){console.error('loadPhaseFromCloud:',e);}
+}
+
 function getActivePhase(){
+  // Always reload custom phase from localStorage on every call
   const stored=localStorage.getItem('rf_phase_custom');
-  if(activePhaseId==='custom'&&stored){
-    try{const c=JSON.parse(stored);PHASES.custom={...PHASES.custom,...c};}catch{}
+  if(stored){
+    try{
+      const c=JSON.parse(stored);
+      // Ensure schedule exists with all 7 days
+      if(!c.schedule){
+        c.schedule={};
+        [0,1,2,3,4,5,6].forEach(d=>{
+          c.schedule[d]={
+            type:d===2||d===5?'high':'low',
+            cal:d===2||d===5?(c.highCal||1900):(c.lowCal||1600),
+            carbs:d===2||d===5?(c.highCarbs||175):(c.lowCarbs||120)
+          };
+        });
+      }
+      PHASES.custom={...PHASES.custom,...c};
+    }catch(e){console.error('Phase load error',e);}
   }
+  // Also restore activePhaseId from localStorage every time
+  const storedId=localStorage.getItem('rf_active_phase');
+  if(storedId) activePhaseId=storedId;
   return PHASES[activePhaseId]||PHASES.reverse_diet;
 }
 
@@ -1724,6 +1778,8 @@ function selectPhase(id){
   renderPhaseModal();
   updatePhaseCard();
   showToast('✨ Phase switched to '+PHASES[id].name+'!');
+  // Sync to cloud so all devices use same phase
+  savePhaseToCloud(id, id==='custom'?PHASES.custom:null);
 }
 
 function saveCustomPhase(){
@@ -1775,6 +1831,8 @@ function saveCustomPhase(){
   closeModal('phaseModal');
   showToast(`✨ ${phaseName} saved! ${lowCal}–${highCal} cal · ${protein}g protein`);
   try{renderTasks(new Date().getDay(),DAY_SCHED[new Date().getDay()]);}catch(e){}
+  // ── Save phase to Supabase so all devices sync ──
+  savePhaseToCloud('custom', customData);
 }
 
 function updatePhaseCard(){
@@ -1886,8 +1944,8 @@ async function init(){
     const ss=document.getElementById('syncStatus');
     if(ss) ss.style.display='flex';
     await loadAllData();
+    await loadPhaseFromCloud(); // ← load phase AFTER auth
   } else {
-    // No session — load from localStorage only (offline mode)
     loadFromLocalStorage();
   }
   applyActivePhase();
@@ -2914,18 +2972,33 @@ let jinImageType='image/jpeg';
 function handleJinImage(input){
   const file=input.files[0];
   if(!file) return;
-  jinImageType=file.type||'image/jpeg';
-  const reader=new FileReader();
-  reader.onload=e=>{
-    jinImageData=e.target.result.split(',')[1]; // base64 only
-    document.getElementById('jinPreviewImg').src=e.target.result;
+  jinImageType='image/jpeg'; // always compress to JPEG
+  
+  // Compress image before storing - max 800px, quality 0.7
+  const img=new Image();
+  const objectUrl=URL.createObjectURL(file);
+  img.onload=()=>{
+    URL.revokeObjectURL(objectUrl);
+    const canvas=document.createElement('canvas');
+    const MAX=800;
+    let w=img.width,h=img.height;
+    if(w>MAX||h>MAX){
+      if(w>h){h=Math.round(h*MAX/w);w=MAX;}
+      else{w=Math.round(w*MAX/h);h=MAX;}
+    }
+    canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+    const compressed=canvas.toDataURL('image/jpeg',0.75);
+    jinImageData=compressed.split(',')[1];
+    document.getElementById('jinPreviewImg').src=compressed;
     document.getElementById('jinImagePreview').style.display='block';
-    // Auto-fill hint text
     const inp=document.getElementById('jinInput');
     if(!inp.value.trim()) inp.value='What are the macros in this meal?';
+    console.log('Image compressed: '+Math.round(jinImageData.length/1024)+'KB');
   };
-  reader.readAsDataURL(file);
-  input.value=''; // reset so same file can be picked again
+  img.src=objectUrl;
+  input.value='';
 }
 
 function clearJinImage(){
