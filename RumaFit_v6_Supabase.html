@@ -3190,9 +3190,10 @@ function showJinLogCard(logData){
   // Build unique card ID
   const cardId='jinlog_'+Date.now();
 
-  // Build editable rows for each food item
+  // Build editable rows — store name in hidden input so confirmJinLog can read it reliably
   const rows=items.map((item,i)=>`
     <div style="background:var(--warm);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid rgba(201,144,122,.15)">
+      <input type="hidden" id="${cardId}_name_${i}" value="${(item.name||'Food item').replace(/"/g,'&quot;')}">
       <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:6px">
         ${item.name}${item.portion?`<span style="font-size:10px;font-weight:400;color:var(--light);margin-left:6px">${item.portion}</span>`:''}
       </div>
@@ -3254,31 +3255,40 @@ function showJinLogCard(logData){
 }
 
 function confirmJinLog(cardId,itemCount){
-  const meal=document.getElementById(cardId+'_meal').value;
+  const mealEl=document.getElementById(cardId+'_meal');
+  if(!mealEl){showToast('Something went wrong — try again');return;}
+  const meal=mealEl.value;
   let totalCal=0,totalPro=0,totalCarb=0,totalFat=0;
   const loggedNames=[];
 
   for(let i=0;i<itemCount;i++){
+    // Read name from hidden input — reliable
+    const nameEl=document.getElementById(cardId+'_name_'+i);
+    const name=nameEl?nameEl.value:'Food item';
     const cal=Number(document.getElementById(cardId+'_cal_'+i)?.value)||0;
     const pro=Number(document.getElementById(cardId+'_pro_'+i)?.value)||0;
     const carb=Number(document.getElementById(cardId+'_carb_'+i)?.value)||0;
     const fat=Number(document.getElementById(cardId+'_fat_'+i)?.value)||0;
-    // Get item name from label above the inputs
-    const card=document.getElementById(cardId);
-    const nameEls=card.querySelectorAll('[style*="font-weight:600"][style*="color:var(--dark)"]');
-    const name=(nameEls[i+1]?.textContent||'Food item').trim().split('\n')[0].trim();
     loggedNames.push(name);
+    // Push to meals object
+    if(!meals[meal]) meals[meal]=[];
     meals[meal].push({name,cal,pro,carb,fat,id:Date.now()+i});
     totalCal+=cal;totalPro+=pro;totalCarb+=carb;totalFat+=fat;
+    console.log('Logged item',i,name,cal,'cal to',meal);
   }
 
-  renderMeals();updateMacros();saveTodayLocal();updateJinMacroSnap();
+  // Save and update UI
+  renderMeals();
+  updateMacros();
+  saveTodayLocal();
+  updateJinMacroSnap();
 
   // Remove card and show success message
   document.getElementById(cardId).remove();
   appendJinMessage('jin',`✅ Logged ${itemCount} item${itemCount>1?'s':''} to ${meal}!<br><strong>${totalCal} cal · ${totalPro}g P · ${totalCarb}g C · ${totalFat}g F</strong><br><span style="font-size:11px;opacity:.7">${loggedNames.join(', ')}</span>`);
   showToast('🐹 '+itemCount+' item'+(itemCount>1?'s':'')+' logged to '+meal+'!');
-  document.getElementById('jinMessages').scrollTop=document.getElementById('jinMessages').scrollHeight;
+  const msgs=document.getElementById('jinMessages');
+  if(msgs) msgs.scrollTop=msgs.scrollHeight;
 }
 
 function appendJinMessage(role,text,id){
