@@ -269,6 +269,22 @@ select.input-field{appearance:none}
   </div>
 </div>
 
+<!-- ══ WHY BANNER ══════════════════════════════════════════════════════════ -->
+<div style="background:linear-gradient(135deg,#2d0f0f,#3d1a0a);padding:14px 18px;border-bottom:1px solid rgba(201,144,122,.25)">
+  <div style="font-size:7px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(201,144,122,.5);margin-bottom:8px">⚡ MY WHY · MY PURPOSE</div>
+  <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px">
+    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(201,144,122,.12);border:1px solid rgba(201,144,122,.22);border-radius:20px;padding:3px 9px;font-size:10px;color:#E8C4B0;font-weight:500">🫀 Eliminate visceral fat</span>
+    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(201,144,122,.12);border:1px solid rgba(201,144,122,.22);border-radius:20px;padding:3px 9px;font-size:10px;color:#E8C4B0;font-weight:500">💉 Reverse diabetes</span>
+    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(201,144,122,.12);border:1px solid rgba(201,144,122,.22);border-radius:20px;padding:3px 9px;font-size:10px;color:#E8C4B0;font-weight:500">🩺 Lower blood pressure</span>
+    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(201,144,122,.12);border:1px solid rgba(201,144,122,.22);border-radius:20px;padding:3px 9px;font-size:10px;color:#E8C4B0;font-weight:500">⚡ More energy</span>
+    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(201,144,122,.12);border:1px solid rgba(201,144,122,.22);border-radius:20px;padding:3px 9px;font-size:10px;color:#E8C4B0;font-weight:500">😴 Better sleep · no snoring</span>
+    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(201,144,122,.12);border:1px solid rgba(201,144,122,.22);border-radius:20px;padding:3px 9px;font-size:10px;color:#E8C4B0;font-weight:500">👨‍👩‍👧 More with family & friends</span>
+  </div>
+  <div style="border-top:1px solid rgba(201,144,122,.15);padding-top:8px;font-size:11px;color:rgba(232,196,176,.75);font-style:italic;line-height:1.6">
+    ✨ <strong style="color:#E8C4B0;font-style:normal">Purpose:</strong> To inspire others to have a healthy relationship with food — no binging, no fear, no eliminating macros. Every macro matters. Food is fuel, not punishment.
+  </div>
+</div>
+
 <div class="quote-banner">
   <div class="quote-text" id="quoteText"></div>
   <div class="quote-source" id="quoteSource"></div>
@@ -707,17 +723,6 @@ select.input-field{appearance:none}
     <button class="btn btn-primary" onclick="saveCheckin()">Submit Weekly Check-In ✨</button>
   </div>
 
-  <div class="section-label">Calibration Guide</div>
-  <div class="card">
-    <div class="card-title">⚙️ When To Adjust</div>
-    <div style="display:grid;gap:6px">
-      <div class="callout c-teal"><strong>Scale dropping >2 lbs/week:</strong> Raise Low Days +100 cals. Muscle loss risk.</div>
-      <div class="callout c-red"><strong>Scale stalled 3+ weeks:</strong> Check steps + protein first. Then drop Low Days -100 cals OR +2K steps. Never both.</div>
-      <div class="callout c-gold"><strong>Energy crashed:</strong> Raise High Days +100-150 cals immediately. Underfueled.</div>
-      <div class="callout c-mauve"><strong>Everything feeling good ✨:</strong> Touch NOTHING. If it ain't broke!</div>
-      <div class="callout c-purple"><strong>Period week — scale up 2-5 lbs:</strong> Normal. Water retention. Do NOT drop calories.</div>
-    </div>
-  </div>
 </div>
 
 <!-- ══ PROGRESS ════════════════════════════════════════════════════════════════ -->
@@ -1674,20 +1679,28 @@ function renderPhaseModal(){
     </div>
 
     <div style="background:var(--nude);border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid rgba(201,144,122,.18)">
-      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:8px">🎛️ Or set custom calories</div>
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:8px">🎛️ Set Custom Phase</div>
+      <div class="input-row">
+        <div class="input-group" style="grid-column:span 2"><label class="input-label">Phase Name</label><input type="text" class="input-field" id="customPhaseName" value="${customData.name||'My Custom Phase'}" placeholder="e.g. My Bulk Phase"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label class="input-label">Start Date</label><input type="date" class="input-field" id="customDateStart" value="${customData.dateStart||new Date().toISOString().split('T')[0]}"></div>
+        <div class="input-group"><label class="input-label">End Date (optional)</label><input type="date" class="input-field" id="customDateEnd" value="${customData.dateEnd||''}"></div>
+      </div>
       <div class="input-row">
         <div class="input-group"><label class="input-label">Low Day Cals</label><input type="number" class="input-field" id="customLowCal" value="${customData.lowCal}" placeholder="1600"></div>
         <div class="input-group"><label class="input-label">High Day Cals</label><input type="number" class="input-field" id="customHighCal" value="${customData.highCal}" placeholder="1900"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label class="input-label">Protein (g)</label><input type="number" class="input-field" id="customProtein" value="${customData.protein}" placeholder="165"></div>
+        <div class="input-group"><label class="input-label">Protein Min (g)</label><input type="number" class="input-field" id="customProtein" value="${customData.protein}" placeholder="165"></div>
         <div class="input-group"><label class="input-label">Fat Max (g)</label><input type="number" class="input-field" id="customFatMax" value="${customData.fatMax}" placeholder="50"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label class="input-label">Low Carbs (g)</label><input type="number" class="input-field" id="customLowCarbs" value="${customData.lowCarbs}" placeholder="120"></div>
-        <div class="input-group"><label class="input-label">High Carbs (g)</label><input type="number" class="input-field" id="customHighCarbs" value="${customData.highCarbs}" placeholder="175"></div>
+        <div class="input-group"><label class="input-label">Low Day Carbs (g)</label><input type="number" class="input-field" id="customLowCarbs" value="${customData.lowCarbs}" placeholder="120"></div>
+        <div class="input-group"><label class="input-label">High Day Carbs (g)</label><input type="number" class="input-field" id="customHighCarbs" value="${customData.highCarbs}" placeholder="175"></div>
       </div>
-      <button class="btn btn-secondary" style="margin-top:4px" onclick="saveCustomPhase()">Use Custom Calories</button>
+      <div style="font-size:9px;color:var(--light);padding:3px 0 6px">💡 Low days: Sun/Mon/Wed/Thu/Sat · High days: Tue/Fri</div>
+      <button class="btn btn-primary" style="width:100%" onclick="saveCustomPhase()">✨ Save Custom Phase</button>
     </div>`;
 }
 
@@ -1701,32 +1714,54 @@ function selectPhase(id){
 }
 
 function saveCustomPhase(){
-  const lowCal=parseInt(document.getElementById('customLowCal').value)||1600;
-  const highCal=parseInt(document.getElementById('customHighCal').value)||1900;
-  const protein=parseInt(document.getElementById('customProtein').value)||165;
-  const fatMax=parseInt(document.getElementById('customFatMax').value)||50;
-  const lowCarbs=parseInt(document.getElementById('customLowCarbs').value)||120;
-  const highCarbs=parseInt(document.getElementById('customHighCarbs').value)||175;
+  // Read everything FIRST before any DOM changes
+  const get=id=>document.getElementById(id);
+  if(!get('customLowCal')){showToast('Open phase settings first');return;}
+
+  const phaseName=(get('customPhaseName')&&get('customPhaseName').value.trim())||'My Custom Phase';
+  const dateStart=(get('customDateStart')&&get('customDateStart').value)||new Date().toISOString().split('T')[0];
+  const dateEnd=(get('customDateEnd')&&get('customDateEnd').value)||'';
+  const lowCal=parseInt(get('customLowCal').value)||1600;
+  const highCal=parseInt(get('customHighCal').value)||1900;
+  const protein=parseInt(get('customProtein').value)||165;
+  const fatMax=parseInt(get('customFatMax').value)||50;
+  const lowCarbs=parseInt(get('customLowCarbs').value)||120;
+  const highCarbs=parseInt(get('customHighCarbs').value)||175;
+
+  // Validate
+  if(lowCal<800){showToast('⚠️ Calories too low — minimum 800');return;}
+  if(highCal<lowCal){showToast('⚠️ High day must be higher than low day');return;}
+  if(protein<80){showToast('⚠️ Protein minimum is 80g');return;}
+
+  // Format date display
+  const fmtDate=s=>{if(!s)return'';const[y,m,da]=s.split('-');const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return`${mo[+m-1]} ${da}, ${y}`;};
+  const datesDisplay=dateEnd?`${fmtDate(dateStart)} – ${fmtDate(dateEnd)}`:`From ${fmtDate(dateStart)}`;
 
   const customData={
-    lowCal,highCal,protein,fatMax,lowCarbs,highCarbs,
+    name:phaseName, dates:datesDisplay, dateStart, dateEnd,
+    lowCal, highCal, protein, fatMax, lowCarbs, highCarbs,
+    color:'#9B7DD4', custom:true,
+    note:`Low ${lowCal} · High ${highCal} · ${protein}g protein`,
     schedule:{
-      0:{type:'low',cal:lowCal,carbs:lowCarbs},1:{type:'low',cal:lowCal,carbs:lowCarbs},
-      2:{type:'high',cal:highCal,carbs:highCarbs},3:{type:'low',cal:lowCal,carbs:lowCarbs},
-      4:{type:'low',cal:lowCal,carbs:lowCarbs},5:{type:'high',cal:highCal,carbs:highCarbs},
+      0:{type:'low',cal:lowCal,carbs:lowCarbs},
+      1:{type:'low',cal:lowCal,carbs:lowCarbs},
+      2:{type:'high',cal:highCal,carbs:highCarbs},
+      3:{type:'low',cal:lowCal,carbs:lowCarbs},
+      4:{type:'low',cal:lowCal,carbs:lowCarbs},
+      5:{type:'high',cal:highCal,carbs:highCarbs},
       6:{type:'low',cal:lowCal,carbs:lowCarbs},
     },
-    protein,fatMax,
-    note:`Low ${lowCal} · High ${highCal} · Protein ${protein}g`,
   };
+
   localStorage.setItem('rf_phase_custom',JSON.stringify(customData));
   PHASES.custom={...PHASES.custom,...customData};
   activePhaseId='custom';
   localStorage.setItem('rf_active_phase','custom');
   applyActivePhase();
-  renderPhaseModal();
   updatePhaseCard();
-  showToast('✨ Custom calories saved!');
+  closeModal('phaseModal');
+  showToast(`✨ ${phaseName} saved! ${lowCal}–${highCal} cal · ${protein}g protein`);
+  try{renderTasks(new Date().getDay(),DAY_SCHED[new Date().getDay()]);}catch(e){}
 }
 
 function updatePhaseCard(){
