@@ -1916,6 +1916,18 @@ async function saveTodayLocal(){
       tasks:tasksDone,calories:t.cal,
       stats_logged:statsLoggedToday
     });
+  } else {
+    // currentUser not ready yet — retry in 2 seconds
+    setTimeout(async()=>{
+      if(currentUser){
+        await dbUpsertByDate('daily_logs',todayKey(),{
+          meals,steps,water:waterCount,
+          tasks:tasksDone,calories:t.cal,
+          stats_logged:statsLoggedToday
+        });
+        console.log('✅ Delayed Supabase sync succeeded');
+      }
+    },2000);
   }
   calHistory[todayKey()]=t.cal;
   stepsHistory[todayKey()]=steps;
@@ -1965,17 +1977,36 @@ async function appStart(){
 }
 
 async function init(){
-  // Ship handles auth — RumaFit starts directly
-  // Try to get existing session silently for Supabase sync
+  // Try to get existing Supabase session
   const{data:{session}}=await sb.auth.getSession();
   if(session){
     currentUser=session.user;
     const ss=document.getElementById('syncStatus');
     if(ss) ss.style.display='flex';
     await loadAllData();
-    await loadPhaseFromCloud(); // ← load phase AFTER auth
+    await loadPhaseFromCloud();
   } else {
-    loadFromLocalStorage();
+    // No session — silently sign in (works across all devices including mobile)
+    try{
+      const{data,error}=await sb.auth.signInWithPassword({
+        email:'admin@rumanurse.com',
+        password:'#Spageti-630'
+      });
+      if(!error&&data.user){
+        currentUser=data.user;
+        const ss=document.getElementById('syncStatus');
+        if(ss) ss.style.display='flex';
+        await loadAllData();
+        await loadPhaseFromCloud();
+        console.log('✅ Silently signed in on mobile');
+      } else {
+        console.log('Auth failed, loading from localStorage');
+        loadFromLocalStorage();
+      }
+    }catch(e){
+      console.log('Auth error, falling back to localStorage:',e);
+      loadFromLocalStorage();
+    }
   }
   applyActivePhase();
   await appStart();
