@@ -293,6 +293,7 @@ select.input-field{appearance:none}
 <div class="tabs">
   <div class="tab active" onclick="showPage('today',this)"><span class="tab-icon">🌸</span>Today</div>
   <div class="tab" onclick="showPage('meals',this)"><span class="tab-icon">🍽️</span>Meals</div>
+  <div class="tab" onclick="showPage('history',this);loadMealHistory()"><span class="tab-icon">📅</span>History</div>
   <div class="tab" onclick="showPage('stats',this)"><span class="tab-icon">📊</span>Stats</div>
   <div class="tab" onclick="showPage('checkin',this)"><span class="tab-icon">✨</span>Check-In</div>
   <div class="tab" onclick="showPage('progress',this)"><span class="tab-icon">📈</span>Progress</div>
@@ -458,7 +459,84 @@ select.input-field{appearance:none}
   <button class="btn btn-dark" style="margin-bottom:10px" onclick="generatePDF()">📄 Download Daily Summary PDF</button>
 </div>
 
-<!-- ══ MEALS ══════════════════════════════════════════════════════════════════ -->
+<!-- ══ HISTORY ═════════════════════════════════════════════════════════════════ -->
+<div class="page" id="history">
+
+  <!-- Header + Export -->
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin:0">📅 Meal History</div>
+      <button onclick="openExportModal()" style="background:linear-gradient(135deg,var(--mauve),var(--rose));color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">⬇️ Export</button>
+    </div>
+    <!-- View toggle -->
+    <div style="display:flex;gap:6px">
+      <button id="hvDay" onclick="setHistoryView('day')" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--mauve);background:var(--mauve);color:white;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">By Day</button>
+      <button id="hvWeek" onclick="setHistoryView('week')" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer">By Week</button>
+    </div>
+  </div>
+
+  <!-- Day picker -->
+  <div class="card" id="historyDayPicker" style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <button onclick="historyChangeDays(-1)" style="background:var(--nude);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">◀</button>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--dark);text-align:center" id="historyDateLabel">Loading...</div>
+        <div style="font-size:10px;color:var(--light);text-align:center" id="historyDayType"></div>
+      </div>
+      <button onclick="historyChangeDays(1)" style="background:var(--nude);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">▶</button>
+    </div>
+    <!-- Move/Copy buttons -->
+    <div style="display:flex;gap:6px">
+      <select id="historyMoveDate" class="input-field" style="flex:1;font-size:11px">
+        <option value="">Move/Copy to...</option>
+      </select>
+      <button onclick="moveHistoryMeals(false)" style="background:var(--nude);border:1px solid rgba(201,144,122,.3);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:var(--mauve);font-family:'DM Sans',sans-serif;font-weight:600">Copy</button>
+      <button onclick="moveHistoryMeals(true)" style="background:linear-gradient(135deg,var(--mauve),var(--rose));border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:white;font-family:'DM Sans',sans-serif;font-weight:600">Move</button>
+    </div>
+  </div>
+
+  <!-- Day meal content -->
+  <div id="historyDayContent"></div>
+
+  <!-- Week view -->
+  <div id="historyWeekView" style="display:none"></div>
+
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('exportModal')">✕</button>
+    <div class="modal-title">⬇️ Export Meal Data</div>
+    <div style="display:grid;gap:10px;margin-bottom:14px">
+      <div>
+        <label class="input-label">Date Range</label>
+        <select class="input-field" id="exportRange">
+          <option value="day">Today only</option>
+          <option value="week">This week (7 days)</option>
+          <option value="month">This month (30 days)</option>
+          <option value="custom">Custom range</option>
+        </select>
+      </div>
+      <div id="exportCustomRange" style="display:none">
+        <div class="input-row">
+          <div class="input-group"><label class="input-label">From</label><input type="date" class="input-field" id="exportFrom"></div>
+          <div class="input-group"><label class="input-label">To</label><input type="date" class="input-field" id="exportTo"></div>
+        </div>
+      </div>
+      <div>
+        <label class="input-label">Format</label>
+        <div style="display:flex;gap:8px">
+          <button id="expCsv" onclick="setExportFormat('csv')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--mauve);background:var(--mauve);color:white;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">📊 CSV/Excel</button>
+          <button id="expPdf" onclick="setExportFormat('pdf')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer">📄 PDF</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="runExport()">⬇️ Download</button>
+  </div>
+</div>
+
+<!-- ══ MEALS ═════════════════════════════════════════════════════════════════ -->
 <div class="page" id="meals">
   <!-- NUTRITION PROGRESS CARD -->
   <div class="card" id="mealsNutritionCard" style="margin-bottom:10px">
@@ -2532,6 +2610,365 @@ async function runJinWeeklyAnalysis(){
   }
 }
 
+// ══ MEAL HISTORY ══════════════════════════════════════════════════════════════
+let historyView='day';
+let historyDate=new Date();
+let historyCache={};
+let exportFormat='csv';
+
+function setHistoryView(v){
+  historyView=v;
+  const dayBtn=document.getElementById('hvDay');
+  const weekBtn=document.getElementById('hvWeek');
+  const dayPicker=document.getElementById('historyDayPicker');
+  const dayContent=document.getElementById('historyDayContent');
+  const weekView=document.getElementById('historyWeekView');
+  if(v==='day'){
+    if(dayBtn){dayBtn.style.background='var(--mauve)';dayBtn.style.color='white';}
+    if(weekBtn){weekBtn.style.background='transparent';weekBtn.style.color='var(--mauve)';}
+    if(dayPicker) dayPicker.style.display='block';
+    if(dayContent) dayContent.style.display='block';
+    if(weekView) weekView.style.display='none';
+    renderHistoryDay();
+  } else {
+    if(weekBtn){weekBtn.style.background='var(--mauve)';weekBtn.style.color='white';}
+    if(dayBtn){dayBtn.style.background='transparent';dayBtn.style.color='var(--mauve)';}
+    if(dayPicker) dayPicker.style.display='none';
+    if(dayContent) dayContent.style.display='none';
+    if(weekView) weekView.style.display='block';
+    renderHistoryWeek();
+  }
+}
+
+function historyDateKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function historyChangeDays(delta){
+  historyDate.setDate(historyDate.getDate()+delta);
+  renderHistoryDay();
+}
+
+async function loadHistoryDay(dateKey){
+  if(historyCache[dateKey]) return historyCache[dateKey];
+  // Try localStorage first
+  const local=JSON.parse(localStorage.getItem('rf_today_'+dateKey)||'{}');
+  if(local.meals&&Object.values(local.meals).flat().length>0){
+    historyCache[dateKey]=local;
+    return local;
+  }
+  // Try Supabase
+  if(currentUser){
+    try{
+      const{data}=await sb.from('daily_logs').select('*').eq('user_id',currentUser.id).eq('date',dateKey).maybeSingle();
+      if(data){
+        historyCache[dateKey]=data;
+        return data;
+      }
+    }catch(e){console.error('loadHistoryDay',e);}
+  }
+  return null;
+}
+
+async function loadMealHistory(){
+  historyDate=new Date();
+  // Populate move/copy date selector with last 30 days
+  const sel=document.getElementById('historyMoveDate');
+  if(sel){
+    sel.innerHTML='<option value="">Move/Copy to...</option>';
+    for(let i=0;i<30;i++){
+      const d=new Date();d.setDate(d.getDate()-i);
+      const k=historyDateKey(d);
+      const label=i===0?'Today':i===1?'Yesterday':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      sel.innerHTML+=`<option value="${k}">${label}</option>`;
+    }
+  }
+  setHistoryView('day');
+}
+
+async function renderHistoryDay(){
+  const dateKey=historyDateKey(historyDate);
+  const isToday=dateKey===todayKey();
+  const dow=historyDate.getDay();
+  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const sched=DAY_SCHED[dow];
+
+  const label=document.getElementById('historyDateLabel');
+  const dayType=document.getElementById('historyDayType');
+  if(label) label.textContent=isToday?'Today — '+historyDate.toLocaleDateString('en-US',{month:'long',day:'numeric'}):historyDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  if(dayType) dayType.textContent=(sched.type==='high'?'⬆️ High Day':'⬇️ Low Day')+' · Target: '+sched.cal+' cal';
+
+  const content=document.getElementById('historyDayContent');
+  if(!content) return;
+  content.innerHTML='<div style="text-align:center;padding:20px;color:var(--light);font-size:12px">Loading...</div>';
+
+  const data=await loadHistoryDay(dateKey);
+  const mealData=isToday?meals:(data?.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]});
+  const allItems=Object.values(mealData).flat();
+  const totalCal=Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0));
+  const totalPro=Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0));
+  const totalCarb=Math.round(allItems.reduce((a,i)=>a+(i.carb||0),0));
+  const totalFat=Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0));
+  const steps=isToday?parseInt(document.getElementById('stepsInput')?.value||0):(data?.steps||0);
+
+  if(!allItems.length){
+    content.innerHTML=`<div class="card" style="text-align:center;padding:20px;color:var(--light)">
+      <div style="font-size:32px;margin-bottom:8px">🍽️</div>
+      <div style="font-size:13px">No meals logged for this day</div>
+    </div>`;
+    return;
+  }
+
+  const mealIcons={breakfast:'🌄',lunch:'☀️',dinner:'🌙',snacks:'🍎'};
+  const mealSections=Object.entries(mealData).map(([meal,items])=>{
+    if(!items.length) return '';
+    const mealCal=Math.round(items.reduce((a,i)=>a+(i.cal||0),0));
+    return `<div class="card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--dark)">${mealIcons[meal]||'🍽️'} ${meal.charAt(0).toUpperCase()+meal.slice(1)}</div>
+        <div style="font-size:11px;color:var(--mauve);font-weight:600">${mealCal} kcal</div>
+      </div>
+      ${items.map(item=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bd)">
+        <div>
+          <div style="font-size:12px;color:var(--dark)">${item.name}</div>
+          <div style="font-size:10px;color:var(--light)">${item.pro||0}g P · ${item.carb||0}g C · ${item.fat||0}g F</div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark)">${item.cal||0}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  content.innerHTML=`
+    <div class="card" style="margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+        <div><div style="font-size:16px;font-weight:700;color:var(--mauve)">${totalCal}</div><div style="font-size:9px;color:var(--light)">/ ${sched.cal} cal</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:var(--teal)">${totalPro}g</div><div style="font-size:9px;color:var(--light)">protein</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:#c9a84c">${totalCarb}g</div><div style="font-size:9px;color:var(--light)">carbs</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:#D4956A">${totalFat}g</div><div style="font-size:9px;color:var(--light)">fat</div></div>
+      </div>
+      ${steps?`<div style="text-align:center;margin-top:8px;font-size:11px;color:var(--light)">👣 ${steps.toLocaleString()} steps</div>`:''}
+    </div>
+    ${mealSections}`;
+}
+
+async function renderHistoryWeek(){
+  const view=document.getElementById('historyWeekView');
+  if(!view) return;
+  view.innerHTML='<div style="text-align:center;padding:20px;color:var(--light)">Loading week...</div>';
+
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    days.push({date:d,key:historyDateKey(d),isToday:i===0});
+  }
+
+  const rows=await Promise.all(days.map(async day=>{
+    const data=await loadHistoryDay(day.key);
+    const mealData=day.isToday?meals:(data?.meals||{});
+    const allItems=Object.values(mealData).flat();
+    const cal=Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0));
+    const pro=Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0));
+    const fat=Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0));
+    const sched=DAY_SCHED[day.date.getDay()];
+    const pct=cal?Math.round(cal/sched.cal*100):0;
+    const color=pct>=90&&pct<=110?'var(--teal)':pct>110?'#E8856A':'var(--light)';
+    const foods=allItems.map(f=>f.name).slice(0,3).join(', ')+(allItems.length>3?'...':'');
+    return `<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="setHistoryView('day');historyDate=new Date('${day.key}T12:00:00');renderHistoryDay()">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:${foods?'6':'0'}px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--dark)">${day.isToday?'Today':day.date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+          <div style="font-size:9px;color:var(--light)">${sched.type==='high'?'⬆️ High':'⬇️ Low'} · target ${sched.cal}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:15px;font-weight:700;color:${color}">${cal||'—'}</div>
+          ${cal?`<div style="font-size:9px;color:var(--teal)">${pro}g P · ${fat}g F</div>`:''}
+        </div>
+      </div>
+      ${foods?`<div style="font-size:10px;color:var(--light);font-style:italic">${foods}</div>`:''}
+    </div>`;
+  }));
+  view.innerHTML=rows.join('');
+}
+
+async function moveHistoryMeals(isMove){
+  const dateKey=historyDateKey(historyDate);
+  const targetKey=document.getElementById('historyMoveDate').value;
+  if(!targetKey){showToast('Choose a target date first');return;}
+  if(targetKey===dateKey){showToast('Already on this date!');return;}
+
+  // Get source meals
+  const sourceData=await loadHistoryDay(dateKey);
+  const sourceMeals=historyDateKey(historyDate)===todayKey()?{...meals}:(sourceData?.meals||{});
+  if(!Object.values(sourceMeals).flat().length){showToast('No meals to move');return;}
+
+  // Get target day meals
+  const targetLocal=JSON.parse(localStorage.getItem('rf_today_'+targetKey)||'{}');
+  const targetMeals=targetLocal.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]};
+
+  // Merge source into target
+  Object.entries(sourceMeals).forEach(([meal,items])=>{
+    if(!targetMeals[meal]) targetMeals[meal]=[];
+    targetMeals[meal].push(...items);
+  });
+
+  // Save target
+  const targetData={...targetLocal,meals:targetMeals,calories:Object.values(targetMeals).flat().reduce((a,i)=>a+(i.cal||0),0)};
+  localStorage.setItem('rf_today_'+targetKey,JSON.stringify(targetData));
+  if(currentUser) await dbUpsertByDate('daily_logs',targetKey,{meals:targetMeals,calories:targetData.calories});
+
+  // Clear source if move
+  if(isMove){
+    const emptyMeals={breakfast:[],lunch:[],dinner:[],snacks:[]};
+    if(dateKey===todayKey()){
+      meals={...emptyMeals};
+      renderMeals();updateMacros();
+    }
+    const emptyData={...sourceData||{},meals:emptyMeals,calories:0};
+    localStorage.setItem('rf_today_'+dateKey,JSON.stringify(emptyData));
+    if(currentUser) await dbUpsertByDate('daily_logs',dateKey,{meals:emptyMeals,calories:0});
+    delete historyCache[dateKey];
+    showToast('✅ Meals moved to '+targetKey+'!');
+  } else {
+    showToast('✅ Meals copied to '+targetKey+'!');
+  }
+
+  delete historyCache[targetKey];
+  if(targetKey===todayKey()){
+    const tData=JSON.parse(localStorage.getItem('rf_today_'+targetKey)||'{}');
+    if(tData.meals) meals=tData.meals;
+    renderMeals();updateMacros();
+  }
+  renderHistoryDay();
+}
+
+// ══ EXPORT ═══════════════════════════════════════════════════════════════════
+function openExportModal(){
+  const today=new Date().toISOString().split('T')[0];
+  const monthAgo=new Date();monthAgo.setDate(monthAgo.getDate()-30);
+  document.getElementById('exportFrom').value=monthAgo.toISOString().split('T')[0];
+  document.getElementById('exportTo').value=today;
+  document.getElementById('exportRange').onchange=function(){
+    document.getElementById('exportCustomRange').style.display=this.value==='custom'?'block':'none';
+  };
+  openModal('exportModal');
+}
+
+function setExportFormat(fmt){
+  exportFormat=fmt;
+  const csvBtn=document.getElementById('expCsv');
+  const pdfBtn=document.getElementById('expPdf');
+  if(fmt==='csv'){
+    csvBtn.style.background='var(--mauve)';csvBtn.style.color='white';
+    pdfBtn.style.background='transparent';pdfBtn.style.color='var(--mauve)';
+  } else {
+    pdfBtn.style.background='var(--mauve)';pdfBtn.style.color='white';
+    csvBtn.style.background='transparent';csvBtn.style.color='var(--mauve)';
+  }
+}
+
+async function runExport(){
+  const range=document.getElementById('exportRange').value;
+  const today=new Date();
+  let startDate=new Date();
+  let endDate=new Date();
+
+  if(range==='day'){startDate=new Date();endDate=new Date();}
+  else if(range==='week'){startDate.setDate(today.getDate()-6);}
+  else if(range==='month'){startDate.setDate(today.getDate()-29);}
+  else {
+    startDate=new Date(document.getElementById('exportFrom').value+'T12:00:00');
+    endDate=new Date(document.getElementById('exportTo').value+'T12:00:00');
+  }
+
+  showToast('Building export...');
+  closeModal('exportModal');
+
+  // Collect data for date range
+  const days=[];
+  const d=new Date(startDate);
+  while(d<=endDate){
+    days.push(historyDateKey(new Date(d)));
+    d.setDate(d.getDate()+1);
+  }
+
+  // Load all days
+  const allData=await Promise.all(days.map(async k=>{
+    const data=await loadHistoryDay(k);
+    const mealData=k===todayKey()?meals:(data?.meals||{});
+    const allItems=Object.values(mealData).flat();
+    return{
+      date:k,
+      meals:mealData,
+      cal:Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0)),
+      pro:Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0)),
+      carb:Math.round(allItems.reduce((a,i)=>a+(i.carb||0),0)),
+      fat:Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0)),
+      steps:data?.steps||0,
+    };
+  }));
+
+  if(exportFormat==='csv') exportCSV(allData);
+  else exportPDF(allData);
+}
+
+function exportCSV(allData){
+  const rows=['Date,Meal,Food Item,Calories,Protein(g),Carbs(g),Fat(g)'];
+  allData.forEach(day=>{
+    // Summary row
+    rows.push(`${day.date},DAILY TOTAL,,${day.cal},${day.pro},${day.carb},${day.fat}`);
+    // Each meal item
+    Object.entries(day.meals).forEach(([meal,items])=>{
+      items.forEach(item=>{
+        const name=(item.name||'').replace(/,/g,' ');
+        rows.push(`${day.date},${meal},"${name}",${item.cal||0},${item.pro||0},${item.carb||0},${item.fat||0}`);
+      });
+    });
+    rows.push(''); // blank row between days
+  });
+  const csv=rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`RumaFit_meals_${allData[0]?.date||'export'}_to_${allData[allData.length-1]?.date||'export'}.csv`;
+  a.click();URL.revokeObjectURL(url);
+  showToast('✅ CSV downloaded!');
+}
+
+function exportPDF(allData){
+  // Build HTML page for printing as PDF
+  const rows=allData.filter(d=>d.cal>0).map(day=>{
+    const dayDate=new Date(day.date+'T12:00:00');
+    const mealRows=Object.entries(day.meals).map(([meal,items])=>{
+      if(!items.length) return '';
+      const mealCal=items.reduce((a,i)=>a+(i.cal||0),0);
+      return `<tr style="background:#f9f0e8"><td colspan="5" style="padding:4px 8px;font-weight:600;font-size:11px;color:#8B4513">${meal.toUpperCase()} — ${mealCal} cal</td></tr>`+
+        items.map(i=>`<tr><td style="padding:3px 8px;padding-left:16px;font-size:11px">${i.name||''}</td><td style="text-align:center;font-size:11px">${i.cal||0}</td><td style="text-align:center;font-size:11px">${i.pro||0}g</td><td style="text-align:center;font-size:11px">${i.carb||0}g</td><td style="text-align:center;font-size:11px">${i.fat||0}g</td></tr>`).join('');
+    }).join('');
+    return `<div style="margin-bottom:20px;page-break-inside:avoid">
+      <div style="background:#8B4513;color:white;padding:6px 12px;font-weight:700;font-size:13px;border-radius:4px 4px 0 0">${dayDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · ${day.cal} cal · ${day.pro}g P · ${day.steps?day.steps.toLocaleString()+' steps':''}</div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #ddd">
+        <tr style="background:#f5efe0"><th style="padding:4px 8px;text-align:left;font-size:11px">Food</th><th style="font-size:11px">Cal</th><th style="font-size:11px">Protein</th><th style="font-size:11px">Carbs</th><th style="font-size:11px">Fat</th></tr>
+        ${mealRows}
+        <tr style="background:#f5efe0;font-weight:700"><td style="padding:4px 8px;font-size:11px">TOTALS</td><td style="text-align:center;font-size:11px">${day.cal}</td><td style="text-align:center;font-size:11px">${day.pro}g</td><td style="text-align:center;font-size:11px">${day.carb}g</td><td style="text-align:center;font-size:11px">${day.fat}g</td></tr>
+      </table>
+    </div>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html><html><head><title>RumaFit Meal Export — Magda</title>
+  <style>body{font-family:sans-serif;padding:20px;color:#333}h1{color:#8B4513;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:20px}@media print{button{display:none}}</style></head>
+  <body>
+  <h1>🌸 RumaFit Meal Log — Magda</h1>
+  <p>${allData[0]?.date} to ${allData[allData.length-1]?.date} · Exported ${new Date().toLocaleDateString()}</p>
+  <button onclick="window.print()" style="background:#8B4513;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;margin-bottom:20px">🖨️ Print / Save as PDF</button>
+  ${rows}
+  </body></html>`;
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+  showToast('✅ PDF preview opened — click Print to save!');
+}
+
 function renderWeightHistory(){
   const c=document.getElementById('weightHistory');
   if(!weightHistory.length){c.innerHTML='<p style="font-size:11px;color:var(--light);text-align:center;padding:12px">No entries yet. Log your weight in Today tab!</p>';return;}
@@ -2935,13 +3372,11 @@ function clearJinApiKey(){
   localStorage.removeItem('bd_apikey');
   localStorage.removeItem('rn_api_key');
   jinHistory=[];
-  // Show setup screen — correct ID is jinApiSetup
-  const setup=document.getElementById('jinApiSetup');
-  const chat=document.getElementById('jinChatInterface');
-  if(setup) setup.style.display='block';
-  if(chat) chat.style.display='none';
-  const keyInput=document.getElementById('jinApiKeyInput');
-  if(keyInput){keyInput.value='';keyInput.focus();}
+  // Show setup screen directly
+  document.getElementById('jinSetup').style.display='block';
+  document.getElementById('jinChatInterface').style.display='none';
+  document.getElementById('jinApiKeyInput').value='';
+  document.getElementById('jinApiKeyInput').focus();
 }
 
 function updateJinStatus(){
@@ -3111,31 +3546,29 @@ function clearJinImage(){
 }
 
 async function sendToJin(){
-  // Step 1: check memory
-  // Step 2: check localStorage
-  // Step 3: check Supabase directly
-  // Step 4: give up and ask user
+  // Always try to reload API key in case it loaded from cloud after Jin initialized
   if(!jinApiKey){
     jinApiKey=localStorage.getItem('rf_jin_key')||localStorage.getItem('bd_apikey')||localStorage.getItem('rn_api_key')||'';
-  }
-  if(!jinApiKey&&currentUser){
-    try{
-      const{data}=await sb.from('user_settings').select('api_key').eq('user_id',currentUser.id).single();
-      if(data?.api_key){
-        jinApiKey=data.api_key;
-        localStorage.setItem('rf_jin_key',data.api_key);
-        console.log('✅ Key fetched from Supabase on demand');
-      }
-    }catch(e){console.log('Supabase key fetch error:',e);}
   }
   const input=document.getElementById('jinInput');
   const msg=input.value.trim();
   const hasImage=!!jinImageData;
   if(!msg&&!hasImage) return;
   if(!jinApiKey){
-    showToast('Tap Change key to enter your Anthropic API key');
-    clearJinApiKey();
-    return;
+    // Try one more time from Supabase
+    if(currentUser){
+      try{
+        const{data}=await sb.from('user_settings').select('api_key').eq('user_id',currentUser.id).single();
+        if(data?.api_key){
+          jinApiKey=data.api_key;
+          localStorage.setItem('rf_jin_key',jinApiKey);
+        }
+      }catch(e){}
+    }
+    if(!jinApiKey){
+      showToast('API key not found — tap Change key to add it');
+      return;
+    }
   }
 
   const displayMsg=msg||(hasImage?'📷 Analyzing my plate...':'');
@@ -3225,15 +3658,7 @@ async function sendToJin(){
     const data=await response.json();
     if(data.error){
       removeTyping(typingId);
-      if(data.error.type==='authentication_error'||data.error.message.includes('x-api-key')||data.error.message.includes('api-key')){
-        // Key is wrong/expired - clear it and show setup
-        jinApiKey='';
-        localStorage.removeItem('rf_jin_key');
-        appendJinMessage('jin','Your API key seems invalid or expired. Tap **Change key** to update it. 🐹');
-        clearJinApiKey();
-      } else {
-        appendJinMessage('jin','Something went wrong: '+data.error.message+' 🐹');
-      }
+      appendJinMessage('jin','Sorry — something went wrong: '+data.error.message+'. Check your API key. 🐹');
       return;
     }
 
@@ -4486,7 +4911,8 @@ function showPage(id,tab){
   if(id==='calc') prefillCalc();
   if(id==='workout') initWorkout();
   if(id==='jin'){initJin();updateJinMacroSnap();}
-  if(id==='meals') updateMacros(); // refresh nutrition card on tab open
+  if(id==='meals') updateMacros();
+  if(id==='history') loadMealHistory();
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
