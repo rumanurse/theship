@@ -3109,29 +3109,31 @@ function clearJinImage(){
 }
 
 async function sendToJin(){
-  // Always try to reload API key in case it loaded from cloud after Jin initialized
+  // Step 1: check memory
+  // Step 2: check localStorage
+  // Step 3: check Supabase directly
+  // Step 4: give up and ask user
   if(!jinApiKey){
     jinApiKey=localStorage.getItem('rf_jin_key')||localStorage.getItem('bd_apikey')||localStorage.getItem('rn_api_key')||'';
+  }
+  if(!jinApiKey&&currentUser){
+    try{
+      const{data}=await sb.from('user_settings').select('api_key').eq('user_id',currentUser.id).single();
+      if(data?.api_key){
+        jinApiKey=data.api_key;
+        localStorage.setItem('rf_jin_key',data.api_key);
+        console.log('✅ Key fetched from Supabase on demand');
+      }
+    }catch(e){console.log('Supabase key fetch error:',e);}
   }
   const input=document.getElementById('jinInput');
   const msg=input.value.trim();
   const hasImage=!!jinImageData;
   if(!msg&&!hasImage) return;
   if(!jinApiKey){
-    // Try one more time from Supabase
-    if(currentUser){
-      try{
-        const{data}=await sb.from('user_settings').select('api_key').eq('user_id',currentUser.id).single();
-        if(data?.api_key){
-          jinApiKey=data.api_key;
-          localStorage.setItem('rf_jin_key',jinApiKey);
-        }
-      }catch(e){}
-    }
-    if(!jinApiKey){
-      showToast('API key not found — tap Change key to add it');
-      return;
-    }
+    showToast('Tap Change key to enter your Anthropic API key');
+    clearJinApiKey();
+    return;
   }
 
   const displayMsg=msg||(hasImage?'📷 Analyzing my plate...':'');
@@ -3221,7 +3223,15 @@ async function sendToJin(){
     const data=await response.json();
     if(data.error){
       removeTyping(typingId);
-      appendJinMessage('jin','Sorry — something went wrong: '+data.error.message+'. Check your API key. 🐹');
+      if(data.error.type==='authentication_error'||data.error.message.includes('x-api-key')||data.error.message.includes('api-key')){
+        // Key is wrong/expired - clear it and show setup
+        jinApiKey='';
+        localStorage.removeItem('rf_jin_key');
+        appendJinMessage('jin','Your API key seems invalid or expired. Tap **Change key** to update it. 🐹');
+        clearJinApiKey();
+      } else {
+        appendJinMessage('jin','Something went wrong: '+data.error.message+' 🐹');
+      }
       return;
     }
 
