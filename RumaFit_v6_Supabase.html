@@ -459,47 +459,54 @@ select.input-field{appearance:none}
   <button class="btn btn-dark" style="margin-bottom:10px" onclick="generatePDF()">📄 Download Daily Summary PDF</button>
 </div>
 
-<!-- ══ HISTORY ═════════════════════════════════════════════════════════════════ -->
+<!-- ══ HISTORY ══════════════════════════════════════════════════════════════ -->
 <div class="page" id="history">
 
-  <!-- Header + Export -->
-  <div class="card" style="margin-bottom:10px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin:0">📅 Meal History</div>
-      <button onclick="openExportModal()" style="background:linear-gradient(135deg,var(--mauve),var(--rose));color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">⬇️ Export</button>
-    </div>
-    <!-- View toggle -->
-    <div style="display:flex;gap:6px">
-      <button id="hvDay" onclick="setHistoryView('day')" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--mauve);background:var(--mauve);color:white;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">By Day</button>
-      <button id="hvWeek" onclick="setHistoryView('week')" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer">By Week</button>
-    </div>
+  <!-- Tabs: Meal History | Check-In History -->
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button id="ht-meals" onclick="setHistoryTab('meals')" style="flex:1;padding:8px;border-radius:10px;border:none;background:var(--mauve);color:white;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer">🍽️ Meal History</button>
+    <button id="ht-checkin" onclick="setHistoryTab('checkin')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">✨ Check-In History</button>
   </div>
 
-  <!-- Day picker -->
-  <div class="card" id="historyDayPicker" style="margin-bottom:10px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <button onclick="historyChangeDays(-1)" style="background:var(--nude);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">◀</button>
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--dark);text-align:center" id="historyDateLabel">Loading...</div>
-        <div style="font-size:10px;color:var(--light);text-align:center" id="historyDayType"></div>
+  <!-- MEAL HISTORY SECTION -->
+  <div id="histMealSection">
+    <div class="card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="card-title" style="margin:0">📅 Meal History</div>
+        <button onclick="openExportModal()" style="background:linear-gradient(135deg,var(--mauve),var(--rose));color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">⬇️ Export</button>
       </div>
-      <button onclick="historyChangeDays(1)" style="background:var(--nude);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">▶</button>
+      <div style="display:flex;gap:6px">
+        <button id="hvDay" onclick="setHistoryView('day')" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--mauve);background:var(--mauve);color:white;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">By Day</button>
+        <button id="hvWeek" onclick="setHistoryView('week')" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--bd-mauve);background:transparent;color:var(--mauve);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer">By Week</button>
+      </div>
     </div>
-    <!-- Move/Copy buttons -->
-    <div style="display:flex;gap:6px">
-      <select id="historyMoveDate" class="input-field" style="flex:1;font-size:11px">
-        <option value="">Move/Copy to...</option>
-      </select>
-      <button onclick="moveHistoryMeals(false)" style="background:var(--nude);border:1px solid rgba(201,144,122,.3);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:var(--mauve);font-family:'DM Sans',sans-serif;font-weight:600">Copy</button>
-      <button onclick="moveHistoryMeals(true)" style="background:linear-gradient(135deg,var(--mauve),var(--rose));border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:white;font-family:'DM Sans',sans-serif;font-weight:600">Move</button>
+    <div class="card" id="historyDayPicker" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <button onclick="historyChangeDays(-1)" style="background:var(--nude);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">◀</button>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--dark);text-align:center" id="historyDateLabel">Loading...</div>
+          <div style="font-size:10px;color:var(--light);text-align:center" id="historyDayType"></div>
+        </div>
+        <button onclick="historyChangeDays(1)" style="background:var(--nude);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">▶</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <select id="historyMoveDate" class="input-field" style="flex:1;font-size:11px">
+          <option value="">Move/Copy to...</option>
+        </select>
+        <button onclick="moveHistoryMeals(false)" style="background:var(--nude);border:1px solid rgba(201,144,122,.3);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:var(--mauve);font-family:'DM Sans',sans-serif;font-weight:600">Copy</button>
+        <button onclick="moveHistoryMeals(true)" style="background:linear-gradient(135deg,var(--mauve),var(--rose));border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:white;font-family:'DM Sans',sans-serif;font-weight:600">Move</button>
+      </div>
     </div>
+    <div id="historyDayContent"></div>
+    <div id="historyWeekView" style="display:none"></div>
   </div>
 
-  <!-- Day meal content -->
-  <div id="historyDayContent"></div>
-
-  <!-- Week view -->
-  <div id="historyWeekView" style="display:none"></div>
+  <!-- CHECK-IN HISTORY SECTION -->
+  <div id="histCheckinSection" style="display:none">
+    <div id="checkinHistoryList">
+      <div style="text-align:center;padding:20px;color:var(--light);font-size:12px">Loading check-in history...</div>
+    </div>
+  </div>
 
 </div>
 
@@ -511,7 +518,7 @@ select.input-field{appearance:none}
     <div style="display:grid;gap:10px;margin-bottom:14px">
       <div>
         <label class="input-label">Date Range</label>
-        <select class="input-field" id="exportRange">
+        <select class="input-field" id="exportRange" onchange="document.getElementById('exportCustomRange').style.display=this.value==='custom'?'block':'none'">
           <option value="day">Today only</option>
           <option value="week">This week (7 days)</option>
           <option value="month">This month (30 days)</option>
@@ -536,7 +543,7 @@ select.input-field{appearance:none}
   </div>
 </div>
 
-<!-- ══ MEALS ═════════════════════════════════════════════════════════════════ -->
+<!-- ══ MEALS ══════════════════════════════════════════════════════════════════ -->
 <div class="page" id="meals">
   <!-- NUTRITION PROGRESS CARD -->
   <div class="card" id="mealsNutritionCard" style="margin-bottom:10px">
@@ -1590,7 +1597,7 @@ async function loadAllData(){
     if(sf&&sf.length) savedFoods=[...DEFAULT_FOODS,...sf.map(r=>({name:r.name,cal:r.cal,pro:r.pro,carb:r.carb,fat:r.fat,cat:r.cat||'My Foods'}))];
 
     // Load checkins
-    const{data:ci}=await sb.from('checkins').select('*').eq('user_id',uid).order('date',{ascending:false}).limit(10);
+    const{data:ci}=await sb.from('checkins').select('*').eq('user_id',uid).order('date',{ascending:false}).limit(20);
     if(ci) checkins=ci;
 
     // Load workout logs
@@ -2610,365 +2617,6 @@ async function runJinWeeklyAnalysis(){
   }
 }
 
-// ══ MEAL HISTORY ══════════════════════════════════════════════════════════════
-let historyView='day';
-let historyDate=new Date();
-let historyCache={};
-let exportFormat='csv';
-
-function setHistoryView(v){
-  historyView=v;
-  const dayBtn=document.getElementById('hvDay');
-  const weekBtn=document.getElementById('hvWeek');
-  const dayPicker=document.getElementById('historyDayPicker');
-  const dayContent=document.getElementById('historyDayContent');
-  const weekView=document.getElementById('historyWeekView');
-  if(v==='day'){
-    if(dayBtn){dayBtn.style.background='var(--mauve)';dayBtn.style.color='white';}
-    if(weekBtn){weekBtn.style.background='transparent';weekBtn.style.color='var(--mauve)';}
-    if(dayPicker) dayPicker.style.display='block';
-    if(dayContent) dayContent.style.display='block';
-    if(weekView) weekView.style.display='none';
-    renderHistoryDay();
-  } else {
-    if(weekBtn){weekBtn.style.background='var(--mauve)';weekBtn.style.color='white';}
-    if(dayBtn){dayBtn.style.background='transparent';dayBtn.style.color='var(--mauve)';}
-    if(dayPicker) dayPicker.style.display='none';
-    if(dayContent) dayContent.style.display='none';
-    if(weekView) weekView.style.display='block';
-    renderHistoryWeek();
-  }
-}
-
-function historyDateKey(d){
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-
-function historyChangeDays(delta){
-  historyDate.setDate(historyDate.getDate()+delta);
-  renderHistoryDay();
-}
-
-async function loadHistoryDay(dateKey){
-  if(historyCache[dateKey]) return historyCache[dateKey];
-  // Try localStorage first
-  const local=JSON.parse(localStorage.getItem('rf_today_'+dateKey)||'{}');
-  if(local.meals&&Object.values(local.meals).flat().length>0){
-    historyCache[dateKey]=local;
-    return local;
-  }
-  // Try Supabase
-  if(currentUser){
-    try{
-      const{data}=await sb.from('daily_logs').select('*').eq('user_id',currentUser.id).eq('date',dateKey).maybeSingle();
-      if(data){
-        historyCache[dateKey]=data;
-        return data;
-      }
-    }catch(e){console.error('loadHistoryDay',e);}
-  }
-  return null;
-}
-
-async function loadMealHistory(){
-  historyDate=new Date();
-  // Populate move/copy date selector with last 30 days
-  const sel=document.getElementById('historyMoveDate');
-  if(sel){
-    sel.innerHTML='<option value="">Move/Copy to...</option>';
-    for(let i=0;i<30;i++){
-      const d=new Date();d.setDate(d.getDate()-i);
-      const k=historyDateKey(d);
-      const label=i===0?'Today':i===1?'Yesterday':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-      sel.innerHTML+=`<option value="${k}">${label}</option>`;
-    }
-  }
-  setHistoryView('day');
-}
-
-async function renderHistoryDay(){
-  const dateKey=historyDateKey(historyDate);
-  const isToday=dateKey===todayKey();
-  const dow=historyDate.getDay();
-  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const sched=DAY_SCHED[dow];
-
-  const label=document.getElementById('historyDateLabel');
-  const dayType=document.getElementById('historyDayType');
-  if(label) label.textContent=isToday?'Today — '+historyDate.toLocaleDateString('en-US',{month:'long',day:'numeric'}):historyDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  if(dayType) dayType.textContent=(sched.type==='high'?'⬆️ High Day':'⬇️ Low Day')+' · Target: '+sched.cal+' cal';
-
-  const content=document.getElementById('historyDayContent');
-  if(!content) return;
-  content.innerHTML='<div style="text-align:center;padding:20px;color:var(--light);font-size:12px">Loading...</div>';
-
-  const data=await loadHistoryDay(dateKey);
-  const mealData=isToday?meals:(data?.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]});
-  const allItems=Object.values(mealData).flat();
-  const totalCal=Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0));
-  const totalPro=Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0));
-  const totalCarb=Math.round(allItems.reduce((a,i)=>a+(i.carb||0),0));
-  const totalFat=Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0));
-  const steps=isToday?parseInt(document.getElementById('stepsInput')?.value||0):(data?.steps||0);
-
-  if(!allItems.length){
-    content.innerHTML=`<div class="card" style="text-align:center;padding:20px;color:var(--light)">
-      <div style="font-size:32px;margin-bottom:8px">🍽️</div>
-      <div style="font-size:13px">No meals logged for this day</div>
-    </div>`;
-    return;
-  }
-
-  const mealIcons={breakfast:'🌄',lunch:'☀️',dinner:'🌙',snacks:'🍎'};
-  const mealSections=Object.entries(mealData).map(([meal,items])=>{
-    if(!items.length) return '';
-    const mealCal=Math.round(items.reduce((a,i)=>a+(i.cal||0),0));
-    return `<div class="card" style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--dark)">${mealIcons[meal]||'🍽️'} ${meal.charAt(0).toUpperCase()+meal.slice(1)}</div>
-        <div style="font-size:11px;color:var(--mauve);font-weight:600">${mealCal} kcal</div>
-      </div>
-      ${items.map(item=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bd)">
-        <div>
-          <div style="font-size:12px;color:var(--dark)">${item.name}</div>
-          <div style="font-size:10px;color:var(--light)">${item.pro||0}g P · ${item.carb||0}g C · ${item.fat||0}g F</div>
-        </div>
-        <div style="font-size:13px;font-weight:600;color:var(--dark)">${item.cal||0}</div>
-      </div>`).join('')}
-    </div>`;
-  }).join('');
-
-  content.innerHTML=`
-    <div class="card" style="margin-bottom:10px">
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
-        <div><div style="font-size:16px;font-weight:700;color:var(--mauve)">${totalCal}</div><div style="font-size:9px;color:var(--light)">/ ${sched.cal} cal</div></div>
-        <div><div style="font-size:16px;font-weight:700;color:var(--teal)">${totalPro}g</div><div style="font-size:9px;color:var(--light)">protein</div></div>
-        <div><div style="font-size:16px;font-weight:700;color:#c9a84c">${totalCarb}g</div><div style="font-size:9px;color:var(--light)">carbs</div></div>
-        <div><div style="font-size:16px;font-weight:700;color:#D4956A">${totalFat}g</div><div style="font-size:9px;color:var(--light)">fat</div></div>
-      </div>
-      ${steps?`<div style="text-align:center;margin-top:8px;font-size:11px;color:var(--light)">👣 ${steps.toLocaleString()} steps</div>`:''}
-    </div>
-    ${mealSections}`;
-}
-
-async function renderHistoryWeek(){
-  const view=document.getElementById('historyWeekView');
-  if(!view) return;
-  view.innerHTML='<div style="text-align:center;padding:20px;color:var(--light)">Loading week...</div>';
-
-  const days=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date();d.setDate(d.getDate()-i);
-    days.push({date:d,key:historyDateKey(d),isToday:i===0});
-  }
-
-  const rows=await Promise.all(days.map(async day=>{
-    const data=await loadHistoryDay(day.key);
-    const mealData=day.isToday?meals:(data?.meals||{});
-    const allItems=Object.values(mealData).flat();
-    const cal=Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0));
-    const pro=Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0));
-    const fat=Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0));
-    const sched=DAY_SCHED[day.date.getDay()];
-    const pct=cal?Math.round(cal/sched.cal*100):0;
-    const color=pct>=90&&pct<=110?'var(--teal)':pct>110?'#E8856A':'var(--light)';
-    const foods=allItems.map(f=>f.name).slice(0,3).join(', ')+(allItems.length>3?'...':'');
-    return `<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="setHistoryView('day');historyDate=new Date('${day.key}T12:00:00');renderHistoryDay()">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:${foods?'6':'0'}px">
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--dark)">${day.isToday?'Today':day.date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
-          <div style="font-size:9px;color:var(--light)">${sched.type==='high'?'⬆️ High':'⬇️ Low'} · target ${sched.cal}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:15px;font-weight:700;color:${color}">${cal||'—'}</div>
-          ${cal?`<div style="font-size:9px;color:var(--teal)">${pro}g P · ${fat}g F</div>`:''}
-        </div>
-      </div>
-      ${foods?`<div style="font-size:10px;color:var(--light);font-style:italic">${foods}</div>`:''}
-    </div>`;
-  }));
-  view.innerHTML=rows.join('');
-}
-
-async function moveHistoryMeals(isMove){
-  const dateKey=historyDateKey(historyDate);
-  const targetKey=document.getElementById('historyMoveDate').value;
-  if(!targetKey){showToast('Choose a target date first');return;}
-  if(targetKey===dateKey){showToast('Already on this date!');return;}
-
-  // Get source meals
-  const sourceData=await loadHistoryDay(dateKey);
-  const sourceMeals=historyDateKey(historyDate)===todayKey()?{...meals}:(sourceData?.meals||{});
-  if(!Object.values(sourceMeals).flat().length){showToast('No meals to move');return;}
-
-  // Get target day meals
-  const targetLocal=JSON.parse(localStorage.getItem('rf_today_'+targetKey)||'{}');
-  const targetMeals=targetLocal.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]};
-
-  // Merge source into target
-  Object.entries(sourceMeals).forEach(([meal,items])=>{
-    if(!targetMeals[meal]) targetMeals[meal]=[];
-    targetMeals[meal].push(...items);
-  });
-
-  // Save target
-  const targetData={...targetLocal,meals:targetMeals,calories:Object.values(targetMeals).flat().reduce((a,i)=>a+(i.cal||0),0)};
-  localStorage.setItem('rf_today_'+targetKey,JSON.stringify(targetData));
-  if(currentUser) await dbUpsertByDate('daily_logs',targetKey,{meals:targetMeals,calories:targetData.calories});
-
-  // Clear source if move
-  if(isMove){
-    const emptyMeals={breakfast:[],lunch:[],dinner:[],snacks:[]};
-    if(dateKey===todayKey()){
-      meals={...emptyMeals};
-      renderMeals();updateMacros();
-    }
-    const emptyData={...sourceData||{},meals:emptyMeals,calories:0};
-    localStorage.setItem('rf_today_'+dateKey,JSON.stringify(emptyData));
-    if(currentUser) await dbUpsertByDate('daily_logs',dateKey,{meals:emptyMeals,calories:0});
-    delete historyCache[dateKey];
-    showToast('✅ Meals moved to '+targetKey+'!');
-  } else {
-    showToast('✅ Meals copied to '+targetKey+'!');
-  }
-
-  delete historyCache[targetKey];
-  if(targetKey===todayKey()){
-    const tData=JSON.parse(localStorage.getItem('rf_today_'+targetKey)||'{}');
-    if(tData.meals) meals=tData.meals;
-    renderMeals();updateMacros();
-  }
-  renderHistoryDay();
-}
-
-// ══ EXPORT ═══════════════════════════════════════════════════════════════════
-function openExportModal(){
-  const today=new Date().toISOString().split('T')[0];
-  const monthAgo=new Date();monthAgo.setDate(monthAgo.getDate()-30);
-  document.getElementById('exportFrom').value=monthAgo.toISOString().split('T')[0];
-  document.getElementById('exportTo').value=today;
-  document.getElementById('exportRange').onchange=function(){
-    document.getElementById('exportCustomRange').style.display=this.value==='custom'?'block':'none';
-  };
-  openModal('exportModal');
-}
-
-function setExportFormat(fmt){
-  exportFormat=fmt;
-  const csvBtn=document.getElementById('expCsv');
-  const pdfBtn=document.getElementById('expPdf');
-  if(fmt==='csv'){
-    csvBtn.style.background='var(--mauve)';csvBtn.style.color='white';
-    pdfBtn.style.background='transparent';pdfBtn.style.color='var(--mauve)';
-  } else {
-    pdfBtn.style.background='var(--mauve)';pdfBtn.style.color='white';
-    csvBtn.style.background='transparent';csvBtn.style.color='var(--mauve)';
-  }
-}
-
-async function runExport(){
-  const range=document.getElementById('exportRange').value;
-  const today=new Date();
-  let startDate=new Date();
-  let endDate=new Date();
-
-  if(range==='day'){startDate=new Date();endDate=new Date();}
-  else if(range==='week'){startDate.setDate(today.getDate()-6);}
-  else if(range==='month'){startDate.setDate(today.getDate()-29);}
-  else {
-    startDate=new Date(document.getElementById('exportFrom').value+'T12:00:00');
-    endDate=new Date(document.getElementById('exportTo').value+'T12:00:00');
-  }
-
-  showToast('Building export...');
-  closeModal('exportModal');
-
-  // Collect data for date range
-  const days=[];
-  const d=new Date(startDate);
-  while(d<=endDate){
-    days.push(historyDateKey(new Date(d)));
-    d.setDate(d.getDate()+1);
-  }
-
-  // Load all days
-  const allData=await Promise.all(days.map(async k=>{
-    const data=await loadHistoryDay(k);
-    const mealData=k===todayKey()?meals:(data?.meals||{});
-    const allItems=Object.values(mealData).flat();
-    return{
-      date:k,
-      meals:mealData,
-      cal:Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0)),
-      pro:Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0)),
-      carb:Math.round(allItems.reduce((a,i)=>a+(i.carb||0),0)),
-      fat:Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0)),
-      steps:data?.steps||0,
-    };
-  }));
-
-  if(exportFormat==='csv') exportCSV(allData);
-  else exportPDF(allData);
-}
-
-function exportCSV(allData){
-  const rows=['Date,Meal,Food Item,Calories,Protein(g),Carbs(g),Fat(g)'];
-  allData.forEach(day=>{
-    // Summary row
-    rows.push(`${day.date},DAILY TOTAL,,${day.cal},${day.pro},${day.carb},${day.fat}`);
-    // Each meal item
-    Object.entries(day.meals).forEach(([meal,items])=>{
-      items.forEach(item=>{
-        const name=(item.name||'').replace(/,/g,' ');
-        rows.push(`${day.date},${meal},"${name}",${item.cal||0},${item.pro||0},${item.carb||0},${item.fat||0}`);
-      });
-    });
-    rows.push(''); // blank row between days
-  });
-  const csv=rows.join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=`RumaFit_meals_${allData[0]?.date||'export'}_to_${allData[allData.length-1]?.date||'export'}.csv`;
-  a.click();URL.revokeObjectURL(url);
-  showToast('✅ CSV downloaded!');
-}
-
-function exportPDF(allData){
-  // Build HTML page for printing as PDF
-  const rows=allData.filter(d=>d.cal>0).map(day=>{
-    const dayDate=new Date(day.date+'T12:00:00');
-    const mealRows=Object.entries(day.meals).map(([meal,items])=>{
-      if(!items.length) return '';
-      const mealCal=items.reduce((a,i)=>a+(i.cal||0),0);
-      return `<tr style="background:#f9f0e8"><td colspan="5" style="padding:4px 8px;font-weight:600;font-size:11px;color:#8B4513">${meal.toUpperCase()} — ${mealCal} cal</td></tr>`+
-        items.map(i=>`<tr><td style="padding:3px 8px;padding-left:16px;font-size:11px">${i.name||''}</td><td style="text-align:center;font-size:11px">${i.cal||0}</td><td style="text-align:center;font-size:11px">${i.pro||0}g</td><td style="text-align:center;font-size:11px">${i.carb||0}g</td><td style="text-align:center;font-size:11px">${i.fat||0}g</td></tr>`).join('');
-    }).join('');
-    return `<div style="margin-bottom:20px;page-break-inside:avoid">
-      <div style="background:#8B4513;color:white;padding:6px 12px;font-weight:700;font-size:13px;border-radius:4px 4px 0 0">${dayDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · ${day.cal} cal · ${day.pro}g P · ${day.steps?day.steps.toLocaleString()+' steps':''}</div>
-      <table style="width:100%;border-collapse:collapse;border:1px solid #ddd">
-        <tr style="background:#f5efe0"><th style="padding:4px 8px;text-align:left;font-size:11px">Food</th><th style="font-size:11px">Cal</th><th style="font-size:11px">Protein</th><th style="font-size:11px">Carbs</th><th style="font-size:11px">Fat</th></tr>
-        ${mealRows}
-        <tr style="background:#f5efe0;font-weight:700"><td style="padding:4px 8px;font-size:11px">TOTALS</td><td style="text-align:center;font-size:11px">${day.cal}</td><td style="text-align:center;font-size:11px">${day.pro}g</td><td style="text-align:center;font-size:11px">${day.carb}g</td><td style="text-align:center;font-size:11px">${day.fat}g</td></tr>
-      </table>
-    </div>`;
-  }).join('');
-
-  const html=`<!DOCTYPE html><html><head><title>RumaFit Meal Export — Magda</title>
-  <style>body{font-family:sans-serif;padding:20px;color:#333}h1{color:#8B4513;margin-bottom:4px}p{color:#888;font-size:12px;margin-bottom:20px}@media print{button{display:none}}</style></head>
-  <body>
-  <h1>🌸 RumaFit Meal Log — Magda</h1>
-  <p>${allData[0]?.date} to ${allData[allData.length-1]?.date} · Exported ${new Date().toLocaleDateString()}</p>
-  <button onclick="window.print()" style="background:#8B4513;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;margin-bottom:20px">🖨️ Print / Save as PDF</button>
-  ${rows}
-  </body></html>`;
-
-  const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  window.open(url,'_blank');
-  showToast('✅ PDF preview opened — click Print to save!');
-}
-
 function renderWeightHistory(){
   const c=document.getElementById('weightHistory');
   if(!weightHistory.length){c.innerHTML='<p style="font-size:11px;color:var(--light);text-align:center;padding:12px">No entries yet. Log your weight in Today tab!</p>';return;}
@@ -3169,8 +2817,43 @@ async function deleteGoal(i){
 async function saveCheckin(){
   const wtThis=document.getElementById('ci_wt_this').value;
   const nextFocus=document.getElementById('ci_focus').value;
-  const checkin={date:todayKey(),wins:document.getElementById('ci_wins').value,struggle:document.getElementById('ci_struggle').value,feeling:document.getElementById('ci_feeling').value,morning:document.getElementById('ci_morning').value,wt_last:document.getElementById('ci_wt_last').value,wt_this:wtThis,macros:document.getElementById('ci_macros').value,meal_changes:document.getElementById('ci_meal_changes').value,hunger:document.getElementById('ci_hunger').value,water:scaleVals['ci_water'],digestion:scaleVals['ci_dig'],stress:scaleVals['ci_stress'],sleep:document.getElementById('ci_sleep').value,period:radioVals['ci_period'],photos:radioVals['ci_photos'],missed:radioVals['ci_miss'],steps:radioVals['ci_steps'],effort:radioVals['ci_effort'],recovery:radioVals['ci_rec'],exercises:document.getElementById('ci_exercises').value,travel:document.getElementById('ci_travel').value,focus:nextFocus,questions:document.getElementById('ci_questions').value,final:document.getElementById('ci_final').value,adjust:radioVals['ci_adjust'],};
+  const checkin={
+    date:todayKey(),
+    wins:document.getElementById('ci_wins').value,
+    struggle:document.getElementById('ci_struggle').value,
+    feeling:document.getElementById('ci_feeling').value,
+    morning:document.getElementById('ci_morning').value,
+    wt_last:document.getElementById('ci_wt_last').value,
+    wt_this:wtThis,
+    macros:document.getElementById('ci_macros').value,
+    meal_changes:document.getElementById('ci_meal_changes').value,
+    hunger:document.getElementById('ci_hunger').value,
+    water:scaleVals['ci_water'],
+    digestion:scaleVals['ci_dig'],
+    stress:scaleVals['ci_stress'],
+    sleep:document.getElementById('ci_sleep').value,
+    period:radioVals['ci_period'],
+    photos:radioVals['ci_photos'],
+    missed:radioVals['ci_miss'],
+    steps:radioVals['ci_steps'],
+    effort:radioVals['ci_effort'],
+    recovery:radioVals['ci_rec'],
+    exercises:document.getElementById('ci_exercises').value,
+    travel:document.getElementById('ci_travel').value,
+    focus:nextFocus,
+    questions:document.getElementById('ci_questions').value,
+    final:document.getElementById('ci_final').value,
+    adjust:radioVals['ci_adjust'],
+    protein_score:scaleVals['ci_q1'],
+    energy_score:scaleVals['ci_q2'],
+    steps_score:scaleVals['ci_q3'],
+    training_score:scaleVals['ci_q4'],
+    hunger_score:scaleVals['ci_q5'],
+    clothes:getSelected('ci_clothes_row'),
+    mealprep:radioVals['ci_mealprep'],
+  };
 
+  // Save to Supabase
   if(currentUser){
     setSyncStatus('syncing','Saving...');
     await sb.from('checkins').upsert({user_id:currentUser.id,...checkin},{onConflict:'user_id,date'});
@@ -3178,6 +2861,7 @@ async function saveCheckin(){
   }
   checkins.unshift(checkin);
 
+  // Weight + goals
   if(wtThis){
     weightHistory.unshift({weight:parseFloat(wtThis),date:todayKey()});
     if(currentUser) await sb.from('weight_logs').upsert({user_id:currentUser.id,date:todayKey(),weight:parseFloat(wtThis)},{onConflict:'user_id,date'});
@@ -3186,15 +2870,504 @@ async function saveCheckin(){
   if(nextFocus){
     const newGoals=nextFocus.split('\n').filter(g=>g.trim()).map(g=>({text:g.trim(),done:false,created_at:new Date().toISOString()}));
     goals.push(...newGoals);
-    if(currentUser){
-      for(const g of newGoals) await sb.from('goals').insert({user_id:currentUser.id,text:g.text,done:false});
-    }
+    if(currentUser) for(const g of newGoals) await sb.from('goals').insert({user_id:currentUser.id,text:g.text,done:false});
   }
   renderGoals();
-  showToast('✨ Check-in saved! You ARE your own coach now. 👑');
+
+  showToast('✨ Check-in saved! Generating your Tyker report... 🐹');
+
+  // Generate Tyker report
+  await generateTykerReport(checkin);
+}
+
+function getSelected(rowId){
+  const row=document.getElementById(rowId);
+  if(!row) return '';
+  const active=row.querySelector('.sel,.active,[style*="background:var(--mauve)"]');
+  return active?active.textContent.trim():'';
+}
+
+async function generateTykerReport(checkin){
+  if(!jinApiKey){
+    // Still save check-in to history without report
+    renderCheckinHistory();
+    showToast('✨ Check-in saved! Add API key for Tyker coaching report.');
+    return;
+  }
+
+  // Gather last 7 days of nutrition data
+  const weekStats=[];
+  for(let i=0;i<7;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const local=JSON.parse(localStorage.getItem('rf_today_'+k)||'{}');
+    const mealData=local.meals||{};
+    const items=Object.values(mealData).flat();
+    const cal=Math.round(items.reduce((a,f)=>a+(f.cal||0),0));
+    const pro=Math.round(items.reduce((a,f)=>a+(f.pro||0),0));
+    const sched=DAY_SCHED[d.getDay()];
+    weekStats.push(`${d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}: ${cal||'not logged'} cal (target ${sched.cal}), ${pro||0}g protein, ${local.steps||0} steps`);
+  }
+
+  // Previous check-in for trend comparison
+  const prevCheckin=checkins.length>1?checkins[1]:null;
+  const prevSummary=prevCheckin?`Previous check-in (${prevCheckin.date}): weight ${prevCheckin.wt_this||'?'}lbs, sleep ${prevCheckin.sleep||'?'}hrs, stress ${prevCheckin.stress||'?'}/5, energy ${prevCheckin.energy_score||'?'}/5`:'No previous check-in on record.';
+
+  const prompt=`You are Tyker — Magda's personal nutrition and fitness coach. You are warm, direct, encouraging, and realistic. You never shame. You celebrate wins and give specific actionable advice.
+
+Here is Magda's weekly check-in data:
+
+📋 RATINGS (1-5 scale):
+- Protein consistency: ${checkin.protein_score||'?'}/5
+- Energy levels: ${checkin.energy_score||'?'}/5  
+- Steps (10K goal): ${checkin.steps_score||'?'}/5
+- Training performance: ${checkin.training_score||'?'}/5
+- Hunger satisfaction: ${checkin.hunger_score||'?'}/5
+- Digestion: ${checkin.digestion||'?'}/5
+- Stress: ${checkin.stress||'?'}/5 (5=highest)
+- Water intake: ${checkin.water||'?'} per day
+- Sleep average: ${checkin.sleep||'?'} hours
+
+⚖️ WEIGHT:
+- Last week: ${checkin.wt_last||'?'} lbs
+- This week: ${checkin.wt_this||'?'} lbs
+- Change: ${checkin.wt_last&&checkin.wt_this?(parseFloat(checkin.wt_this)-parseFloat(checkin.wt_last)).toFixed(1)+' lbs':'unknown'}
+
+🏆 WINS THIS WEEK:
+${checkin.wins||'Not filled in'}
+
+😤 STRUGGLES:
+${checkin.struggle||'Not filled in'}
+
+💭 HOW SHE FELT:
+${checkin.feeling||'Not filled in'}
+
+🌅 MORNING ROUTINE:
+${checkin.morning||'Not filled in'}
+
+👗 CLOTHES FIT: ${checkin.clothes||'Not noted'}
+
+🍽️ MACROS & CALORIES:
+${checkin.macros||'Not filled in'}
+
+📊 LAST 7 DAYS NUTRITION DATA:
+${weekStats.join('\n')}
+
+📈 TREND (vs previous check-in):
+${prevSummary}
+
+🎯 NEXT WEEK FOCUS SHE WROTE:
+${checkin.focus||'Not filled in'}
+
+Write Magda a personal weekly coaching report as Tyker. Structure it like this:
+
+**🏆 What You Crushed**
+[2-3 specific wins with actual numbers from her data]
+
+**📊 What The Numbers Are Telling Us**
+[Honest analysis of weight trend, nutrition patterns, energy vs sleep vs stress correlation — use her actual data]
+
+**🎯 Your 3 Focus Points For Next Week**
+[Specific, realistic, numbered. Not generic. Based on her weakest areas this week.]
+
+**💜 Tyker's Note**
+[1-2 sentences of genuine encouragement — reference something specific she shared]
+
+Keep it warm, specific, and under 350 words. No fluff. She's a nurse — she can handle honest feedback.`;
+
+  try{
+    // Show loading state in history
+    checkin.tyker_report='⏳ Tyker is reviewing your week...';
+    checkin.tyker_loading=true;
+    renderCheckinHistory();
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':jinApiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        system:'You are Tyker, Magda\'s personal coach. You are warm, specific, honest, and encouraging. Never use generic advice — always reference her actual data.',
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+
+    const report=data.content[0].text;
+    checkin.tyker_report=report;
+    checkin.tyker_loading=false;
+
+    // Save report back to Supabase
+    if(currentUser){
+      await sb.from('checkins').upsert({user_id:currentUser.id,...checkin,tyker_report:report},{onConflict:'user_id,date'});
+    }
+    // Update local
+    const idx=checkins.findIndex(c=>c.date===checkin.date);
+    if(idx>-1) checkins[idx]=checkin;
+    else checkins[0]=checkin;
+
+    renderCheckinHistory();
+    showToast('🐹 Tyker\'s report is ready! Check History → Check-In History 👑');
+
+    // Switch to history tab to show the report
+    setTimeout(()=>{
+      const histTab=document.querySelector('[onclick*="history"]');
+      if(histTab) histTab.click();
+      setTimeout(()=>setHistoryTab('checkin'),300);
+    },1000);
+
+  }catch(e){
+    console.error('Tyker report error:',e);
+    checkin.tyker_report='Could not generate report: '+e.message;
+    checkin.tyker_loading=false;
+    const idx=checkins.findIndex(c=>c.date===checkin.date);
+    if(idx>-1) checkins[idx]=checkin;
+    renderCheckinHistory();
+    showToast('Check-in saved! Tyker report failed — check API key.');
+  }
 }
 
 // ══ DOS & DONTS ══════════════════════════════════════════════════════════════
+// ══ HISTORY TAB ═══════════════════════════════════════════════════════════════
+let historyView='day';
+let historyDate=new Date();
+let historyCache={};
+let exportFormat='csv';
+
+function setHistoryTab(tab){
+  const mealSection=document.getElementById('histMealSection');
+  const checkinSection=document.getElementById('histCheckinSection');
+  const mealBtn=document.getElementById('ht-meals');
+  const checkinBtn=document.getElementById('ht-checkin');
+  if(tab==='meals'){
+    mealSection.style.display='block';
+    checkinSection.style.display='none';
+    mealBtn.style.background='var(--mauve)';mealBtn.style.color='white';mealBtn.style.border='none';
+    checkinBtn.style.background='transparent';checkinBtn.style.color='var(--mauve)';checkinBtn.style.border='1.5px solid var(--bd-mauve)';
+    loadMealHistory();
+  } else {
+    mealSection.style.display='none';
+    checkinSection.style.display='block';
+    checkinBtn.style.background='var(--mauve)';checkinBtn.style.color='white';checkinBtn.style.border='none';
+    mealBtn.style.background='transparent';mealBtn.style.color='var(--mauve)';mealBtn.style.border='1.5px solid var(--bd-mauve)';
+    renderCheckinHistory();
+  }
+}
+
+// ── Check-In History Renderer ─────────────────────────────────────────────────
+function renderCheckinHistory(){
+  const el=document.getElementById('checkinHistoryList');
+  if(!el) return;
+  if(!checkins.length){
+    el.innerHTML='<div class="card" style="text-align:center;padding:20px;color:var(--light)"><div style="font-size:32px;margin-bottom:8px">✨</div><div>No check-ins yet — submit your first one!</div></div>';
+    return;
+  }
+  el.innerHTML=checkins.map((c,i)=>{
+    const wtChange=c.wt_last&&c.wt_this?(parseFloat(c.wt_this)-parseFloat(c.wt_last)).toFixed(1):null;
+    const wtColor=wtChange?parseFloat(wtChange)<0?'var(--teal)':parseFloat(wtChange)>0?'#E8856A':'var(--light)':'var(--light)';
+    const scores=[
+      {label:'Protein',val:c.protein_score,color:'var(--teal)'},
+      {label:'Energy',val:c.energy_score,color:'#c9a84c'},
+      {label:'Steps',val:c.steps_score,color:'var(--mauve)'},
+      {label:'Training',val:c.training_score,color:'#D4956A'},
+    ].filter(s=>s.val);
+
+    const scoreChips=scores.map(s=>`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:var(--nude);color:${s.color};font-weight:600">${s.label}: ${s.val}/5</span>`).join('');
+
+    // Report section
+    let reportHTML='';
+    if(c.tyker_loading){
+      reportHTML=`<div style="margin-top:12px;padding:12px;background:linear-gradient(135deg,#FFF8F0,#FFF0E8);border-radius:10px;border:1px solid rgba(201,144,122,.2)">
+        <div style="font-size:11px;color:var(--light);font-style:italic;text-align:center">🐹 Tyker is reviewing your week...</div>
+      </div>`;
+    } else if(c.tyker_report){
+      // Format markdown-like report
+      const formatted=c.tyker_report
+        .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\n\n/g,'</p><p style="margin:8px 0">')
+        .replace(/\n/g,'<br>');
+      reportHTML=`<div style="margin-top:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF9BB0,#FFB347);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🐹</div>
+          <div style="font-size:11px;font-weight:700;color:var(--dark)">Tyker's Weekly Report</div>
+        </div>
+        <div style="font-size:12px;color:var(--dark);line-height:1.8;background:linear-gradient(135deg,#FFF8F5,#FFF0E8);border-radius:12px;padding:14px;border:1px solid rgba(201,144,122,.2)">
+          <p style="margin:0 0 8px">${formatted}</p>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="card" style="margin-bottom:12px">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--dark)">${new Date(c.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
+          <div style="font-size:10px;color:var(--light);margin-top:2px">Week ${i===0?'(Latest)':'#'+(checkins.length-i)}</div>
+        </div>
+        ${wtChange!==null?`<div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:${wtColor}">${parseFloat(wtChange)>0?'+':''}${wtChange} lbs</div>
+          <div style="font-size:9px;color:var(--light)">${c.wt_this} lbs this week</div>
+        </div>`:''}
+      </div>
+
+      <!-- Score chips -->
+      ${scoreChips?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${scoreChips}</div>`:''}
+
+      <!-- Quick stats row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;text-align:center">
+        ${c.sleep?`<div style="background:var(--nude);border-radius:8px;padding:6px"><div style="font-size:13px;font-weight:700;color:var(--dark)">${c.sleep}h</div><div style="font-size:9px;color:var(--light)">Sleep</div></div>`:''}
+        ${c.stress?`<div style="background:var(--nude);border-radius:8px;padding:6px"><div style="font-size:13px;font-weight:700;color:${parseInt(c.stress)>=4?'#E8856A':'var(--teal)'}">${c.stress}/5</div><div style="font-size:9px;color:var(--light)">Stress</div></div>`:''}
+        ${c.water?`<div style="background:var(--nude);border-radius:8px;padding:6px"><div style="font-size:13px;font-weight:700;color:#4A9BB0">${c.water}</div><div style="font-size:9px;color:var(--light)">Water/day</div></div>`:''}
+      </div>
+
+      <!-- Written answers (collapsed by default) -->
+      <div id="ci_expand_${i}" style="display:none">
+        ${c.wins?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">🏆 WINS</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.wins}</div></div>`:''}
+        ${c.struggle?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">😤 STRUGGLES</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.struggle}</div></div>`:''}
+        ${c.feeling?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">💭 HOW I FELT</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.feeling}</div></div>`:''}
+        ${c.focus?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">🎯 NEXT WEEK FOCUS</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.focus}</div></div>`:''}
+      </div>
+
+      <button onclick="const el=document.getElementById('ci_expand_${i}');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'▼ Show answers':'▲ Hide answers'"
+        style="background:transparent;border:1px solid rgba(201,144,122,.2);border-radius:8px;padding:5px 12px;font-size:10px;color:var(--light);cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;width:100%">
+        ▼ Show answers
+      </button>
+
+      ${reportHTML}
+    </div>`;
+  }).join('');
+}
+
+// ── Meal History functions ─────────────────────────────────────────────────────
+function setHistoryView(v){
+  historyView=v;
+  const dayBtn=document.getElementById('hvDay');
+  const weekBtn=document.getElementById('hvWeek');
+  const dayPicker=document.getElementById('historyDayPicker');
+  const dayContent=document.getElementById('historyDayContent');
+  const weekView=document.getElementById('historyWeekView');
+  if(v==='day'){
+    if(dayBtn){dayBtn.style.background='var(--mauve)';dayBtn.style.color='white';}
+    if(weekBtn){weekBtn.style.background='transparent';weekBtn.style.color='var(--mauve)';}
+    if(dayPicker) dayPicker.style.display='block';
+    if(dayContent) dayContent.style.display='block';
+    if(weekView) weekView.style.display='none';
+    renderHistoryDay();
+  } else {
+    if(weekBtn){weekBtn.style.background='var(--mauve)';weekBtn.style.color='white';}
+    if(dayBtn){dayBtn.style.background='transparent';dayBtn.style.color='var(--mauve)';}
+    if(dayPicker) dayPicker.style.display='none';
+    if(dayContent) dayContent.style.display='none';
+    if(weekView) weekView.style.display='block';
+    renderHistoryWeek();
+  }
+}
+
+function historyDateKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function historyChangeDays(delta){
+  historyDate.setDate(historyDate.getDate()+delta);
+  renderHistoryDay();
+}
+
+async function loadHistoryDay(dateKey){
+  if(historyCache[dateKey]) return historyCache[dateKey];
+  const local=JSON.parse(localStorage.getItem('rf_today_'+dateKey)||'{}');
+  if(local.meals&&Object.values(local.meals).flat().length>0){historyCache[dateKey]=local;return local;}
+  if(currentUser){
+    try{
+      const{data}=await sb.from('daily_logs').select('*').eq('user_id',currentUser.id).eq('date',dateKey).maybeSingle();
+      if(data){historyCache[dateKey]=data;return data;}
+    }catch(e){}
+  }
+  return null;
+}
+
+async function loadMealHistory(){
+  historyDate=new Date();
+  const sel=document.getElementById('historyMoveDate');
+  if(sel){
+    sel.innerHTML='<option value="">Move/Copy to...</option>';
+    for(let i=0;i<30;i++){
+      const d=new Date();d.setDate(d.getDate()-i);
+      const k=historyDateKey(d);
+      const label=i===0?'Today':i===1?'Yesterday':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      sel.innerHTML+=`<option value="${k}">${label}</option>`;
+    }
+  }
+  setHistoryView('day');
+}
+
+async function renderHistoryDay(){
+  const dateKey=historyDateKey(historyDate);
+  const isToday=dateKey===todayKey();
+  const sched=DAY_SCHED[historyDate.getDay()];
+  const label=document.getElementById('historyDateLabel');
+  const dayType=document.getElementById('historyDayType');
+  if(label) label.textContent=isToday?'Today — '+historyDate.toLocaleDateString('en-US',{month:'long',day:'numeric'}):historyDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  if(dayType) dayType.textContent=(sched.type==='high'?'⬆️ High Day':'⬇️ Low Day')+' · Target: '+sched.cal+' cal';
+  const content=document.getElementById('historyDayContent');
+  if(!content) return;
+  content.innerHTML='<div style="text-align:center;padding:20px;color:var(--light);font-size:12px">Loading...</div>';
+  const data=await loadHistoryDay(dateKey);
+  const mealData=isToday?meals:(data?.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]});
+  const allItems=Object.values(mealData).flat();
+  const totalCal=Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0));
+  const totalPro=Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0));
+  const totalCarb=Math.round(allItems.reduce((a,i)=>a+(i.carb||0),0));
+  const totalFat=Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0));
+  if(!allItems.length){content.innerHTML='<div class="card" style="text-align:center;padding:20px;color:var(--light)"><div style="font-size:32px;margin-bottom:8px">🍽️</div><div style="font-size:13px">No meals logged for this day</div></div>';return;}
+  const mealIcons={breakfast:'🌄',lunch:'☀️',dinner:'🌙',snacks:'🍎'};
+  const sections=Object.entries(mealData).map(([meal,items])=>{
+    if(!items.length) return '';
+    const mealCal=Math.round(items.reduce((a,i)=>a+(i.cal||0),0));
+    return `<div class="card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--dark)">${mealIcons[meal]||'🍽️'} ${meal.charAt(0).toUpperCase()+meal.slice(1)}</div>
+        <div style="font-size:11px;color:var(--mauve);font-weight:600">${mealCal} kcal</div>
+      </div>
+      ${items.map(item=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd)">
+        <div><div style="font-size:12px;color:var(--dark)">${item.name}</div><div style="font-size:10px;color:var(--light)">${item.pro||0}g P · ${item.carb||0}g C · ${item.fat||0}g F</div></div>
+        <div style="font-size:13px;font-weight:600;color:var(--dark)">${item.cal||0}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+  content.innerHTML=`<div class="card" style="margin-bottom:10px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+      <div><div style="font-size:16px;font-weight:700;color:var(--mauve)">${totalCal}</div><div style="font-size:9px;color:var(--light)">/ ${sched.cal} cal</div></div>
+      <div><div style="font-size:16px;font-weight:700;color:var(--teal)">${totalPro}g</div><div style="font-size:9px;color:var(--light)">protein</div></div>
+      <div><div style="font-size:16px;font-weight:700;color:#c9a84c">${totalCarb}g</div><div style="font-size:9px;color:var(--light)">carbs</div></div>
+      <div><div style="font-size:16px;font-weight:700;color:#D4956A">${totalFat}g</div><div style="font-size:9px;color:var(--light)">fat</div></div>
+    </div>
+  </div>${sections}`;
+}
+
+async function renderHistoryWeek(){
+  const view=document.getElementById('historyWeekView');
+  if(!view) return;
+  view.innerHTML='<div style="text-align:center;padding:20px;color:var(--light)">Loading week...</div>';
+  const days=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push({date:d,key:historyDateKey(d),isToday:i===0});}
+  const rows=await Promise.all(days.map(async day=>{
+    const data=await loadHistoryDay(day.key);
+    const mealData=day.isToday?meals:(data?.meals||{});
+    const allItems=Object.values(mealData).flat();
+    const cal=Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0));
+    const pro=Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0));
+    const sched=DAY_SCHED[day.date.getDay()];
+    const pct=cal?Math.round(cal/sched.cal*100):0;
+    const color=pct>=90&&pct<=110?'var(--teal)':pct>110?'#E8856A':'var(--light)';
+    const foods=allItems.map(f=>f.name).slice(0,3).join(', ')+(allItems.length>3?'...':'');
+    return `<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="setHistoryView('day');historyDate=new Date('${day.key}T12:00:00');renderHistoryDay()">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:${foods?'6':'0'}px">
+        <div><div style="font-size:12px;font-weight:700;color:var(--dark)">${day.isToday?'Today':day.date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+        <div style="font-size:9px;color:var(--light)">${sched.type==='high'?'⬆️ High':'⬇️ Low'} · target ${sched.cal}</div></div>
+        <div style="text-align:right"><div style="font-size:15px;font-weight:700;color:${color}">${cal||'—'}</div>${cal?`<div style="font-size:9px;color:var(--teal)">${pro}g P</div>`:''}</div>
+      </div>
+      ${foods?`<div style="font-size:10px;color:var(--light);font-style:italic">${foods}</div>`:''}
+    </div>`;
+  }));
+  view.innerHTML=rows.join('');
+}
+
+async function moveHistoryMeals(isMove){
+  const dateKey=historyDateKey(historyDate);
+  const targetKey=document.getElementById('historyMoveDate').value;
+  if(!targetKey){showToast('Choose a target date first');return;}
+  if(targetKey===dateKey){showToast('Already on this date!');return;}
+  const sourceData=await loadHistoryDay(dateKey);
+  const sourceMeals=dateKey===todayKey()?{...meals}:(sourceData?.meals||{});
+  if(!Object.values(sourceMeals).flat().length){showToast('No meals to move');return;}
+  const targetLocal=JSON.parse(localStorage.getItem('rf_today_'+targetKey)||'{}');
+  const targetMeals=targetLocal.meals||{breakfast:[],lunch:[],dinner:[],snacks:[]};
+  Object.entries(sourceMeals).forEach(([meal,items])=>{if(!targetMeals[meal])targetMeals[meal]=[];targetMeals[meal].push(...items);});
+  const targetData={...targetLocal,meals:targetMeals,calories:Object.values(targetMeals).flat().reduce((a,i)=>a+(i.cal||0),0)};
+  localStorage.setItem('rf_today_'+targetKey,JSON.stringify(targetData));
+  if(currentUser) await dbUpsertByDate('daily_logs',targetKey,{meals:targetMeals,calories:targetData.calories});
+  if(isMove){
+    const emptyMeals={breakfast:[],lunch:[],dinner:[],snacks:[]};
+    if(dateKey===todayKey()){meals={...emptyMeals};renderMeals();updateMacros();}
+    localStorage.setItem('rf_today_'+dateKey,JSON.stringify({...sourceData||{},meals:emptyMeals,calories:0}));
+    if(currentUser) await dbUpsertByDate('daily_logs',dateKey,{meals:emptyMeals,calories:0});
+    delete historyCache[dateKey];
+    showToast('✅ Meals moved to '+targetKey+'!');
+  } else {
+    showToast('✅ Meals copied to '+targetKey+'!');
+  }
+  delete historyCache[targetKey];
+  if(targetKey===todayKey()){const tData=JSON.parse(localStorage.getItem('rf_today_'+targetKey)||'{}');if(tData.meals){meals=tData.meals;renderMeals();updateMacros();}}
+  renderHistoryDay();
+}
+
+// ══ EXPORT ═══════════════════════════════════════════════════════════════════
+function openExportModal(){
+  const today=new Date().toISOString().split('T')[0];
+  const monthAgo=new Date();monthAgo.setDate(monthAgo.getDate()-30);
+  document.getElementById('exportFrom').value=monthAgo.toISOString().split('T')[0];
+  document.getElementById('exportTo').value=today;
+  openModal('exportModal');
+}
+
+function setExportFormat(fmt){
+  exportFormat=fmt;
+  const csvBtn=document.getElementById('expCsv');
+  const pdfBtn=document.getElementById('expPdf');
+  if(fmt==='csv'){csvBtn.style.background='var(--mauve)';csvBtn.style.color='white';pdfBtn.style.background='transparent';pdfBtn.style.color='var(--mauve)';}
+  else{pdfBtn.style.background='var(--mauve)';pdfBtn.style.color='white';csvBtn.style.background='transparent';csvBtn.style.color='var(--mauve)';}
+}
+
+async function runExport(){
+  const range=document.getElementById('exportRange').value;
+  const today=new Date();let startDate=new Date();let endDate=new Date();
+  if(range==='day'){startDate=new Date();endDate=new Date();}
+  else if(range==='week'){startDate.setDate(today.getDate()-6);}
+  else if(range==='month'){startDate.setDate(today.getDate()-29);}
+  else{startDate=new Date(document.getElementById('exportFrom').value+'T12:00:00');endDate=new Date(document.getElementById('exportTo').value+'T12:00:00');}
+  showToast('Building export...');closeModal('exportModal');
+  const days=[];const d=new Date(startDate);
+  while(d<=endDate){days.push(historyDateKey(new Date(d)));d.setDate(d.getDate()+1);}
+  const allData=await Promise.all(days.map(async k=>{
+    const data=await loadHistoryDay(k);
+    const mealData=k===todayKey()?meals:(data?.meals||{});
+    const allItems=Object.values(mealData).flat();
+    return{date:k,meals:mealData,cal:Math.round(allItems.reduce((a,i)=>a+(i.cal||0),0)),pro:Math.round(allItems.reduce((a,i)=>a+(i.pro||0),0)),carb:Math.round(allItems.reduce((a,i)=>a+(i.carb||0),0)),fat:Math.round(allItems.reduce((a,i)=>a+(i.fat||0),0)),steps:data?.steps||0};
+  }));
+  if(exportFormat==='csv') exportCSV(allData);
+  else exportPDF(allData);
+}
+
+function exportCSV(allData){
+  const rows=['Date,Meal,Food Item,Calories,Protein(g),Carbs(g),Fat(g)'];
+  allData.forEach(day=>{
+    rows.push(`${day.date},DAILY TOTAL,,${day.cal},${day.pro},${day.carb},${day.fat}`);
+    Object.entries(day.meals).forEach(([meal,items])=>items.forEach(item=>{const name=(item.name||'').replace(/,/g,' ');rows.push(`${day.date},${meal},"${name}",${item.cal||0},${item.pro||0},${item.carb||0},${item.fat||0}`);}));
+    rows.push('');
+  });
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`RumaFit_meals_${allData[0]?.date||'export'}.csv`;a.click();URL.revokeObjectURL(url);
+  showToast('✅ CSV downloaded!');
+}
+
+function exportPDF(allData){
+  const rows=allData.filter(d=>d.cal>0).map(day=>{
+    const mealRows=Object.entries(day.meals).map(([meal,items])=>{
+      if(!items.length) return '';
+      return `<tr style="background:#f9f0e8"><td colspan="5" style="padding:4px 8px;font-weight:600;font-size:11px;color:#8B4513">${meal.toUpperCase()} — ${items.reduce((a,i)=>a+(i.cal||0),0)} cal</td></tr>`+
+        items.map(i=>`<tr><td style="padding:3px 8px;padding-left:16px;font-size:11px">${i.name||''}</td><td style="text-align:center;font-size:11px">${i.cal||0}</td><td style="text-align:center;font-size:11px">${i.pro||0}g</td><td style="text-align:center;font-size:11px">${i.carb||0}g</td><td style="text-align:center;font-size:11px">${i.fat||0}g</td></tr>`).join('');
+    }).join('');
+    return `<div style="margin-bottom:20px;page-break-inside:avoid"><div style="background:#8B4513;color:white;padding:6px 12px;font-weight:700;font-size:13px;border-radius:4px 4px 0 0">${new Date(day.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · ${day.cal} cal · ${day.pro}g P</div>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #ddd"><tr style="background:#f5efe0"><th style="padding:4px 8px;text-align:left;font-size:11px">Food</th><th style="font-size:11px">Cal</th><th style="font-size:11px">Protein</th><th style="font-size:11px">Carbs</th><th style="font-size:11px">Fat</th></tr>${mealRows}<tr style="background:#f5efe0;font-weight:700"><td style="padding:4px 8px;font-size:11px">TOTALS</td><td style="text-align:center;font-size:11px">${day.cal}</td><td style="text-align:center;font-size:11px">${day.pro}g</td><td style="text-align:center;font-size:11px">${day.carb}g</td><td style="text-align:center;font-size:11px">${day.fat}g</td></tr></table></div>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html><head><title>RumaFit Meal Export</title><style>body{font-family:sans-serif;padding:20px;color:#333}h1{color:#8B4513}@media print{button{display:none}}</style></head><body><h1>🌸 RumaFit Meal Log — Magda</h1><p>${allData[0]?.date} to ${allData[allData.length-1]?.date}</p><button onclick="window.print()" style="background:#8B4513;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;margin-bottom:20px">🖨️ Print / Save as PDF</button>${rows}</body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  window.open(URL.createObjectURL(blob),'_blank');
+  showToast('✅ PDF preview opened!');
+}
+
 function renderDosAndDonts(){
   document.getElementById('dosList').innerHTML=DOS.map(d=>`<div class="do-item"><span style="font-size:13px;flex-shrink:0">✅</span><div class="do-text">${d}</div></div>`).join('');
   document.getElementById('dontsList').innerHTML=DONTS.map(d=>`<div class="dont-item"><span style="font-size:13px;flex-shrink:0">❌</span><div class="do-text">${d}</div></div>`).join('');
@@ -4912,7 +5085,7 @@ function showPage(id,tab){
   if(id==='workout') initWorkout();
   if(id==='jin'){initJin();updateJinMacroSnap();}
   if(id==='meals') updateMacros();
-  if(id==='history') loadMealHistory();
+  if(id==='history') loadMealHistory(); // refresh nutrition card on tab open
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
