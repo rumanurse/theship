@@ -2973,7 +2973,7 @@ Write Magda a personal weekly coaching report as Tyker. Structure it like this:
 **💜 Tyker's Note**
 [1-2 sentences of genuine encouragement — reference something specific she shared]
 
-Keep it warm, specific, and under 350 words. No fluff. She's a nurse — she can handle honest feedback.`;
+Be warm, specific, and thorough — aim for 400-500 words minimum. Reference her ACTUAL numbers throughout. She's a nurse — she can handle honest feedback and appreciates clinical precision. Make it feel like a real coaching session.`;
 
   try{
     // Show loading state in history
@@ -2986,7 +2986,7 @@ Keep it warm, specific, and under 350 words. No fluff. She's a nurse — she can
       headers:{'Content-Type':'application/json','x-api-key':jinApiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
-        max_tokens:800,
+        max_tokens:1500,
         system:'You are Tyker, Magda\'s personal coach. You are warm, specific, honest, and encouraging. Never use generic advice — always reference her actual data.',
         messages:[{role:'user',content:prompt}]
       })
@@ -3056,9 +3056,37 @@ function setHistoryTab(tab){
 }
 
 // ── Check-In History Renderer ─────────────────────────────────────────────────
+
+function exportCheckinPDF(idx){
+  const c=checkins[idx];
+  if(!c)return;
+  const wtChange=c.wt_last&&c.wt_this?(parseFloat(c.wt_this)-parseFloat(c.wt_last)).toFixed(1):null;
+  const wtColor=wtChange&&parseFloat(wtChange)<0?'#2ecc71':wtChange&&parseFloat(wtChange)>0?'#E8856A':'#888';
+  const dateStr=new Date(c.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const scores=[{label:'Protein',val:c.protein_score},{label:'Energy',val:c.energy_score},{label:'Steps',val:c.steps_score},{label:'Training',val:c.training_score},{label:'Hunger',val:c.hunger_score},{label:'Digestion',val:c.digestion},{label:'Stress',val:c.stress}].filter(s=>s.val);
+  const answers=[{q:'Wins This Week',a:c.wins},{q:'Struggles',a:c.struggle},{q:'How I Felt',a:c.feeling},{q:'Morning Routine',a:c.morning},{q:'Macros & Calories',a:c.macros},{q:'Meal Changes Wanted',a:c.meal_changes},{q:'Hunger Notes',a:c.hunger},{q:'Next Week Focus',a:c.focus},{q:'Questions',a:c.questions},{q:'Final Thoughts',a:c.final}].filter(a=>a.a&&a.a.trim());
+  const reportFormatted=c.tyker_report?(c.tyker_report.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')):'No Tyker report generated yet.';
+  const html='<!DOCTYPE html><html><head><title>Check-In Report</title><style>body{font-family:Georgia,serif;max-width:700px;margin:0 auto;padding:30px;color:#2d1515}h1{color:#8B4513}h2{color:#8B4513;font-size:14px;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #f0e0d0;padding-bottom:6px;margin-top:24px}.card{background:#FFF8F5;border:1px solid #f0e0d0;border-radius:10px;padding:14px;margin-bottom:10px}.score-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.score-box{background:white;border:1px solid #f0e0d0;border-radius:8px;padding:8px;text-align:center}.score-val{font-size:20px;font-weight:700;color:#8B4513}.score-lbl{font-size:9px;color:#999}.answer{margin-bottom:14px}.answer-q{font-size:11px;font-weight:700;color:#C9907A;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}.answer-a{font-size:13px;line-height:1.7;background:#FFF8F5;padding:10px;border-radius:8px;border-left:3px solid #C9907A}.tyker{background:linear-gradient(135deg,#FFF8F0,#FFF0E8);border:2px solid #C9907A;border-radius:12px;padding:20px;margin-top:24px}.tyker-header{font-size:16px;font-weight:700;color:#8B4513;margin-bottom:4px}.tyker-sub{font-size:11px;color:#999;margin-bottom:14px}.tyker-body{font-size:13px;line-height:1.9}@media print{.no-print{display:none}}</style></head><body>'
+  +'<div class="no-print" style="margin-bottom:20px"><button onclick="window.print()" style="background:#8B4513;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:13px">🖨️ Print / Save as PDF</button></div>'
+  +'<h1>🌸 Weekly Check-In Report — Magda</h1><p style="color:#999">'+dateStr+'</p>'
+  +'<div style="display:flex;justify-content:space-between;align-items:center;background:#FFF8F5;border:1px solid #f0e0d0;border-radius:12px;padding:16px;margin-bottom:20px">'
+  +(c.wt_this?'<div><div style="font-size:11px;color:#999">THIS WEEK</div><div style="font-size:28px;font-weight:700;color:#8B4513">'+c.wt_this+' lbs</div></div>':'')
+  +(wtChange!==null?'<div style="text-align:center"><div style="font-size:28px;font-weight:700;color:'+wtColor+'">'+(parseFloat(wtChange)>0?'+':'')+wtChange+' lbs</div><div style="font-size:11px;color:#999">vs last week</div></div>':'')
+  +(c.wt_last?'<div style="text-align:right"><div style="font-size:11px;color:#999">LAST WEEK</div><div style="font-size:28px;font-weight:700;color:#8B4513">'+c.wt_last+' lbs</div></div>':'')
+  +'</div>'
+  +'<h2>📊 Weekly Ratings</h2><div class="score-grid">'+scores.map(s=>'<div class="score-box"><div class="score-val">'+s.val+'/5</div><div class="score-lbl">'+s.label+'</div></div>').join('')+'</div>'
+  +(c.sleep||c.stress||c.water?'<div class="card" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px">'+(c.sleep?'<span>😴 <strong>'+c.sleep+'h</strong> sleep</span>':'')+(c.stress?'<span>💆 Stress <strong>'+c.stress+'/5</strong></span>':'')+(c.water?'<span>💧 <strong>'+c.water+'</strong>/day water</span>':'')+(c.clothes?'<span>👗 Clothes: <strong>'+c.clothes+'</strong></span>':'')+'</div>':'')
+  +'<h2>✍️ My Answers</h2>'+answers.map(a=>'<div class="answer"><div class="answer-q">'+a.q+'</div><div class="answer-a">'+a.a.replace(/\n/g,'<br>')+'</div></div>').join('')
+  +'<div class="tyker"><div class="tyker-header">🐹 Tyker\'s Weekly Coaching Report</div><div class="tyker-sub">Personalized coaching based on your data</div><div class="tyker-body">'+reportFormatted+'</div></div>'
+  +'</body></html>';
+  const blob=new Blob([html],{type:'text/html'});
+  window.open(URL.createObjectURL(blob),'_blank');
+  showToast('PDF preview opened — click Print!');
+}
+
 function renderCheckinHistory(){
   const el=document.getElementById('checkinHistoryList');
-  if(!el) return;
+  if(!el)return;
   if(!checkins.length){
     el.innerHTML='<div class="card" style="text-align:center;padding:20px;color:var(--light)"><div style="font-size:32px;margin-bottom:8px">✨</div><div>No check-ins yet — submit your first one!</div></div>';
     return;
@@ -3066,78 +3094,80 @@ function renderCheckinHistory(){
   el.innerHTML=checkins.map((c,i)=>{
     const wtChange=c.wt_last&&c.wt_this?(parseFloat(c.wt_this)-parseFloat(c.wt_last)).toFixed(1):null;
     const wtColor=wtChange?parseFloat(wtChange)<0?'var(--teal)':parseFloat(wtChange)>0?'#E8856A':'var(--light)':'var(--light)';
-    const scores=[
+    const allScores=[
       {label:'Protein',val:c.protein_score,color:'var(--teal)'},
       {label:'Energy',val:c.energy_score,color:'#c9a84c'},
       {label:'Steps',val:c.steps_score,color:'var(--mauve)'},
       {label:'Training',val:c.training_score,color:'#D4956A'},
+      {label:'Hunger',val:c.hunger_score,color:'var(--rose)'},
+      {label:'Digestion',val:c.digestion,color:'var(--teal)'},
+      {label:'Stress',val:c.stress,color:parseInt(c.stress)>=4?'#E8856A':'var(--teal)'},
     ].filter(s=>s.val);
+    const scoreGrid=allScores.map(s=>`<div style="background:var(--nude);border-radius:8px;padding:5px 8px;text-align:center"><div style="font-size:13px;font-weight:700;color:${s.color}">${s.val}/5</div><div style="font-size:8px;color:var(--light)">${s.label}</div></div>`).join('');
+    const answers=[
+      {icon:'🏆',label:'WINS',val:c.wins},
+      {icon:'😤',label:'STRUGGLES',val:c.struggle},
+      {icon:'💭',label:'HOW I FELT',val:c.feeling},
+      {icon:'🌅',label:'MORNING ROUTINE',val:c.morning},
+      {icon:'🍽️',label:'MACROS & CALORIES',val:c.macros},
+      {icon:'🥗',label:'MEAL CHANGES WANTED',val:c.meal_changes},
+      {icon:'🍗',label:'HUNGER NOTES',val:c.hunger},
+      {icon:'🎯',label:'NEXT WEEK FOCUS',val:c.focus},
+      {icon:'❓',label:'QUESTIONS',val:c.questions},
+      {icon:'💬',label:'FINAL THOUGHTS',val:c.final},
+    ].filter(a=>a.val&&a.val.trim());
 
-    const scoreChips=scores.map(s=>`<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:var(--nude);color:${s.color};font-weight:600">${s.label}: ${s.val}/5</span>`).join('');
-
-    // Report section
     let reportHTML='';
     if(c.tyker_loading){
-      reportHTML=`<div style="margin-top:12px;padding:12px;background:linear-gradient(135deg,#FFF8F0,#FFF0E8);border-radius:10px;border:1px solid rgba(201,144,122,.2)">
-        <div style="font-size:11px;color:var(--light);font-style:italic;text-align:center">🐹 Tyker is reviewing your week...</div>
-      </div>`;
+      reportHTML=`<div style="margin-top:16px;padding:20px;background:linear-gradient(135deg,#FFF8F0,#FFF0E8);border-radius:12px;border:1.5px solid rgba(201,144,122,.3);text-align:center"><div style="font-size:28px;margin-bottom:8px">🐹</div><div style="font-size:12px;color:var(--light)">Tyker is reviewing your entire week...</div></div>`;
     } else if(c.tyker_report){
-      // Format markdown-like report
-      const formatted=c.tyker_report
-        .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-        .replace(/\n\n/g,'</p><p style="margin:8px 0">')
+      const fmt=c.tyker_report
+        .replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--dark)">$1</strong>')
+        .replace(/\n\n/g,'<div style="height:8px"></div>')
         .replace(/\n/g,'<br>');
-      reportHTML=`<div style="margin-top:14px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF9BB0,#FFB347);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🐹</div>
-          <div style="font-size:11px;font-weight:700;color:var(--dark)">Tyker's Weekly Report</div>
+      reportHTML=`<div style="margin-top:16px;border-top:2px solid rgba(201,144,122,.12);padding-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FF9BB0,#FFB347);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🐹</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--dark)">Tyker's Weekly Report</div><div style="font-size:10px;color:var(--light)">Personalized coaching based on your data</div></div>
+          </div>
+          <button onclick="exportCheckinPDF(${i})" style="background:linear-gradient(135deg,var(--mauve),var(--rose));color:white;border:none;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0">📄 Export PDF</button>
         </div>
-        <div style="font-size:12px;color:var(--dark);line-height:1.8;background:linear-gradient(135deg,#FFF8F5,#FFF0E8);border-radius:12px;padding:14px;border:1px solid rgba(201,144,122,.2)">
-          <p style="margin:0 0 8px">${formatted}</p>
-        </div>
+        <div style="font-size:12px;color:var(--dark);line-height:1.9;background:linear-gradient(135deg,#FFFAF8,#FFF5F0);border-radius:12px;padding:16px;border:1px solid rgba(201,144,122,.15)">${fmt}</div>
       </div>`;
+    } else {
+      reportHTML=`<div style="margin-top:12px;padding:12px;background:var(--nude);border-radius:10px;display:flex;align-items:center;justify-content:space-between"><div style="font-size:11px;color:var(--light)">🐹 No Tyker report yet</div><button onclick="regenerateTykerReport(${i})" style="background:linear-gradient(135deg,var(--mauve),var(--rose));color:white;border:none;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Generate Report</button></div>`;
     }
 
-    return `<div class="card" style="margin-bottom:12px">
-      <!-- Header -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+    return `<div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(201,144,122,.1)">
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--dark)">${new Date(c.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
-          <div style="font-size:10px;color:var(--light);margin-top:2px">Week ${i===0?'(Latest)':'#'+(checkins.length-i)}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--dark)">${new Date(c.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
+          <div style="font-size:10px;color:var(--light);margin-top:2px">${i===0?'✨ Latest Check-In':'Week #'+(checkins.length-i)}</div>
         </div>
-        ${wtChange!==null?`<div style="text-align:right">
-          <div style="font-size:18px;font-weight:700;color:${wtColor}">${parseFloat(wtChange)>0?'+':''}${wtChange} lbs</div>
-          <div style="font-size:9px;color:var(--light)">${c.wt_this} lbs this week</div>
-        </div>`:''}
+        ${wtChange!==null?`<div style="text-align:right"><div style="font-size:20px;font-weight:700;color:${wtColor}">${parseFloat(wtChange)>0?'+':''}${wtChange} lbs</div><div style="font-size:9px;color:var(--light)">${c.wt_this} lbs this week</div></div>`:''}
       </div>
-
-      <!-- Score chips -->
-      ${scoreChips?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${scoreChips}</div>`:''}
-
-      <!-- Quick stats row -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;text-align:center">
-        ${c.sleep?`<div style="background:var(--nude);border-radius:8px;padding:6px"><div style="font-size:13px;font-weight:700;color:var(--dark)">${c.sleep}h</div><div style="font-size:9px;color:var(--light)">Sleep</div></div>`:''}
-        ${c.stress?`<div style="background:var(--nude);border-radius:8px;padding:6px"><div style="font-size:13px;font-weight:700;color:${parseInt(c.stress)>=4?'#E8856A':'var(--teal)'}">${c.stress}/5</div><div style="font-size:9px;color:var(--light)">Stress</div></div>`:''}
-        ${c.water?`<div style="background:var(--nude);border-radius:8px;padding:6px"><div style="font-size:13px;font-weight:700;color:#4A9BB0">${c.water}</div><div style="font-size:9px;color:var(--light)">Water/day</div></div>`:''}
+      ${scoreGrid?`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">${scoreGrid}</div>`:''}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${answers.length?'12':'4'}px">
+        ${c.sleep?`<span style="background:var(--nude);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--dark)">😴 ${c.sleep}h sleep</span>`:''}
+        ${c.stress?`<span style="background:var(--nude);border-radius:20px;padding:4px 10px;font-size:11px;color:${parseInt(c.stress)>=4?'#E8856A':'var(--teal)'}">💆 Stress ${c.stress}/5</span>`:''}
+        ${c.water?`<span style="background:var(--nude);border-radius:20px;padding:4px 10px;font-size:11px;color:#4A9BB0">💧 ${c.water}/day</span>`:''}
+        ${c.clothes?`<span style="background:var(--nude);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--mauve)">👗 ${c.clothes}</span>`:''}
       </div>
-
-      <!-- Written answers (collapsed by default) -->
-      <div id="ci_expand_${i}" style="display:none">
-        ${c.wins?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">🏆 WINS</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.wins}</div></div>`:''}
-        ${c.struggle?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">😤 STRUGGLES</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.struggle}</div></div>`:''}
-        ${c.feeling?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">💭 HOW I FELT</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.feeling}</div></div>`:''}
-        ${c.focus?`<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">🎯 NEXT WEEK FOCUS</div><div style="font-size:12px;color:var(--dark);line-height:1.6">${c.focus}</div></div>`:''}
-      </div>
-
-      <button onclick="const el=document.getElementById('ci_expand_${i}');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'▼ Show answers':'▲ Hide answers'"
-        style="background:transparent;border:1px solid rgba(201,144,122,.2);border-radius:8px;padding:5px 12px;font-size:10px;color:var(--light);cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;width:100%">
-        ▼ Show answers
-      </button>
-
+      ${answers.length?`<div style="border-top:1px solid rgba(201,144,122,.1);padding-top:12px;display:grid;gap:10px">${answers.map(a=>`<div><div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);margin-bottom:4px">${a.icon} ${a.label}</div><div style="font-size:12px;color:var(--dark);line-height:1.7;background:var(--nude);padding:8px 10px;border-radius:8px;border-left:2px solid rgba(201,144,122,.3)">${a.val.replace(/\n/g,'<br>')}</div></div>`).join('')}</div>`:''}
       ${reportHTML}
     </div>`;
   }).join('');
 }
+
+async function regenerateTykerReport(idx){
+  const c=checkins[idx];
+  if(!c||!jinApiKey){showToast(jinApiKey?'Check-in not found':'Add API key first');return;}
+  checkins[idx].tyker_loading=true;
+  renderCheckinHistory();
+  await generateTykerReport(c);
+}
+
 
 // ── Meal History functions ─────────────────────────────────────────────────────
 function setHistoryView(v){
@@ -3849,9 +3879,11 @@ async function sendToJin(){
       const jsonStart=logStart+9;
       // Find matching closing }] by tracking brace depth
       let depth=0,jsonEnd=-1;
+      const OB=String.fromCharCode(123); // {
+      const CB=String.fromCharCode(125); // }
       for(let ci=jsonStart;ci<reply.length-1;ci++){
-        if(reply[ci]==='{') depth++;
-        else if(reply[ci]==='}'){depth--;if(depth===0){jsonEnd=ci;break;}}
+        if(reply[ci]===OB) depth++;
+        else if(reply[ci]===CB){depth--;if(depth===0){jsonEnd=ci;break;}}
       }
       if(jsonEnd>jsonStart){
         const jsonStr=reply.substring(jsonStart,jsonEnd+1);
