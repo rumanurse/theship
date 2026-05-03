@@ -1680,13 +1680,13 @@ async function loadPhaseFromCloud(){
     }
     if(!data){console.log('No user_settings row');return;}
     
-    // ── Load API key ──
-    if(data.api_key&&!jinApiKey){
+    // ── Load API key — always overwrite with cloud version ──
+    if(data.api_key){
       jinApiKey=data.api_key;
       localStorage.setItem('rf_jin_key',data.api_key);
-      console.log('✅ API key loaded from cloud');
-      // Re-init Jin now that we have the key
-      setTimeout(()=>initJin(),100);
+      console.log('✅ API key loaded from cloud:', data.api_key.substring(0,12)+'...');
+      // Re-init Jin with the key
+      setTimeout(()=>initJin(),200);
     }
     
     // ── Load phase ──
@@ -2891,10 +2891,11 @@ function initJin(){
 
 async function saveJinApiKey(){
   const key=document.getElementById('jinApiKeyInput').value.trim();
-  if(!key||!key.startsWith('sk-')){showToast('Please enter a valid API key (starts with sk-)');return;}
+  if(!key||!key.startsWith('sk-')){showToast('Enter a valid API key — starts with sk-ant-');return;}
   jinApiKey=key;
   localStorage.setItem('rf_jin_key',key);
-  // Save to Supabase so all devices get the key automatically
+  showToast('Saving...');
+  // Save to Supabase — REQUIRED for cross-device sync
   if(currentUser){
     try{
       const{error}=await sb.from('user_settings').upsert({
@@ -2902,19 +2903,43 @@ async function saveJinApiKey(){
         api_key:key,
         updated_at:new Date().toISOString()
       },{onConflict:'user_id'});
-      if(error) console.error('saveJinApiKey cloud error:',error);
-      else console.log('✅ API key saved to cloud');
-    }catch(e){console.error('saveJinApiKey:',e);}
+      if(error){
+        console.error('saveJinApiKey cloud error:',error);
+        showToast('⚠️ Saved locally only — cloud sync failed');
+      } else {
+        console.log('✅ API key saved to cloud successfully');
+        showToast('🐹 Jin connected on ALL your devices! ✅');
+      }
+    }catch(e){
+      console.error('saveJinApiKey exception:',e);
+      showToast('🐹 Jin connected locally!');
+    }
+  } else {
+    // Not connected to Supabase yet — retry in 3 seconds
+    showToast('🐹 Jin connected! Syncing to cloud...');
+    setTimeout(async()=>{
+      if(currentUser){
+        await sb.from('user_settings').upsert({
+          user_id:currentUser.id,api_key:key,updated_at:new Date().toISOString()
+        },{onConflict:'user_id'});
+        console.log('✅ API key saved to cloud (delayed)');
+      }
+    },3000);
   }
   initJin();
-  showToast('🐹 Jin is connected across all your devices!');
 }
 
 function clearJinApiKey(){
   jinApiKey='';
   localStorage.removeItem('rf_jin_key');
+  localStorage.removeItem('bd_apikey');
+  localStorage.removeItem('rn_api_key');
   jinHistory=[];
-  initJin();
+  // Show setup screen directly
+  document.getElementById('jinSetup').style.display='block';
+  document.getElementById('jinChatInterface').style.display='none';
+  document.getElementById('jinApiKeyInput').value='';
+  document.getElementById('jinApiKeyInput').focus();
 }
 
 function updateJinStatus(){
