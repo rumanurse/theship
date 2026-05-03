@@ -2935,11 +2935,13 @@ function clearJinApiKey(){
   localStorage.removeItem('bd_apikey');
   localStorage.removeItem('rn_api_key');
   jinHistory=[];
-  // Show setup screen directly
-  document.getElementById('jinSetup').style.display='block';
-  document.getElementById('jinChatInterface').style.display='none';
-  document.getElementById('jinApiKeyInput').value='';
-  document.getElementById('jinApiKeyInput').focus();
+  // Show setup screen — correct ID is jinApiSetup
+  const setup=document.getElementById('jinApiSetup');
+  const chat=document.getElementById('jinChatInterface');
+  if(setup) setup.style.display='block';
+  if(chat) chat.style.display='none';
+  const keyInput=document.getElementById('jinApiKeyInput');
+  if(keyInput){keyInput.value='';keyInput.focus();}
 }
 
 function updateJinStatus(){
